@@ -50,6 +50,16 @@ struct MenuBarView: View {
                 Text("Voice")
                     .font(.subheadline)
 
+                Text("Using: \(appModel.outputVoiceDescription)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if let note = appModel.outputVoiceNote {
+                    Text(note)
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                }
+
                 Picker(
                     "Voice",
                     selection: Binding(

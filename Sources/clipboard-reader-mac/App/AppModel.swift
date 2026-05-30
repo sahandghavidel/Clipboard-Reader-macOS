@@ -7,6 +7,8 @@ import KeyboardShortcuts
 final class AppModel: ObservableObject {
     @Published private(set) var speechState: SpeechState = .idle
     @Published private(set) var statusMessage: String = SpeechState.idle.label
+    @Published private(set) var outputVoiceDescription: String = "System Default"
+    @Published private(set) var outputVoiceNote: String?
 
     @Published var speedMultiplier: Double {
         didSet {
@@ -91,6 +93,20 @@ final class AppModel: ObservableObject {
             .sink { [weak self] state in
                 self?.speechState = state
                 self?.statusMessage = state.label
+            }
+            .store(in: &cancellables)
+
+        ttsManager.$resolvedVoiceDescription
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] description in
+                self?.outputVoiceDescription = description
+            }
+            .store(in: &cancellables)
+
+        ttsManager.$resolvedVoiceNote
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] note in
+                self?.outputVoiceNote = note
             }
             .store(in: &cancellables)
     }
