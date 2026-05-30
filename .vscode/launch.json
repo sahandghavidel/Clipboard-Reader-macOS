@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:clipboard-reader-mac}",
+      "name": "Debug clipboard-reader-mac",
+      "target": "clipboard-reader-mac",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug clipboard-reader-mac"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:clipboard-reader-mac}",
+      "name": "Release clipboard-reader-mac",
+      "target": "clipboard-reader-mac",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release clipboard-reader-mac"
+    }
+  ]
+}
