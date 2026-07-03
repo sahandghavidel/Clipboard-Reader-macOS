@@ -7,17 +7,49 @@ struct MenuBarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Clipboard Reader")
-                .font(.headline)
+            HStack(alignment: .firstTextBaseline) {
+                Text("Clipboard Reader")
+                    .font(.headline)
+
+                Spacer()
+
+                Text("v\(AppVersion.shortVersion)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Text(appModel.statusMessage)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            HStack(spacing: 8) {
-                Button("Read Clipboard") {
-                    appModel.readClipboardNow()
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("Read typed text instead of clipboard", isOn: $appModel.readsTypedTextInsteadOfClipboard)
+
+                Text(appModel.inputModeStatus)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                TextEditor(text: $appModel.typedText)
+                    .font(.body)
+                    .frame(minHeight: 100)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.secondary.opacity(0.25))
+                    )
+
+                HStack(spacing: 8) {
+                    Button(appModel.readButtonTitle) {
+                        appModel.readNow()
+                    }
+
+                    Button("Clear") {
+                        appModel.clearTypedText()
+                    }
+                    .disabled(appModel.typedText.isEmpty)
                 }
+            }
+
+            HStack(spacing: 8) {
 
                 Button("Stop") {
                     appModel.stopReading()
@@ -83,7 +115,7 @@ struct MenuBarView: View {
                 Text("Global Shortcuts")
                     .font(.subheadline.bold())
 
-                KeyboardShortcuts.Recorder("Read Clipboard", name: .readClipboard)
+                KeyboardShortcuts.Recorder("Read Current Input", name: .readClipboard)
                 KeyboardShortcuts.Recorder("Stop Reading", name: .stopReading)
                 KeyboardShortcuts.Recorder("Pause / Resume", name: .pauseResumeReading)
             }

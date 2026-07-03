@@ -9,6 +9,13 @@ final class AppModel: ObservableObject {
     @Published private(set) var statusMessage: String = SpeechState.idle.label
     @Published private(set) var outputVoiceDescription: String = "System Default"
     @Published private(set) var outputVoiceNote: String?
+    @Published var typedText: String = ""
+
+    @Published var readsTypedTextInsteadOfClipboard: Bool {
+        didSet {
+            defaults.set(readsTypedTextInsteadOfClipboard, forKey: Self.inputModeKey)
+        }
+    }
 
     @Published var speedMultiplier: Double {
         didSet {
@@ -42,8 +49,17 @@ final class AppModel: ObservableObject {
         selectedVoiceIdentifier ?? ""
     }
 
+    var readButtonTitle: String {
+        readsTypedTextInsteadOfClipboard ? "Read Text" : "Read Clipboard"
+    }
+
+    var inputModeStatus: String {
+        readsTypedTextInsteadOfClipboard ? "Shortcut reads typed text." : "Shortcut reads clipboard."
+    }
+
     private static let speedKey = "clipboardReader.speedMultiplier"
     private static let voiceKey = "clipboardReader.voiceIdentifier"
+    private static let inputModeKey = "clipboardReader.readsTypedTextInsteadOfClipboard"
 
     private let defaults: UserDefaults
     private let clipboardService = ClipboardService()
@@ -56,12 +72,25 @@ final class AppModel: ObservableObject {
         let storedSpeed = defaults.object(forKey: Self.speedKey) as? Double
         self.speedMultiplier = SpeechRateMapper.clampMultiplier(storedSpeed ?? SpeechRateMapper.defaultMultiplier)
         self.selectedVoiceIdentifier = defaults.string(forKey: Self.voiceKey)
+        self.readsTypedTextInsteadOfClipboard = defaults.bool(forKey: Self.inputModeKey)
 
         bindSpeechState()
         registerShortcutHandlers()
     }
 
-    func readClipboardNow() {
+    func readNow() {
+        if readsTypedTextInsteadOfClipboard {
+            readTypedTextNow()
+        } else {
+            readClipboardNow()
+        }
+    }
+
+    func clearTypedText() {
+        typedText = ""
+    }
+
+    private func readClipboardNow() {
         guard let text = clipboardService.currentText() else {
             statusMessage = "Clipboard is empty."
             return
@@ -72,7 +101,22 @@ final class AppModel: ObservableObject {
             speedMultiplier: speedMultiplier,
             voiceIdentifier: selectedVoiceIdentifier
         )
-        statusMessage = SpeechState.speaking.label
+        statusMessage = "Reading clipboard…"
+    }
+
+    private func readTypedTextNow() {
+        let text = clipboardService.normalize(typedText)
+        guard !text.isEmpty else {
+            statusMessage = "Text field is empty."
+            return
+        }
+
+        ttsManager.speak(
+            text: text,
+            speedMultiplier: speedMultiplier,
+            voiceIdentifier: selectedVoiceIdentifier
+        )
+        statusMessage = "Reading typed text…"
     }
 
     func stopReading() {
@@ -114,7 +158,7 @@ final class AppModel: ObservableObject {
     private func registerShortcutHandlers() {
         KeyboardShortcuts.onKeyUp(for: .readClipboard) { [weak self] in
             Task { @MainActor in
-                self?.readClipboardNow()
+                self?.readNow()
             }
         }
 

@@ -11,7 +11,7 @@ enum SpeechState: Equatable {
         case .idle:
             return "Ready"
         case .speaking:
-            return "Reading clipboard…"
+            return "Reading…"
         case .paused:
             return "Paused"
         case .stopping:
