@@ -2,7 +2,7 @@
 
 A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.6`.
+Current local version: `1.7`.
 
 ## Requirements
 
@@ -44,7 +44,8 @@ Turn on **Script mode** when the text box contains a tutorial script.
 
 - The app splits the script into sentence-based scenes.
 - **Play Scene** and the read shortcut read one scene, stop, then advance to the next scene after speech finishes.
-- Use **Previous**, **Next**, and **Restart** to control the current scene.
+- Use **Previous**, **Replay**, **Next**, and **Restart** to control the current scene.
+- Default scene shortcuts are `Command+Option+Up` for replay, `Command+Option+Left` for previous, and `Command+Option+Right` for next.
 - The current scene preview shows what will be read next.
 
 ### Run from VS Code
@@ -98,9 +99,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>6</string>
+  <string>7</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.6</string>
+  <string>1.7</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -126,7 +127,7 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 5. Trigger **Read Text** (button or same shortcut), then confirm it reads typed text instead of clipboard.
 6. Turn **Script mode** on and paste a multi-sentence tutorial script.
 7. Trigger **Play Scene** or the read shortcut, then confirm it reads one scene and advances to the next.
-8. Use **Previous**, **Next**, and **Restart** to navigate scenes.
+8. Use **Previous**, **Replay**, **Next**, and **Restart** to navigate scenes.
 9. Trigger **Pause/Resume** once → pauses.
 10. Trigger **Pause/Resume** again → resumes.
 11. Trigger **Stop** → speech stops immediately.

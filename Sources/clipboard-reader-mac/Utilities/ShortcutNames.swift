@@ -15,4 +15,19 @@ extension KeyboardShortcuts.Name {
         "pauseResumeReading",
         default: KeyboardShortcuts.Shortcut(.p, modifiers: [.command, .option])
     )
+
+    static let replayScriptScene = Self(
+        "replayScriptScene",
+        default: KeyboardShortcuts.Shortcut(.upArrow, modifiers: [.command, .option])
+    )
+
+    static let previousScriptScene = Self(
+        "previousScriptScene",
+        default: KeyboardShortcuts.Shortcut(.leftArrow, modifiers: [.command, .option])
+    )
+
+    static let nextScriptScene = Self(
+        "nextScriptScene",
+        default: KeyboardShortcuts.Shortcut(.rightArrow, modifiers: [.command, .option])
+    )
 }

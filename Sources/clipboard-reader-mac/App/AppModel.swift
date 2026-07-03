@@ -156,29 +156,58 @@ final class AppModel: ObservableObject {
     }
 
     func goToPreviousScene() {
-        refreshScriptScenes()
-        guard canGoToPreviousScene else {
+        guard scriptModeEnabled else {
+            statusMessage = "Turn on Script mode to use scene controls."
             return
         }
 
+        refreshScriptScenes()
+        guard canGoToPreviousScene else {
+            statusMessage = scriptScenes.isEmpty ? "Text field is empty." : "Already at first scene."
+            return
+        }
+
+        stopSpeechForSceneNavigation()
         currentSceneIndex -= 1
         statusMessage = scriptSceneProgress
     }
 
     func goToNextScene() {
-        refreshScriptScenes()
-        guard canGoToNextScene else {
+        guard scriptModeEnabled else {
+            statusMessage = "Turn on Script mode to use scene controls."
             return
         }
 
+        refreshScriptScenes()
+        guard canGoToNextScene else {
+            statusMessage = scriptScenes.isEmpty ? "Text field is empty." : "Already at last scene."
+            return
+        }
+
+        stopSpeechForSceneNavigation()
         currentSceneIndex += 1
         statusMessage = scriptSceneProgress
     }
 
     func restartScript() {
+        guard scriptModeEnabled else {
+            statusMessage = "Turn on Script mode to use scene controls."
+            return
+        }
+
+        stopSpeechForSceneNavigation()
         refreshScriptScenes()
         currentSceneIndex = 0
         statusMessage = scriptScenes.isEmpty ? "Text field is empty." : scriptSceneProgress
+    }
+
+    func replayCurrentScriptScene() {
+        guard scriptModeEnabled else {
+            statusMessage = "Turn on Script mode to use scene controls."
+            return
+        }
+
+        readCurrentScriptSceneNow(advancesAfterSpeech: false)
     }
 
     private func readClipboardNow() {
@@ -211,6 +240,10 @@ final class AppModel: ObservableObject {
     }
 
     private func readCurrentScriptSceneNow() {
+        readCurrentScriptSceneNow(advancesAfterSpeech: true)
+    }
+
+    private func readCurrentScriptSceneNow(advancesAfterSpeech: Bool) {
         refreshScriptScenes()
 
         guard let scene = currentSceneText else {
@@ -218,13 +251,13 @@ final class AppModel: ObservableObject {
             return
         }
 
-        shouldAdvanceScriptSceneAfterSpeech = true
+        shouldAdvanceScriptSceneAfterSpeech = advancesAfterSpeech
         ttsManager.speak(
             text: scene,
             speedMultiplier: speedMultiplier,
             voiceIdentifier: selectedVoiceIdentifier
         )
-        statusMessage = "Reading \(scriptSceneProgress)…"
+        statusMessage = advancesAfterSpeech ? "Reading \(scriptSceneProgress)…" : "Replaying \(scriptSceneProgress)…"
     }
 
     func stopReading() {
@@ -238,6 +271,13 @@ final class AppModel: ObservableObject {
 
     func updateVoiceSelection(_ identifier: String) {
         selectedVoiceIdentifier = identifier.isEmpty ? nil : identifier
+    }
+
+    private func stopSpeechForSceneNavigation() {
+        shouldAdvanceScriptSceneAfterSpeech = false
+        if speechState == .speaking || speechState == .paused || speechState == .stopping {
+            ttsManager.stop()
+        }
     }
 
     private func bindSpeechState() {
@@ -306,6 +346,24 @@ final class AppModel: ObservableObject {
         KeyboardShortcuts.onKeyUp(for: .pauseResumeReading) { [weak self] in
             Task { @MainActor in
                 self?.togglePauseResume()
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .replayScriptScene) { [weak self] in
+            Task { @MainActor in
+                self?.replayCurrentScriptScene()
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .previousScriptScene) { [weak self] in
+            Task { @MainActor in
+                self?.goToPreviousScene()
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .nextScriptScene) { [weak self] in
+            Task { @MainActor in
+                self?.goToNextScene()
             }
         }
     }

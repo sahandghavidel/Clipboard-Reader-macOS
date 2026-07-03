@@ -72,6 +72,11 @@ struct MenuBarView: View {
                             }
                             .disabled(!appModel.canGoToPreviousScene)
 
+                            Button("Replay") {
+                                appModel.replayCurrentScriptScene()
+                            }
+                            .disabled(appModel.currentSceneText == nil)
+
                             Button("Next") {
                                 appModel.goToNextScene()
                             }
@@ -155,6 +160,9 @@ struct MenuBarView: View {
                 KeyboardShortcuts.Recorder("Read Current Input", name: .readClipboard)
                 KeyboardShortcuts.Recorder("Stop Reading", name: .stopReading)
                 KeyboardShortcuts.Recorder("Pause / Resume", name: .pauseResumeReading)
+                KeyboardShortcuts.Recorder("Replay Scene", name: .replayScriptScene)
+                KeyboardShortcuts.Recorder("Previous Scene", name: .previousScriptScene)
+                KeyboardShortcuts.Recorder("Next Scene", name: .nextScriptScene)
             }
 
             Divider()
