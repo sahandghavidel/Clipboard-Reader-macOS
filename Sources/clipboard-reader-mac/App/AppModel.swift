@@ -11,9 +11,22 @@ final class AppModel: ObservableObject {
     @Published private(set) var outputVoiceNote: String?
     @Published var typedText: String = ""
 
+    @Published var scriptModeEnabled: Bool {
+        didSet {
+            defaults.set(scriptModeEnabled, forKey: Self.scriptModeKey)
+            if scriptModeEnabled {
+                readsTypedTextInsteadOfClipboard = true
+                refreshScriptScenes()
+            }
+        }
+    }
+
     @Published var readsTypedTextInsteadOfClipboard: Bool {
         didSet {
             defaults.set(readsTypedTextInsteadOfClipboard, forKey: Self.inputModeKey)
+            if !readsTypedTextInsteadOfClipboard, scriptModeEnabled {
+                scriptModeEnabled = false
+            }
         }
     }
 
@@ -50,21 +63,57 @@ final class AppModel: ObservableObject {
     }
 
     var readButtonTitle: String {
-        readsTypedTextInsteadOfClipboard ? "Read Text" : "Read Clipboard"
+        if scriptModeEnabled {
+            return "Play Scene"
+        }
+
+        return readsTypedTextInsteadOfClipboard ? "Read Text" : "Read Clipboard"
     }
 
     var inputModeStatus: String {
-        readsTypedTextInsteadOfClipboard ? "Shortcut reads typed text." : "Shortcut reads clipboard."
+        if scriptModeEnabled {
+            return "Shortcut plays the current script scene."
+        }
+
+        return readsTypedTextInsteadOfClipboard ? "Shortcut reads typed text." : "Shortcut reads clipboard."
+    }
+
+    var currentSceneText: String? {
+        guard scriptScenes.indices.contains(currentSceneIndex) else {
+            return nil
+        }
+
+        return scriptScenes[currentSceneIndex]
+    }
+
+    var scriptSceneProgress: String {
+        guard !scriptScenes.isEmpty else {
+            return "No scenes yet"
+        }
+
+        return "Scene \(currentSceneIndex + 1) of \(scriptScenes.count)"
+    }
+
+    var canGoToPreviousScene: Bool {
+        currentSceneIndex > 0
+    }
+
+    var canGoToNextScene: Bool {
+        currentSceneIndex + 1 < scriptScenes.count
     }
 
     private static let speedKey = "clipboardReader.speedMultiplier"
     private static let voiceKey = "clipboardReader.voiceIdentifier"
     private static let inputModeKey = "clipboardReader.readsTypedTextInsteadOfClipboard"
+    private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
 
     private let defaults: UserDefaults
     private let clipboardService = ClipboardService()
     private let ttsManager = TTSManager()
     private var cancellables = Set<AnyCancellable>()
+    @Published private var currentSceneIndex = 0
+    @Published private var scriptScenes: [String] = []
+    private var shouldAdvanceScriptSceneAfterSpeech = false
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -73,12 +122,18 @@ final class AppModel: ObservableObject {
         self.speedMultiplier = SpeechRateMapper.clampMultiplier(storedSpeed ?? SpeechRateMapper.defaultMultiplier)
         self.selectedVoiceIdentifier = defaults.string(forKey: Self.voiceKey)
         self.readsTypedTextInsteadOfClipboard = defaults.bool(forKey: Self.inputModeKey)
+        self.scriptModeEnabled = defaults.bool(forKey: Self.scriptModeKey)
 
         bindSpeechState()
         registerShortcutHandlers()
     }
 
     func readNow() {
+        if scriptModeEnabled {
+            readCurrentScriptSceneNow()
+            return
+        }
+
         if readsTypedTextInsteadOfClipboard {
             readTypedTextNow()
         } else {
@@ -88,6 +143,42 @@ final class AppModel: ObservableObject {
 
     func clearTypedText() {
         typedText = ""
+        refreshScriptScenes()
+    }
+
+    func refreshScriptScenes() {
+        scriptScenes = ScriptSceneSplitter.scenes(from: typedText)
+        if scriptScenes.isEmpty {
+            currentSceneIndex = 0
+        } else {
+            currentSceneIndex = min(currentSceneIndex, scriptScenes.count - 1)
+        }
+    }
+
+    func goToPreviousScene() {
+        refreshScriptScenes()
+        guard canGoToPreviousScene else {
+            return
+        }
+
+        currentSceneIndex -= 1
+        statusMessage = scriptSceneProgress
+    }
+
+    func goToNextScene() {
+        refreshScriptScenes()
+        guard canGoToNextScene else {
+            return
+        }
+
+        currentSceneIndex += 1
+        statusMessage = scriptSceneProgress
+    }
+
+    func restartScript() {
+        refreshScriptScenes()
+        currentSceneIndex = 0
+        statusMessage = scriptScenes.isEmpty ? "Text field is empty." : scriptSceneProgress
     }
 
     private func readClipboardNow() {
@@ -119,7 +210,25 @@ final class AppModel: ObservableObject {
         statusMessage = "Reading typed text…"
     }
 
+    private func readCurrentScriptSceneNow() {
+        refreshScriptScenes()
+
+        guard let scene = currentSceneText else {
+            statusMessage = "Text field is empty."
+            return
+        }
+
+        shouldAdvanceScriptSceneAfterSpeech = true
+        ttsManager.speak(
+            text: scene,
+            speedMultiplier: speedMultiplier,
+            voiceIdentifier: selectedVoiceIdentifier
+        )
+        statusMessage = "Reading \(scriptSceneProgress)…"
+    }
+
     func stopReading() {
+        shouldAdvanceScriptSceneAfterSpeech = false
         ttsManager.stop()
     }
 
@@ -136,7 +245,9 @@ final class AppModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 self?.speechState = state
-                self?.statusMessage = state.label
+                if state != .speaking {
+                    self?.statusMessage = state.label
+                }
             }
             .store(in: &cancellables)
 
@@ -153,6 +264,30 @@ final class AppModel: ObservableObject {
                 self?.outputVoiceNote = note
             }
             .store(in: &cancellables)
+
+        ttsManager.$completedUtteranceCount
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.advanceScriptSceneAfterCompletedSpeech()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func advanceScriptSceneAfterCompletedSpeech() {
+        guard scriptModeEnabled, shouldAdvanceScriptSceneAfterSpeech else {
+            return
+        }
+
+        shouldAdvanceScriptSceneAfterSpeech = false
+        refreshScriptScenes()
+
+        if canGoToNextScene {
+            currentSceneIndex += 1
+            statusMessage = "Ready for \(scriptSceneProgress)"
+        } else {
+            statusMessage = "Script finished."
+        }
     }
 
     private func registerShortcutHandlers() {

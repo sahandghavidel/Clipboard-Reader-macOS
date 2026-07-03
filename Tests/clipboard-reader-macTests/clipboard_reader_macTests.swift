@@ -24,6 +24,15 @@ final class ClipboardReaderMacTests: XCTestCase {
         XCTAssertEqual(service.normalize("   hello world\n"), "hello world")
     }
 
+    func testScriptSceneSplitterSplitsSentences() {
+        let scenes = ScriptSceneSplitter.scenes(from: "First step. Now click the button! Done?")
+        XCTAssertEqual(scenes, ["First step.", "Now click the button!", "Done?"])
+    }
+
+    func testScriptSceneSplitterDropsEmptyWhitespace() {
+        XCTAssertEqual(ScriptSceneSplitter.scenes(from: "\n\n  "), [])
+    }
+
     func testPauseResumeLabel() {
         XCTAssertEqual(SpeechState.speaking.pauseResumeTitle, "Pause Reading")
         XCTAssertEqual(SpeechState.paused.pauseResumeTitle, "Resume Reading")

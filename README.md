@@ -1,8 +1,8 @@
 # Clipboard Reader (macOS)
 
-A native macOS menu bar app that reads clipboard text or typed text aloud with built-in speech.
+A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.5`.
+Current local version: `1.6`.
 
 ## Requirements
 
@@ -37,6 +37,15 @@ The menu bar app has a toggle named **Read typed text instead of clipboard**.
 - Toggle on: **Read Text** and the same read shortcut use the text typed into the app.
 - Stop, pause/resume, speed, voice, and shortcut settings work the same in both modes.
 - Typed text is not saved when the app quits.
+
+## Script mode
+
+Turn on **Script mode** when the text box contains a tutorial script.
+
+- The app splits the script into sentence-based scenes.
+- **Play Scene** and the read shortcut read one scene, stop, then advance to the next scene after speech finishes.
+- Use **Previous**, **Next**, and **Restart** to control the current scene.
+- The current scene preview shows what will be read next.
 
 ### Run from VS Code
 
@@ -89,9 +98,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>5</string>
+  <string>6</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.5</string>
+  <string>1.6</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -115,11 +124,14 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 3. Trigger **Read Clipboard** (button or shortcut), then confirm speech starts.
 4. Turn **Read typed text instead of clipboard** on and type text into the app.
 5. Trigger **Read Text** (button or same shortcut), then confirm it reads typed text instead of clipboard.
-6. Trigger **Pause/Resume** once → pauses.
-7. Trigger **Pause/Resume** again → resumes.
-8. Trigger **Stop** → speech stops immediately.
-9. Move speed slider to **0.5x** and **1.5x**, verify slower/faster speech.
-10. Reassign all 3 shortcuts and verify they still work globally.
+6. Turn **Script mode** on and paste a multi-sentence tutorial script.
+7. Trigger **Play Scene** or the read shortcut, then confirm it reads one scene and advances to the next.
+8. Use **Previous**, **Next**, and **Restart** to navigate scenes.
+9. Trigger **Pause/Resume** once → pauses.
+10. Trigger **Pause/Resume** again → resumes.
+11. Trigger **Stop** → speech stops immediately.
+12. Move speed slider to **0.5x** and **1.5x**, verify slower/faster speech.
+13. Reassign all 3 shortcuts and verify they still work globally.
 
 ## Troubleshooting
 

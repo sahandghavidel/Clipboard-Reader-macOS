@@ -6,6 +6,7 @@ final class TTSManager: NSObject, ObservableObject {
     @Published private(set) var state: SpeechState = .idle
     @Published private(set) var resolvedVoiceDescription: String = "System Default"
     @Published private(set) var resolvedVoiceNote: String?
+    @Published private(set) var completedUtteranceCount = 0
 
     private let synthesizer = AVSpeechSynthesizer()
     private let systemSynthesizer = NSSpeechSynthesizer()
@@ -241,6 +242,7 @@ extension TTSManager: AVSpeechSynthesizerDelegate {
         DispatchQueue.main.async {
             self.activeEngine = .none
             self.state = .idle
+            self.completedUtteranceCount += 1
         }
     }
 
@@ -273,6 +275,9 @@ extension TTSManager: NSSpeechSynthesizerDelegate {
 
             self.activeEngine = .none
             self.state = .idle
+            if finishedSpeaking {
+                self.completedUtteranceCount += 1
+            }
         }
     }
 }

@@ -25,6 +25,8 @@ struct MenuBarView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Toggle("Read typed text instead of clipboard", isOn: $appModel.readsTypedTextInsteadOfClipboard)
 
+                Toggle("Script mode", isOn: $appModel.scriptModeEnabled)
+
                 Text(appModel.inputModeStatus)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -32,6 +34,9 @@ struct MenuBarView: View {
                 TextEditor(text: $appModel.typedText)
                     .font(.body)
                     .frame(minHeight: 100)
+                    .onChange(of: appModel.typedText) {
+                        appModel.refreshScriptScenes()
+                    }
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
                             .stroke(Color.secondary.opacity(0.25))
@@ -46,6 +51,38 @@ struct MenuBarView: View {
                         appModel.clearTypedText()
                     }
                     .disabled(appModel.typedText.isEmpty)
+                }
+
+                if appModel.scriptModeEnabled {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(appModel.scriptSceneProgress)
+                            .font(.subheadline.bold())
+
+                        Text(appModel.currentSceneText ?? "Paste a script to create scenes.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(4)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        HStack(spacing: 8) {
+                            Button("Previous") {
+                                appModel.goToPreviousScene()
+                            }
+                            .disabled(!appModel.canGoToPreviousScene)
+
+                            Button("Next") {
+                                appModel.goToNextScene()
+                            }
+                            .disabled(!appModel.canGoToNextScene)
+
+                            Button("Restart") {
+                                appModel.restartScript()
+                            }
+                            .disabled(appModel.currentSceneText == nil)
+                        }
+                    }
                 }
             }
 
