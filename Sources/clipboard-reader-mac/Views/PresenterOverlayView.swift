@@ -10,11 +10,11 @@ struct PresenterOverlayView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(appModel.scriptSceneProgress)
                     .font(.caption.bold())
-                    .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(0.72))
+                    .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(appModel.presenterOverlaySecondaryTextOpacity))
 
                 Text(appModel.currentSceneText ?? "Paste a script and turn on Script mode.")
                     .font(.system(size: CGFloat(appModel.presenterOverlayCurrentFontSize), weight: .semibold))
-                    .foregroundStyle(appModel.presenterOverlayCurrentTextColor)
+                    .foregroundStyle(appModel.presenterOverlayCurrentTextColor.opacity(appModel.presenterOverlayCurrentTextOpacity))
                     .lineLimit(nil)
                     .minimumScaleFactor(0.7)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -40,11 +40,11 @@ struct PresenterOverlayView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.caption2.bold())
-                .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(0.48))
+                .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(appModel.presenterOverlaySecondaryTextOpacity * 0.7))
 
             Text(text ?? "None")
                 .font(.system(size: CGFloat(appModel.presenterOverlaySideFontSize)))
-                .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(text == nil ? 0.32 : 0.68))
+                .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(text == nil ? appModel.presenterOverlaySecondaryTextOpacity * 0.45 : appModel.presenterOverlaySecondaryTextOpacity))
                 .lineLimit(nil)
                 .minimumScaleFactor(0.75)
                 .frame(maxWidth: .infinity, alignment: .leading)

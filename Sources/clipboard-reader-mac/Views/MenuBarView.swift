@@ -147,18 +147,34 @@ struct MenuBarView: View {
                                     range: AppModel.minPresenterOverlaySideFontSize...AppModel.maxPresenterOverlaySideFontSize,
                                     specifier: "%.0f"
                                 )
+                                overlaySlider(
+                                    "Current text opacity",
+                                    value: $appModel.presenterOverlayCurrentTextOpacity,
+                                    range: AppModel.minPresenterOverlayTextOpacity...AppModel.maxPresenterOverlayTextOpacity,
+                                    specifier: "%.2f"
+                                )
+                                overlaySlider(
+                                    "Previous/next text opacity",
+                                    value: $appModel.presenterOverlaySecondaryTextOpacity,
+                                    range: AppModel.minPresenterOverlayTextOpacity...AppModel.maxPresenterOverlayTextOpacity,
+                                    specifier: "%.2f"
+                                )
 
                                 ColorPicker(
                                     "Current text color",
                                     selection: $appModel.presenterOverlayCurrentTextColor,
-                                    supportsOpacity: false
+                                    supportsOpacity: true
                                 )
+
+                                colorPresetRow(for: $appModel.presenterOverlayCurrentTextColor)
 
                                 ColorPicker(
                                     "Previous/next text color",
                                     selection: $appModel.presenterOverlaySecondaryTextColor,
-                                    supportsOpacity: false
+                                    supportsOpacity: true
                                 )
+
+                                colorPresetRow(for: $appModel.presenterOverlaySecondaryTextColor)
 
                                 Button("Reset overlay defaults") {
                                     appModel.resetPresenterOverlayDefaults()
@@ -270,5 +286,28 @@ struct MenuBarView: View {
 
             Slider(value: value, in: range)
         }
+    }
+
+    private func colorPresetRow(for color: Binding<Color>) -> some View {
+        HStack(spacing: 8) {
+            colorPreset(.white, selection: color)
+            colorPreset(.yellow, selection: color)
+            colorPreset(.green, selection: color)
+            colorPreset(.cyan, selection: color)
+            colorPreset(.orange, selection: color)
+            colorPreset(.red, selection: color)
+        }
+    }
+
+    private func colorPreset(_ color: Color, selection: Binding<Color>) -> some View {
+        Button {
+            selection.wrappedValue = color
+        } label: {
+            Circle()
+                .fill(color)
+                .frame(width: 18, height: 18)
+                .overlay(Circle().stroke(.secondary.opacity(0.4)))
+        }
+        .buttonStyle(.plain)
     }
 }

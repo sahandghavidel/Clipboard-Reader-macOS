@@ -117,6 +117,30 @@ final class AppModel: ObservableObject {
         }
     }
 
+    @Published var presenterOverlayCurrentTextOpacity: Double {
+        didSet {
+            let clamped = Self.clamp(presenterOverlayCurrentTextOpacity, min: Self.minPresenterOverlayTextOpacity, max: Self.maxPresenterOverlayTextOpacity)
+            if clamped != presenterOverlayCurrentTextOpacity {
+                presenterOverlayCurrentTextOpacity = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.presenterOverlayCurrentTextOpacityKey)
+        }
+    }
+
+    @Published var presenterOverlaySecondaryTextOpacity: Double {
+        didSet {
+            let clamped = Self.clamp(presenterOverlaySecondaryTextOpacity, min: Self.minPresenterOverlayTextOpacity, max: Self.maxPresenterOverlayTextOpacity)
+            if clamped != presenterOverlaySecondaryTextOpacity {
+                presenterOverlaySecondaryTextOpacity = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.presenterOverlaySecondaryTextOpacityKey)
+        }
+    }
+
     @Published var presenterOverlayCurrentTextColor: Color {
         didSet {
             if let hexString = presenterOverlayCurrentTextColor.hexString {
@@ -266,6 +290,8 @@ final class AppModel: ObservableObject {
     private static let presenterOverlayHorizontalOffsetKey = "clipboardReader.presenterOverlay.horizontalOffset"
     private static let presenterOverlayCurrentFontSizeKey = "clipboardReader.presenterOverlay.currentFontSize"
     private static let presenterOverlaySideFontSizeKey = "clipboardReader.presenterOverlay.sideFontSize"
+    private static let presenterOverlayCurrentTextOpacityKey = "clipboardReader.presenterOverlay.currentTextOpacity"
+    private static let presenterOverlaySecondaryTextOpacityKey = "clipboardReader.presenterOverlay.secondaryTextOpacity"
     private static let presenterOverlayCurrentTextColorKey = "clipboardReader.presenterOverlay.currentTextColor"
     private static let presenterOverlaySecondaryTextColorKey = "clipboardReader.presenterOverlay.secondaryTextColor"
 
@@ -276,6 +302,8 @@ final class AppModel: ObservableObject {
     static let defaultPresenterOverlayHorizontalOffset = 0.0
     static let defaultPresenterOverlayCurrentFontSize = 24.0
     static let defaultPresenterOverlaySideFontSize = 13.0
+    static let defaultPresenterOverlayCurrentTextOpacity = 1.0
+    static let defaultPresenterOverlaySecondaryTextOpacity = 0.68
     static let minPresenterOverlayOpacity = 0.2
     static let maxPresenterOverlayOpacity = 1.0
     static let minPresenterOverlayWidth = 520.0
@@ -290,6 +318,8 @@ final class AppModel: ObservableObject {
     static let maxPresenterOverlayCurrentFontSize = 56.0
     static let minPresenterOverlaySideFontSize = 10.0
     static let maxPresenterOverlaySideFontSize = 32.0
+    static let minPresenterOverlayTextOpacity = 0.1
+    static let maxPresenterOverlayTextOpacity = 1.0
 
     private let defaults: UserDefaults
     private let clipboardService = ClipboardService()
@@ -345,12 +375,22 @@ final class AppModel: ObservableObject {
             forKey: Self.presenterOverlaySideFontSizeKey,
             defaultValue: Self.defaultPresenterOverlaySideFontSize
         )
+        self.presenterOverlayCurrentTextOpacity = Self.storedDouble(
+            in: defaults,
+            forKey: Self.presenterOverlayCurrentTextOpacityKey,
+            defaultValue: Self.defaultPresenterOverlayCurrentTextOpacity
+        )
+        self.presenterOverlaySecondaryTextOpacity = Self.storedDouble(
+            in: defaults,
+            forKey: Self.presenterOverlaySecondaryTextOpacityKey,
+            defaultValue: Self.defaultPresenterOverlaySecondaryTextOpacity
+        )
         self.presenterOverlayCurrentTextColor = Color(
-            hexString: defaults.string(forKey: Self.presenterOverlayCurrentTextColorKey) ?? "#FFFFFF",
+            hexString: defaults.string(forKey: Self.presenterOverlayCurrentTextColorKey) ?? "#FFFFFFFF",
             fallback: .white
         )
         self.presenterOverlaySecondaryTextColor = Color(
-            hexString: defaults.string(forKey: Self.presenterOverlaySecondaryTextColorKey) ?? "#D8DEE9",
+            hexString: defaults.string(forKey: Self.presenterOverlaySecondaryTextColorKey) ?? "#D8DEE9FF",
             fallback: Color(red: 0.85, green: 0.87, blue: 0.91)
         )
 
@@ -401,6 +441,8 @@ final class AppModel: ObservableObject {
         presenterOverlayHorizontalOffset = Self.defaultPresenterOverlayHorizontalOffset
         presenterOverlayCurrentFontSize = Self.defaultPresenterOverlayCurrentFontSize
         presenterOverlaySideFontSize = Self.defaultPresenterOverlaySideFontSize
+        presenterOverlayCurrentTextOpacity = Self.defaultPresenterOverlayCurrentTextOpacity
+        presenterOverlaySecondaryTextOpacity = Self.defaultPresenterOverlaySecondaryTextOpacity
         presenterOverlayCurrentTextColor = .white
         presenterOverlaySecondaryTextColor = Color(red: 0.85, green: 0.87, blue: 0.91)
         presenterOverlayController?.updateLayout()

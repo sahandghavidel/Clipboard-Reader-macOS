@@ -2,7 +2,7 @@
 
 A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.10`.
+Current local version: `1.11`.
 
 ## Requirements
 
@@ -52,7 +52,7 @@ Turn on **Script mode** when the text box contains a tutorial script.
 
 Turn on **Show presenter overlay** inside Script mode to show previous, current, and next scenes in a floating bottom overlay. Use **Hide overlay from screen recordings** to ask macOS not to include the overlay in standard screen capture output.
 
-The overlay settings let you adjust opacity, width, height, bottom position, horizontal position, current text size, previous/next text size, current text color, and previous/next text color. Use **Reset overlay defaults** to return to the default presenter layout.
+The overlay settings let you adjust opacity, width, height, bottom position, horizontal position, current text size, previous/next text size, text colors, text transparency, and quick color presets. Use **Reset overlay defaults** to return to the default presenter layout.
 
 ### Run from VS Code
 
@@ -105,9 +105,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>10</string>
+  <string>11</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.10</string>
+  <string>1.11</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -135,7 +135,7 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 7. Trigger **Play Scene** or the read shortcut, then confirm it reads one scene and advances to the next.
 8. Use **Previous**, **Replay**, **Next**, and **Restart** to navigate scenes.
 9. Turn **Show presenter overlay** on and confirm previous/current/next scenes appear near the bottom of the screen.
-10. Adjust overlay opacity, width, height, position, font sizes, and text colors.
+10. Adjust overlay opacity, width, height, position, font sizes, text colors, and text transparency.
 11. Use **Reset overlay defaults** and confirm the overlay returns to the default layout.
 12. Start a short screen recording and verify the overlay behavior with **Hide overlay from screen recordings** on and off.
 13. Trigger **Pause/Resume** once → pauses.
