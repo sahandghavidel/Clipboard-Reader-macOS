@@ -30,4 +30,9 @@ extension KeyboardShortcuts.Name {
         "nextScriptScene",
         default: KeyboardShortcuts.Shortcut(.rightArrow, modifiers: [.command, .option])
     )
+
+    static let togglePresenterOverlay = Self(
+        "togglePresenterOverlay",
+        default: KeyboardShortcuts.Shortcut(.o, modifiers: [.command, .option])
+    )
 }

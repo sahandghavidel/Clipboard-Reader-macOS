@@ -99,6 +99,9 @@ struct MenuBarView: View {
                         Toggle("Hide overlay from screen recordings", isOn: $appModel.hidePresenterOverlayFromCapture)
                             .disabled(!appModel.showPresenterOverlay)
 
+                        Toggle("Hide overlay while audio is playing", isOn: $appModel.hidePresenterOverlayWhileSpeaking)
+                            .disabled(!appModel.showPresenterOverlay)
+
                         Text("Overlay shows previous, current, and next scenes at the bottom of the screen.")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -258,6 +261,7 @@ struct MenuBarView: View {
                 KeyboardShortcuts.Recorder("Replay Scene", name: .replayScriptScene)
                 KeyboardShortcuts.Recorder("Previous Scene", name: .previousScriptScene)
                 KeyboardShortcuts.Recorder("Next Scene", name: .nextScriptScene)
+                KeyboardShortcuts.Recorder("Toggle Overlay", name: .togglePresenterOverlay)
             }
 
             Divider()

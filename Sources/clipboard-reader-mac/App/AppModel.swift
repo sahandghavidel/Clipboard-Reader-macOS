@@ -26,6 +26,13 @@ final class AppModel: ObservableObject {
         }
     }
 
+    @Published var hidePresenterOverlayWhileSpeaking: Bool {
+        didSet {
+            defaults.set(hidePresenterOverlayWhileSpeaking, forKey: Self.presenterOverlayHideWhileSpeakingKey)
+            refreshPresenterOverlayVisibility()
+        }
+    }
+
     @Published var presenterOverlayOpacity: Double {
         didSet {
             let clamped = Self.clamp(presenterOverlayOpacity, min: Self.minPresenterOverlayOpacity, max: Self.maxPresenterOverlayOpacity)
@@ -270,7 +277,9 @@ final class AppModel: ObservableObject {
     }
 
     var shouldShowPresenterOverlay: Bool {
-        showPresenterOverlay && scriptModeEnabled
+        showPresenterOverlay
+            && scriptModeEnabled
+            && !(hidePresenterOverlayWhileSpeaking && speechState == .speaking)
     }
 
     var presenterOverlaySideColumnWidth: Double {
@@ -283,6 +292,7 @@ final class AppModel: ObservableObject {
     private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
+    private static let presenterOverlayHideWhileSpeakingKey = "clipboardReader.hidePresenterOverlayWhileSpeaking"
     private static let presenterOverlayOpacityKey = "clipboardReader.presenterOverlay.opacity"
     private static let presenterOverlayWidthKey = "clipboardReader.presenterOverlay.width"
     private static let presenterOverlayHeightKey = "clipboardReader.presenterOverlay.height"
@@ -340,6 +350,7 @@ final class AppModel: ObservableObject {
         self.scriptModeEnabled = defaults.bool(forKey: Self.scriptModeKey)
         self.showPresenterOverlay = defaults.bool(forKey: Self.presenterOverlayKey)
         self.hidePresenterOverlayFromCapture = (defaults.object(forKey: Self.presenterOverlayCaptureKey) as? Bool) ?? true
+        self.hidePresenterOverlayWhileSpeaking = defaults.bool(forKey: Self.presenterOverlayHideWhileSpeakingKey)
         self.presenterOverlayOpacity = Self.storedDouble(
             in: defaults,
             forKey: Self.presenterOverlayOpacityKey,
@@ -431,6 +442,16 @@ final class AppModel: ObservableObject {
 
     func refreshPresenterOverlayVisibility() {
         presenterOverlayController?.updateVisibility()
+    }
+
+    func togglePresenterOverlay() {
+        guard scriptModeEnabled else {
+            statusMessage = "Turn on Script mode to use presenter overlay."
+            return
+        }
+
+        showPresenterOverlay.toggle()
+        statusMessage = showPresenterOverlay ? "Presenter overlay shown." : "Presenter overlay hidden."
     }
 
     func resetPresenterOverlayDefaults() {
@@ -581,6 +602,7 @@ final class AppModel: ObservableObject {
                 if state != .speaking {
                     self?.statusMessage = state.label
                 }
+                self?.refreshPresenterOverlayVisibility()
             }
             .store(in: &cancellables)
 
@@ -657,6 +679,12 @@ final class AppModel: ObservableObject {
         KeyboardShortcuts.onKeyUp(for: .nextScriptScene) { [weak self] in
             Task { @MainActor in
                 self?.goToNextScene()
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .togglePresenterOverlay) { [weak self] in
+            Task { @MainActor in
+                self?.togglePresenterOverlay()
             }
         }
     }

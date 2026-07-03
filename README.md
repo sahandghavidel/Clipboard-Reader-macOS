@@ -2,7 +2,7 @@
 
 A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.11`.
+Current local version: `1.12`.
 
 ## Requirements
 
@@ -53,6 +53,8 @@ Turn on **Script mode** when the text box contains a tutorial script.
 Turn on **Show presenter overlay** inside Script mode to show previous, current, and next scenes in a floating bottom overlay. Use **Hide overlay from screen recordings** to ask macOS not to include the overlay in standard screen capture output.
 
 The overlay settings let you adjust opacity, width, height, bottom position, horizontal position, current text size, previous/next text size, text colors, text transparency, and quick color presets. Use **Reset overlay defaults** to return to the default presenter layout.
+
+Use the **Toggle Overlay** shortcut to show or hide the presenter overlay without opening the menu. The default shortcut is `Command+Option+O`. Turn on **Hide overlay while audio is playing** if you want the overlay visible while preparing but hidden during narration playback.
 
 ### Run from VS Code
 
@@ -105,9 +107,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>11</string>
+  <string>12</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.11</string>
+  <string>1.12</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -136,13 +138,15 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 8. Use **Previous**, **Replay**, **Next**, and **Restart** to navigate scenes.
 9. Turn **Show presenter overlay** on and confirm previous/current/next scenes appear near the bottom of the screen.
 10. Adjust overlay opacity, width, height, position, font sizes, text colors, and text transparency.
-11. Use **Reset overlay defaults** and confirm the overlay returns to the default layout.
-12. Start a short screen recording and verify the overlay behavior with **Hide overlay from screen recordings** on and off.
-13. Trigger **Pause/Resume** once → pauses.
-14. Trigger **Pause/Resume** again → resumes.
-15. Trigger **Stop** → speech stops immediately.
-16. Move speed slider to **0.5x** and **1.5x**, verify slower/faster speech.
-17. Reassign all 3 shortcuts and verify they still work globally.
+11. Use the **Toggle Overlay** shortcut and confirm the overlay shows/hides.
+12. Turn **Hide overlay while audio is playing** on and confirm the overlay hides during speech, then returns after speech stops or finishes.
+13. Use **Reset overlay defaults** and confirm the overlay returns to the default layout.
+14. Start a short screen recording and verify the overlay behavior with **Hide overlay from screen recordings** on and off.
+15. Trigger **Pause/Resume** once → pauses.
+16. Trigger **Pause/Resume** again → resumes.
+17. Trigger **Stop** → speech stops immediately.
+18. Move speed slider to **0.5x** and **1.5x**, verify slower/faster speech.
+19. Reassign shortcuts and verify they still work globally.
 
 ## Troubleshooting
 
