@@ -2,6 +2,7 @@ import AVFoundation
 import Combine
 import Foundation
 import KeyboardShortcuts
+import SwiftUI
 
 @MainActor
 final class AppModel: ObservableObject {
@@ -22,6 +23,115 @@ final class AppModel: ObservableObject {
         didSet {
             defaults.set(hidePresenterOverlayFromCapture, forKey: Self.presenterOverlayCaptureKey)
             presenterOverlayController?.updateCaptureVisibility()
+        }
+    }
+
+    @Published var presenterOverlayOpacity: Double {
+        didSet {
+            let clamped = Self.clamp(presenterOverlayOpacity, min: Self.minPresenterOverlayOpacity, max: Self.maxPresenterOverlayOpacity)
+            if clamped != presenterOverlayOpacity {
+                presenterOverlayOpacity = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.presenterOverlayOpacityKey)
+            presenterOverlayController?.updateLayout()
+        }
+    }
+
+    @Published var presenterOverlayWidth: Double {
+        didSet {
+            let clamped = Self.clamp(presenterOverlayWidth, min: Self.minPresenterOverlayWidth, max: Self.maxPresenterOverlayWidth)
+            if clamped != presenterOverlayWidth {
+                presenterOverlayWidth = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.presenterOverlayWidthKey)
+            presenterOverlayController?.updateLayout()
+        }
+    }
+
+    @Published var presenterOverlayHeight: Double {
+        didSet {
+            let clamped = Self.clamp(presenterOverlayHeight, min: Self.minPresenterOverlayHeight, max: Self.maxPresenterOverlayHeight)
+            if clamped != presenterOverlayHeight {
+                presenterOverlayHeight = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.presenterOverlayHeightKey)
+            presenterOverlayController?.updateLayout()
+        }
+    }
+
+    @Published var presenterOverlayBottomOffset: Double {
+        didSet {
+            let clamped = Self.clamp(presenterOverlayBottomOffset, min: Self.minPresenterOverlayBottomOffset, max: Self.maxPresenterOverlayBottomOffset)
+            if clamped != presenterOverlayBottomOffset {
+                presenterOverlayBottomOffset = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.presenterOverlayBottomOffsetKey)
+            presenterOverlayController?.updateLayout()
+        }
+    }
+
+    @Published var presenterOverlayHorizontalOffset: Double {
+        didSet {
+            let clamped = Self.clamp(presenterOverlayHorizontalOffset, min: Self.minPresenterOverlayHorizontalOffset, max: Self.maxPresenterOverlayHorizontalOffset)
+            if clamped != presenterOverlayHorizontalOffset {
+                presenterOverlayHorizontalOffset = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.presenterOverlayHorizontalOffsetKey)
+            presenterOverlayController?.updateLayout()
+        }
+    }
+
+    @Published var presenterOverlayCurrentFontSize: Double {
+        didSet {
+            let clamped = Self.clamp(presenterOverlayCurrentFontSize, min: Self.minPresenterOverlayCurrentFontSize, max: Self.maxPresenterOverlayCurrentFontSize)
+            if clamped != presenterOverlayCurrentFontSize {
+                presenterOverlayCurrentFontSize = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.presenterOverlayCurrentFontSizeKey)
+            presenterOverlayController?.updateLayout()
+        }
+    }
+
+    @Published var presenterOverlaySideFontSize: Double {
+        didSet {
+            let clamped = Self.clamp(presenterOverlaySideFontSize, min: Self.minPresenterOverlaySideFontSize, max: Self.maxPresenterOverlaySideFontSize)
+            if clamped != presenterOverlaySideFontSize {
+                presenterOverlaySideFontSize = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.presenterOverlaySideFontSizeKey)
+            presenterOverlayController?.updateLayout()
+        }
+    }
+
+    @Published var presenterOverlayCurrentTextColor: Color {
+        didSet {
+            if let hexString = presenterOverlayCurrentTextColor.hexString {
+                defaults.set(hexString, forKey: Self.presenterOverlayCurrentTextColorKey)
+            }
+            presenterOverlayController?.updateLayout()
+        }
+    }
+
+    @Published var presenterOverlaySecondaryTextColor: Color {
+        didSet {
+            if let hexString = presenterOverlaySecondaryTextColor.hexString {
+                defaults.set(hexString, forKey: Self.presenterOverlaySecondaryTextColorKey)
+            }
+            presenterOverlayController?.updateLayout()
         }
     }
 
@@ -139,12 +249,47 @@ final class AppModel: ObservableObject {
         showPresenterOverlay && scriptModeEnabled
     }
 
+    var presenterOverlaySideColumnWidth: Double {
+        min(280, max(150, presenterOverlayWidth * 0.22))
+    }
+
     private static let speedKey = "clipboardReader.speedMultiplier"
     private static let voiceKey = "clipboardReader.voiceIdentifier"
     private static let inputModeKey = "clipboardReader.readsTypedTextInsteadOfClipboard"
     private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
+    private static let presenterOverlayOpacityKey = "clipboardReader.presenterOverlay.opacity"
+    private static let presenterOverlayWidthKey = "clipboardReader.presenterOverlay.width"
+    private static let presenterOverlayHeightKey = "clipboardReader.presenterOverlay.height"
+    private static let presenterOverlayBottomOffsetKey = "clipboardReader.presenterOverlay.bottomOffset"
+    private static let presenterOverlayHorizontalOffsetKey = "clipboardReader.presenterOverlay.horizontalOffset"
+    private static let presenterOverlayCurrentFontSizeKey = "clipboardReader.presenterOverlay.currentFontSize"
+    private static let presenterOverlaySideFontSizeKey = "clipboardReader.presenterOverlay.sideFontSize"
+    private static let presenterOverlayCurrentTextColorKey = "clipboardReader.presenterOverlay.currentTextColor"
+    private static let presenterOverlaySecondaryTextColorKey = "clipboardReader.presenterOverlay.secondaryTextColor"
+
+    static let defaultPresenterOverlayOpacity = 0.82
+    static let defaultPresenterOverlayWidth = 980.0
+    static let defaultPresenterOverlayHeight = 170.0
+    static let defaultPresenterOverlayBottomOffset = 24.0
+    static let defaultPresenterOverlayHorizontalOffset = 0.0
+    static let defaultPresenterOverlayCurrentFontSize = 24.0
+    static let defaultPresenterOverlaySideFontSize = 13.0
+    static let minPresenterOverlayOpacity = 0.2
+    static let maxPresenterOverlayOpacity = 1.0
+    static let minPresenterOverlayWidth = 520.0
+    static let maxPresenterOverlayWidth = 1600.0
+    static let minPresenterOverlayHeight = 120.0
+    static let maxPresenterOverlayHeight = 420.0
+    static let minPresenterOverlayBottomOffset = 0.0
+    static let maxPresenterOverlayBottomOffset = 700.0
+    static let minPresenterOverlayHorizontalOffset = -700.0
+    static let maxPresenterOverlayHorizontalOffset = 700.0
+    static let minPresenterOverlayCurrentFontSize = 16.0
+    static let maxPresenterOverlayCurrentFontSize = 56.0
+    static let minPresenterOverlaySideFontSize = 10.0
+    static let maxPresenterOverlaySideFontSize = 32.0
 
     private let defaults: UserDefaults
     private let clipboardService = ClipboardService()
@@ -165,11 +310,56 @@ final class AppModel: ObservableObject {
         self.scriptModeEnabled = defaults.bool(forKey: Self.scriptModeKey)
         self.showPresenterOverlay = defaults.bool(forKey: Self.presenterOverlayKey)
         self.hidePresenterOverlayFromCapture = (defaults.object(forKey: Self.presenterOverlayCaptureKey) as? Bool) ?? true
+        self.presenterOverlayOpacity = Self.storedDouble(
+            in: defaults,
+            forKey: Self.presenterOverlayOpacityKey,
+            defaultValue: Self.defaultPresenterOverlayOpacity
+        )
+        self.presenterOverlayWidth = Self.storedDouble(
+            in: defaults,
+            forKey: Self.presenterOverlayWidthKey,
+            defaultValue: Self.defaultPresenterOverlayWidth
+        )
+        self.presenterOverlayHeight = Self.storedDouble(
+            in: defaults,
+            forKey: Self.presenterOverlayHeightKey,
+            defaultValue: Self.defaultPresenterOverlayHeight
+        )
+        self.presenterOverlayBottomOffset = Self.storedDouble(
+            in: defaults,
+            forKey: Self.presenterOverlayBottomOffsetKey,
+            defaultValue: Self.defaultPresenterOverlayBottomOffset
+        )
+        self.presenterOverlayHorizontalOffset = Self.storedDouble(
+            in: defaults,
+            forKey: Self.presenterOverlayHorizontalOffsetKey,
+            defaultValue: Self.defaultPresenterOverlayHorizontalOffset
+        )
+        self.presenterOverlayCurrentFontSize = Self.storedDouble(
+            in: defaults,
+            forKey: Self.presenterOverlayCurrentFontSizeKey,
+            defaultValue: Self.defaultPresenterOverlayCurrentFontSize
+        )
+        self.presenterOverlaySideFontSize = Self.storedDouble(
+            in: defaults,
+            forKey: Self.presenterOverlaySideFontSizeKey,
+            defaultValue: Self.defaultPresenterOverlaySideFontSize
+        )
+        self.presenterOverlayCurrentTextColor = Color(
+            hexString: defaults.string(forKey: Self.presenterOverlayCurrentTextColorKey) ?? "#FFFFFF",
+            fallback: .white
+        )
+        self.presenterOverlaySecondaryTextColor = Color(
+            hexString: defaults.string(forKey: Self.presenterOverlaySecondaryTextColorKey) ?? "#D8DEE9",
+            fallback: Color(red: 0.85, green: 0.87, blue: 0.91)
+        )
 
         bindSpeechState()
         registerShortcutHandlers()
         presenterOverlayController = PresenterOverlayController(appModel: self)
-        refreshPresenterOverlayVisibility()
+        DispatchQueue.main.async { [weak self] in
+            self?.refreshPresenterOverlayVisibility()
+        }
     }
 
     func readNow() {
@@ -201,6 +391,19 @@ final class AppModel: ObservableObject {
 
     func refreshPresenterOverlayVisibility() {
         presenterOverlayController?.updateVisibility()
+    }
+
+    func resetPresenterOverlayDefaults() {
+        presenterOverlayOpacity = Self.defaultPresenterOverlayOpacity
+        presenterOverlayWidth = Self.defaultPresenterOverlayWidth
+        presenterOverlayHeight = Self.defaultPresenterOverlayHeight
+        presenterOverlayBottomOffset = Self.defaultPresenterOverlayBottomOffset
+        presenterOverlayHorizontalOffset = Self.defaultPresenterOverlayHorizontalOffset
+        presenterOverlayCurrentFontSize = Self.defaultPresenterOverlayCurrentFontSize
+        presenterOverlaySideFontSize = Self.defaultPresenterOverlaySideFontSize
+        presenterOverlayCurrentTextColor = .white
+        presenterOverlaySecondaryTextColor = Color(red: 0.85, green: 0.87, blue: 0.91)
+        presenterOverlayController?.updateLayout()
     }
 
     func goToPreviousScene() {
@@ -414,5 +617,17 @@ final class AppModel: ObservableObject {
                 self?.goToNextScene()
             }
         }
+    }
+
+    private static func storedDouble(in defaults: UserDefaults, forKey key: String, defaultValue: Double) -> Double {
+        guard defaults.object(forKey: key) != nil else {
+            return defaultValue
+        }
+
+        return defaults.double(forKey: key)
+    }
+
+    private static func clamp(_ value: Double, min minValue: Double, max maxValue: Double) -> Double {
+        min(max(value, minValue), maxValue)
     }
 }

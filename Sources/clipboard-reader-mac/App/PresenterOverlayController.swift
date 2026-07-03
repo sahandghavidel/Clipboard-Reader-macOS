@@ -22,6 +22,14 @@ final class PresenterOverlayController {
         panel?.sharingType = appModel.hidePresenterOverlayFromCapture ? .none : .readOnly
     }
 
+    func updateLayout() {
+        guard let panel else {
+            return
+        }
+
+        position(panel)
+    }
+
     private func show() {
         let panel = panel ?? makePanel()
         self.panel = panel
@@ -65,10 +73,16 @@ final class PresenterOverlayController {
         }
 
         let screenFrame = screen.frame
-        let width = min(screenFrame.width - 80, 980)
-        let height: CGFloat = 170
-        let x = screenFrame.midX - width / 2
-        let y = screenFrame.minY + 24
+        let width = min(screenFrame.width - 40, CGFloat(appModel.presenterOverlayWidth))
+        let height = CGFloat(appModel.presenterOverlayHeight)
+        let minX = screenFrame.minX + 20
+        let maxX = screenFrame.maxX - width - 20
+        let minY = screenFrame.minY + 8
+        let maxY = screenFrame.maxY - height - 20
+        let preferredX = screenFrame.midX - width / 2 + CGFloat(appModel.presenterOverlayHorizontalOffset)
+        let preferredY = screenFrame.minY + CGFloat(appModel.presenterOverlayBottomOffset)
+        let x = min(max(preferredX, minX), maxX)
+        let y = min(max(preferredY, minY), maxY)
 
         panel.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
     }

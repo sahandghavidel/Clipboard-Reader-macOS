@@ -4,9 +4,11 @@ import SwiftUI
 
 struct MenuBarView: View {
     @EnvironmentObject private var appModel: AppModel
+    @State private var overlaySettingsExpanded = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Clipboard Reader")
                     .font(.headline)
@@ -100,6 +102,70 @@ struct MenuBarView: View {
                         Text("Overlay shows previous, current, and next scenes at the bottom of the screen.")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
+
+                        DisclosureGroup("Presenter overlay settings", isExpanded: $overlaySettingsExpanded) {
+                            VStack(alignment: .leading, spacing: 10) {
+                                overlaySlider(
+                                    "Opacity",
+                                    value: $appModel.presenterOverlayOpacity,
+                                    range: AppModel.minPresenterOverlayOpacity...AppModel.maxPresenterOverlayOpacity,
+                                    specifier: "%.2f"
+                                )
+                                overlaySlider(
+                                    "Width",
+                                    value: $appModel.presenterOverlayWidth,
+                                    range: AppModel.minPresenterOverlayWidth...AppModel.maxPresenterOverlayWidth,
+                                    specifier: "%.0f"
+                                )
+                                overlaySlider(
+                                    "Height",
+                                    value: $appModel.presenterOverlayHeight,
+                                    range: AppModel.minPresenterOverlayHeight...AppModel.maxPresenterOverlayHeight,
+                                    specifier: "%.0f"
+                                )
+                                overlaySlider(
+                                    "Bottom position",
+                                    value: $appModel.presenterOverlayBottomOffset,
+                                    range: AppModel.minPresenterOverlayBottomOffset...AppModel.maxPresenterOverlayBottomOffset,
+                                    specifier: "%.0f"
+                                )
+                                overlaySlider(
+                                    "Horizontal position",
+                                    value: $appModel.presenterOverlayHorizontalOffset,
+                                    range: AppModel.minPresenterOverlayHorizontalOffset...AppModel.maxPresenterOverlayHorizontalOffset,
+                                    specifier: "%.0f"
+                                )
+                                overlaySlider(
+                                    "Current text size",
+                                    value: $appModel.presenterOverlayCurrentFontSize,
+                                    range: AppModel.minPresenterOverlayCurrentFontSize...AppModel.maxPresenterOverlayCurrentFontSize,
+                                    specifier: "%.0f"
+                                )
+                                overlaySlider(
+                                    "Previous/next text size",
+                                    value: $appModel.presenterOverlaySideFontSize,
+                                    range: AppModel.minPresenterOverlaySideFontSize...AppModel.maxPresenterOverlaySideFontSize,
+                                    specifier: "%.0f"
+                                )
+
+                                ColorPicker(
+                                    "Current text color",
+                                    selection: $appModel.presenterOverlayCurrentTextColor,
+                                    supportsOpacity: false
+                                )
+
+                                ColorPicker(
+                                    "Previous/next text color",
+                                    selection: $appModel.presenterOverlaySecondaryTextColor,
+                                    supportsOpacity: false
+                                )
+
+                                Button("Reset overlay defaults") {
+                                    appModel.resetPresenterOverlayDefaults()
+                                }
+                            }
+                            .padding(.top, 6)
+                        }
                     }
                 }
             }
@@ -184,8 +250,25 @@ struct MenuBarView: View {
                 NSApplication.shared.terminate(nil)
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(14)
-        .frame(width: 420)
+        .frame(width: 460, height: 720)
+    }
+
+    private func overlaySlider(
+        _ title: String,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        specifier: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(title): \(value.wrappedValue, specifier: specifier)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Slider(value: value, in: range)
+        }
     }
 }
