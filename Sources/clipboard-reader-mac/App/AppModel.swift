@@ -10,7 +10,18 @@ final class AppModel: ObservableObject {
     @Published private(set) var statusMessage: String = SpeechState.idle.label
     @Published private(set) var outputVoiceDescription: String = "System Default"
     @Published private(set) var outputVoiceNote: String?
+    @Published private(set) var isShortcutTriggerAccessibilityTrusted: Bool
+    @Published private(set) var recordingTriggerShortcut: TriggerShortcut?
     @Published var typedText: String = ""
+
+    @Published var triggerRecordingShortcutWhenAudioStarts: Bool {
+        didSet {
+            defaults.set(triggerRecordingShortcutWhenAudioStarts, forKey: Self.recordingShortcutTriggerKey)
+            if triggerRecordingShortcutWhenAudioStarts {
+                refreshShortcutTriggerAccessibilityStatus()
+            }
+        }
+    }
 
     @Published var showPresenterOverlay: Bool {
         didSet {
@@ -290,6 +301,8 @@ final class AppModel: ObservableObject {
     private static let voiceKey = "clipboardReader.voiceIdentifier"
     private static let inputModeKey = "clipboardReader.readsTypedTextInsteadOfClipboard"
     private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
+    private static let recordingShortcutTriggerKey = "clipboardReader.recordingShortcutTrigger.enabled"
+    private static let recordingShortcutValueKey = "clipboardReader.recordingShortcutTrigger.shortcut"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
     private static let presenterOverlayHideWhileSpeakingKey = "clipboardReader.hidePresenterOverlayWhileSpeaking"
@@ -333,6 +346,7 @@ final class AppModel: ObservableObject {
 
     private let defaults: UserDefaults
     private let clipboardService = ClipboardService()
+    private let shortcutTriggerService = ShortcutTriggerService()
     private let ttsManager = TTSManager()
     private var cancellables = Set<AnyCancellable>()
     private var presenterOverlayController: PresenterOverlayController?
@@ -348,6 +362,9 @@ final class AppModel: ObservableObject {
         self.selectedVoiceIdentifier = defaults.string(forKey: Self.voiceKey)
         self.readsTypedTextInsteadOfClipboard = defaults.bool(forKey: Self.inputModeKey)
         self.scriptModeEnabled = defaults.bool(forKey: Self.scriptModeKey)
+        self.triggerRecordingShortcutWhenAudioStarts = defaults.bool(forKey: Self.recordingShortcutTriggerKey)
+        self.recordingTriggerShortcut = Self.storedRecordingTriggerShortcut(in: defaults)
+        self.isShortcutTriggerAccessibilityTrusted = ShortcutTriggerService.isAccessibilityTrusted
         self.showPresenterOverlay = defaults.bool(forKey: Self.presenterOverlayKey)
         self.hidePresenterOverlayFromCapture = (defaults.object(forKey: Self.presenterOverlayCaptureKey) as? Bool) ?? true
         self.hidePresenterOverlayWhileSpeaking = defaults.bool(forKey: Self.presenterOverlayHideWhileSpeakingKey)
@@ -444,6 +461,39 @@ final class AppModel: ObservableObject {
         presenterOverlayController?.updateVisibility()
     }
 
+    func openShortcutTriggerAccessibilitySettings() {
+        ShortcutTriggerService.openAccessibilitySettings()
+        refreshShortcutTriggerAccessibilityStatus()
+    }
+
+    func refreshShortcutTriggerAccessibilityStatus(promptIfNeeded: Bool = false) {
+        if promptIfNeeded {
+            ShortcutTriggerService.requestAccessibilityTrustPrompt()
+        }
+
+        isShortcutTriggerAccessibilityTrusted = ShortcutTriggerService.isAccessibilityTrusted
+    }
+
+    func requestShortcutTriggerAccessibilityPermission() {
+        ShortcutTriggerService.requestAccessibilityTrustPrompt()
+        refreshShortcutTriggerAccessibilityStatus()
+    }
+
+    func updateRecordingTriggerShortcut(_ shortcut: TriggerShortcut) {
+        recordingTriggerShortcut = shortcut
+
+        guard let data = try? JSONEncoder().encode(shortcut) else {
+            return
+        }
+
+        defaults.set(data, forKey: Self.recordingShortcutValueKey)
+    }
+
+    func clearRecordingTriggerShortcut() {
+        recordingTriggerShortcut = nil
+        defaults.removeObject(forKey: Self.recordingShortcutValueKey)
+    }
+
     func togglePresenterOverlay() {
         guard scriptModeEnabled else {
             statusMessage = "Turn on Script mode to use presenter overlay."
@@ -530,6 +580,7 @@ final class AppModel: ObservableObject {
             return
         }
 
+        triggerRecordingShortcutIfNeeded()
         ttsManager.speak(
             text: text,
             speedMultiplier: speedMultiplier,
@@ -545,6 +596,7 @@ final class AppModel: ObservableObject {
             return
         }
 
+        triggerRecordingShortcutIfNeeded()
         ttsManager.speak(
             text: text,
             speedMultiplier: speedMultiplier,
@@ -566,6 +618,7 @@ final class AppModel: ObservableObject {
         }
 
         shouldAdvanceScriptSceneAfterSpeech = advancesAfterSpeech
+        triggerRecordingShortcutIfNeeded()
         ttsManager.speak(
             text: scene,
             speedMultiplier: speedMultiplier,
@@ -592,6 +645,33 @@ final class AppModel: ObservableObject {
         if speechState == .speaking || speechState == .paused || speechState == .stopping {
             ttsManager.stop()
         }
+    }
+
+    private func triggerRecordingShortcutIfNeeded() {
+        guard triggerRecordingShortcutWhenAudioStarts,
+              let shortcut = recordingTriggerShortcut
+        else {
+            return
+        }
+
+        refreshShortcutTriggerAccessibilityStatus()
+        guard isShortcutTriggerAccessibilityTrusted else {
+            statusMessage = "Accessibility permission is required to trigger the recording shortcut."
+            return
+        }
+
+        if !shortcutTriggerService.trigger(shortcut) {
+            statusMessage = "Could not trigger the recording shortcut."
+        }
+        refreshShortcutTriggerAccessibilityStatus()
+    }
+
+    private static func storedRecordingTriggerShortcut(in defaults: UserDefaults) -> TriggerShortcut? {
+        guard let data = defaults.data(forKey: recordingShortcutValueKey) else {
+            return nil
+        }
+
+        return try? JSONDecoder().decode(TriggerShortcut.self, from: data)
     }
 
     private func bindSpeechState() {

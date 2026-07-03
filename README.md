@@ -2,7 +2,7 @@
 
 A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.12`.
+Current local version: `1.15`.
 
 ## Requirements
 
@@ -56,6 +56,14 @@ The overlay settings let you adjust opacity, width, height, bottom position, hor
 
 Use the **Toggle Overlay** shortcut to show or hide the presenter overlay without opening the menu. The default shortcut is `Command+Option+O`. Turn on **Hide overlay while audio is playing** if you want the overlay visible while preparing but hidden during narration playback.
 
+## Recording shortcut trigger
+
+Turn on **Trigger shortcut when audio starts** to send a chosen keyboard shortcut right before the app starts speaking. This can start a recording app if that app listens for the shortcut. macOS Accessibility permission is required.
+
+The recording trigger shortcut is configured with modifier checkboxes and a key picker. It is not registered as a global shortcut by Clipboard Reader, so it can match a shortcut that already belongs to your recording app.
+
+The app does not repeatedly force the Accessibility permission dialog during playback. Use **Request Accessibility Permission** only when you want macOS to show the permission prompt again.
+
 ### Run from VS Code
 
 1. Open this folder in VS Code.
@@ -107,9 +115,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>12</string>
+  <string>15</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.12</string>
+  <string>1.15</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -145,8 +153,9 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 15. Trigger **Pause/Resume** once → pauses.
 16. Trigger **Pause/Resume** again → resumes.
 17. Trigger **Stop** → speech stops immediately.
-18. Move speed slider to **0.5x** and **1.5x**, verify slower/faster speech.
-19. Reassign shortcuts and verify they still work globally.
+18. Enable **Trigger shortcut when audio starts**, choose a recording shortcut, and verify the recording app receives it when speech starts.
+19. Move speed slider to **0.5x** and **1.5x**, verify slower/faster speech.
+20. Reassign shortcuts and verify they still work globally.
 
 ## Troubleshooting
 

@@ -218,6 +218,30 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             }
 
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Recording Shortcut Trigger")
+                    .font(.subheadline.bold())
+
+                Toggle("Trigger shortcut when audio starts", isOn: $appModel.triggerRecordingShortcutWhenAudioStarts)
+
+                TriggerShortcutCaptureView()
+                    .disabled(!appModel.triggerRecordingShortcutWhenAudioStarts)
+
+                Text(appModel.isShortcutTriggerAccessibilityTrusted ? "Accessibility permission granted." : "Accessibility permission required to trigger shortcuts.")
+                    .font(.caption2)
+                    .foregroundStyle(appModel.isShortcutTriggerAccessibilityTrusted ? Color.secondary : Color.orange)
+
+                Button("Open Accessibility Settings") {
+                    appModel.openShortcutTriggerAccessibilitySettings()
+                }
+
+                Button("Request Accessibility Permission") {
+                    appModel.requestShortcutTriggerAccessibilityPermission()
+                }
+            }
+
+            Divider()
+
             VStack(alignment: .leading, spacing: 6) {
                 Text("Voice")
                     .font(.subheadline)
