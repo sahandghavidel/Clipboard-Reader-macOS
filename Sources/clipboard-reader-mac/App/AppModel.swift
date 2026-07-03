@@ -11,6 +11,20 @@ final class AppModel: ObservableObject {
     @Published private(set) var outputVoiceNote: String?
     @Published var typedText: String = ""
 
+    @Published var showPresenterOverlay: Bool {
+        didSet {
+            defaults.set(showPresenterOverlay, forKey: Self.presenterOverlayKey)
+            refreshPresenterOverlayVisibility()
+        }
+    }
+
+    @Published var hidePresenterOverlayFromCapture: Bool {
+        didSet {
+            defaults.set(hidePresenterOverlayFromCapture, forKey: Self.presenterOverlayCaptureKey)
+            presenterOverlayController?.updateCaptureVisibility()
+        }
+    }
+
     @Published var scriptModeEnabled: Bool {
         didSet {
             defaults.set(scriptModeEnabled, forKey: Self.scriptModeKey)
@@ -18,6 +32,7 @@ final class AppModel: ObservableObject {
                 readsTypedTextInsteadOfClipboard = true
                 refreshScriptScenes()
             }
+            refreshPresenterOverlayVisibility()
         }
     }
 
@@ -86,6 +101,24 @@ final class AppModel: ObservableObject {
         return scriptScenes[currentSceneIndex]
     }
 
+    var previousSceneText: String? {
+        let previousIndex = currentSceneIndex - 1
+        guard scriptScenes.indices.contains(previousIndex) else {
+            return nil
+        }
+
+        return scriptScenes[previousIndex]
+    }
+
+    var nextSceneText: String? {
+        let nextIndex = currentSceneIndex + 1
+        guard scriptScenes.indices.contains(nextIndex) else {
+            return nil
+        }
+
+        return scriptScenes[nextIndex]
+    }
+
     var scriptSceneProgress: String {
         guard !scriptScenes.isEmpty else {
             return "No scenes yet"
@@ -102,15 +135,22 @@ final class AppModel: ObservableObject {
         currentSceneIndex + 1 < scriptScenes.count
     }
 
+    var shouldShowPresenterOverlay: Bool {
+        showPresenterOverlay && scriptModeEnabled
+    }
+
     private static let speedKey = "clipboardReader.speedMultiplier"
     private static let voiceKey = "clipboardReader.voiceIdentifier"
     private static let inputModeKey = "clipboardReader.readsTypedTextInsteadOfClipboard"
     private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
+    private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
+    private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
 
     private let defaults: UserDefaults
     private let clipboardService = ClipboardService()
     private let ttsManager = TTSManager()
     private var cancellables = Set<AnyCancellable>()
+    private var presenterOverlayController: PresenterOverlayController?
     @Published private var currentSceneIndex = 0
     @Published private var scriptScenes: [String] = []
     private var shouldAdvanceScriptSceneAfterSpeech = false
@@ -123,9 +163,13 @@ final class AppModel: ObservableObject {
         self.selectedVoiceIdentifier = defaults.string(forKey: Self.voiceKey)
         self.readsTypedTextInsteadOfClipboard = defaults.bool(forKey: Self.inputModeKey)
         self.scriptModeEnabled = defaults.bool(forKey: Self.scriptModeKey)
+        self.showPresenterOverlay = defaults.bool(forKey: Self.presenterOverlayKey)
+        self.hidePresenterOverlayFromCapture = (defaults.object(forKey: Self.presenterOverlayCaptureKey) as? Bool) ?? true
 
         bindSpeechState()
         registerShortcutHandlers()
+        presenterOverlayController = PresenterOverlayController(appModel: self)
+        refreshPresenterOverlayVisibility()
     }
 
     func readNow() {
@@ -153,6 +197,10 @@ final class AppModel: ObservableObject {
         } else {
             currentSceneIndex = min(currentSceneIndex, scriptScenes.count - 1)
         }
+    }
+
+    func refreshPresenterOverlayVisibility() {
+        presenterOverlayController?.updateVisibility()
     }
 
     func goToPreviousScene() {

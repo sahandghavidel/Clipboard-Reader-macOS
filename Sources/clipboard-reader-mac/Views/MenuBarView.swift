@@ -88,6 +88,19 @@ struct MenuBarView: View {
                             .disabled(appModel.currentSceneText == nil)
                         }
                     }
+
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Show presenter overlay", isOn: $appModel.showPresenterOverlay)
+
+                        Toggle("Hide overlay from screen recordings", isOn: $appModel.hidePresenterOverlayFromCapture)
+                            .disabled(!appModel.showPresenterOverlay)
+
+                        Text("Overlay shows previous, current, and next scenes at the bottom of the screen.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 

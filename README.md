@@ -2,7 +2,7 @@
 
 A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.7`.
+Current local version: `1.8`.
 
 ## Requirements
 
@@ -47,6 +47,10 @@ Turn on **Script mode** when the text box contains a tutorial script.
 - Use **Previous**, **Replay**, **Next**, and **Restart** to control the current scene.
 - Default scene shortcuts are `Command+Option+Up` for replay, `Command+Option+Left` for previous, and `Command+Option+Right` for next.
 - The current scene preview shows what will be read next.
+
+## Presenter overlay
+
+Turn on **Show presenter overlay** inside Script mode to show previous, current, and next scenes in a floating bottom overlay. Use **Hide overlay from screen recordings** to ask macOS not to include the overlay in standard screen capture output.
 
 ### Run from VS Code
 
@@ -99,9 +103,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>7</string>
+  <string>8</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.7</string>
+  <string>1.8</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -128,11 +132,13 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 6. Turn **Script mode** on and paste a multi-sentence tutorial script.
 7. Trigger **Play Scene** or the read shortcut, then confirm it reads one scene and advances to the next.
 8. Use **Previous**, **Replay**, **Next**, and **Restart** to navigate scenes.
-9. Trigger **Pause/Resume** once → pauses.
-10. Trigger **Pause/Resume** again → resumes.
-11. Trigger **Stop** → speech stops immediately.
-12. Move speed slider to **0.5x** and **1.5x**, verify slower/faster speech.
-13. Reassign all 3 shortcuts and verify they still work globally.
+9. Turn **Show presenter overlay** on and confirm previous/current/next scenes appear near the bottom of the screen.
+10. Start a short screen recording and verify the overlay behavior with **Hide overlay from screen recordings** on and off.
+11. Trigger **Pause/Resume** once → pauses.
+12. Trigger **Pause/Resume** again → resumes.
+13. Trigger **Stop** → speech stops immediately.
+14. Move speed slider to **0.5x** and **1.5x**, verify slower/faster speech.
+15. Reassign all 3 shortcuts and verify they still work globally.
 
 ## Troubleshooting
 

@@ -1,6 +1,6 @@
 import Foundation
 
 enum AppVersion {
-    static let shortVersion = "1.7"
-    static let build = "7"
+    static let shortVersion = "1.8"
+    static let build = "8"
 }
