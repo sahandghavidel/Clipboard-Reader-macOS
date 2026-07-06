@@ -2,8 +2,8 @@ import AVFoundation
 import Foundation
 
 enum SpeechRateMapper {
-    static let minMultiplier = 0.5
-    static let maxMultiplier = 1.5
+    static let minMultiplier = 0.25
+    static let maxMultiplier = 2.5
     static let defaultMultiplier = 1.0
 
     static func clampMultiplier(_ value: Double) -> Double {

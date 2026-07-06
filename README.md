@@ -2,7 +2,7 @@
 
 A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.15`.
+Current local version: `1.17`.
 
 ## Requirements
 
@@ -56,11 +56,18 @@ The overlay settings let you adjust opacity, width, height, bottom position, hor
 
 Use the **Toggle Overlay** shortcut to show or hide the presenter overlay without opening the menu. The default shortcut is `Command+Option+O`. Turn on **Hide overlay while audio is playing** if you want the overlay visible while preparing but hidden during narration playback.
 
-## Recording shortcut trigger
+## External shortcut triggers
 
-Turn on **Trigger shortcut when audio starts** to send a chosen keyboard shortcut right before the app starts speaking. This can start a recording app if that app listens for the shortcut. macOS Accessibility permission is required.
+The **Global Shortcuts** section includes two separate read shortcuts:
 
-The recording trigger shortcut is configured with modifier checkboxes and a key picker. It is not registered as a global shortcut by Clipboard Reader, so it can match a shortcut that already belongs to your recording app.
+- **Read Current Input 1**
+- **Read Current Input 2**
+
+Both read the same current input: clipboard mode reads the clipboard, typed text mode reads the text box, and Script mode plays the current scene. Each read shortcut has its own speech speed plus options to trigger an external shortcut before reading, after reading, or both.
+
+The global read speed and both read-shortcut speeds support `0.25x` through `2.5x`.
+
+The external trigger shortcut is configured with modifier checkboxes and a key picker. It is not registered as a global shortcut by Clipboard Reader, so it can match a shortcut that already belongs to your recording app. macOS Accessibility permission is required to send the external shortcut.
 
 The app does not repeatedly force the Accessibility permission dialog during playback. Use **Request Accessibility Permission** only when you want macOS to show the permission prompt again.
 
@@ -115,9 +122,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>15</string>
+  <string>17</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.15</string>
+  <string>1.17</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -153,9 +160,12 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 15. Trigger **Pause/Resume** once → pauses.
 16. Trigger **Pause/Resume** again → resumes.
 17. Trigger **Stop** → speech stops immediately.
-18. Enable **Trigger shortcut when audio starts**, choose a recording shortcut, and verify the recording app receives it when speech starts.
-19. Move speed slider to **0.5x** and **1.5x**, verify slower/faster speech.
-20. Reassign shortcuts and verify they still work globally.
+18. Configure **Read Current Input 1** and **Read Current Input 2** with different shortcut combinations.
+19. Set **Read Current Input 1** to `0.5x` and **Read Current Input 2** to `1.5x`, then verify each shortcut uses its own speed.
+20. Enable **Trigger external shortcut before reading** and verify the recording app receives the external shortcut before speech starts.
+21. Enable **Trigger external shortcut after reading** and verify the recording app receives the external shortcut after speech finishes.
+22. Move speed sliders to **0.25x** and **2.5x**, verify slower/faster speech.
+23. Reassign shortcuts and verify they still work globally.
 
 ## Troubleshooting
 

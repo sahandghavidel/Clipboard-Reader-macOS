@@ -6,6 +6,11 @@ extension KeyboardShortcuts.Name {
         default: KeyboardShortcuts.Shortcut(.r, modifiers: [.command, .option])
     )
 
+    static let readCurrentInputSecondary = Self(
+        "readCurrentInputSecondary",
+        default: KeyboardShortcuts.Shortcut(.r, modifiers: [.command, .option, .shift])
+    )
+
     static let stopReading = Self(
         "stopReading",
         default: KeyboardShortcuts.Shortcut(.s, modifiers: [.command, .option])

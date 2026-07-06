@@ -14,12 +14,55 @@ final class AppModel: ObservableObject {
     @Published private(set) var recordingTriggerShortcut: TriggerShortcut?
     @Published var typedText: String = ""
 
-    @Published var triggerRecordingShortcutWhenAudioStarts: Bool {
+    @Published var readShortcutOneTriggersBefore: Bool {
         didSet {
-            defaults.set(triggerRecordingShortcutWhenAudioStarts, forKey: Self.recordingShortcutTriggerKey)
-            if triggerRecordingShortcutWhenAudioStarts {
-                refreshShortcutTriggerAccessibilityStatus()
+            defaults.set(readShortcutOneTriggersBefore, forKey: Self.readShortcutOneTriggerBeforeKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readShortcutOneTriggersAfter: Bool {
+        didSet {
+            defaults.set(readShortcutOneTriggersAfter, forKey: Self.readShortcutOneTriggerAfterKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readShortcutOneSpeedMultiplier: Double {
+        didSet {
+            let clamped = SpeechRateMapper.clampMultiplier(readShortcutOneSpeedMultiplier)
+            if clamped != readShortcutOneSpeedMultiplier {
+                readShortcutOneSpeedMultiplier = clamped
+                return
             }
+
+            defaults.set(clamped, forKey: Self.readShortcutOneSpeedKey)
+        }
+    }
+
+    @Published var readShortcutTwoTriggersBefore: Bool {
+        didSet {
+            defaults.set(readShortcutTwoTriggersBefore, forKey: Self.readShortcutTwoTriggerBeforeKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readShortcutTwoTriggersAfter: Bool {
+        didSet {
+            defaults.set(readShortcutTwoTriggersAfter, forKey: Self.readShortcutTwoTriggerAfterKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readShortcutTwoSpeedMultiplier: Double {
+        didSet {
+            let clamped = SpeechRateMapper.clampMultiplier(readShortcutTwoSpeedMultiplier)
+            if clamped != readShortcutTwoSpeedMultiplier {
+                readShortcutTwoSpeedMultiplier = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.readShortcutTwoSpeedKey)
         }
     }
 
@@ -301,8 +344,14 @@ final class AppModel: ObservableObject {
     private static let voiceKey = "clipboardReader.voiceIdentifier"
     private static let inputModeKey = "clipboardReader.readsTypedTextInsteadOfClipboard"
     private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
-    private static let recordingShortcutTriggerKey = "clipboardReader.recordingShortcutTrigger.enabled"
+    private static let legacyRecordingShortcutTriggerKey = "clipboardReader.recordingShortcutTrigger.enabled"
     private static let recordingShortcutValueKey = "clipboardReader.recordingShortcutTrigger.shortcut"
+    private static let readShortcutOneTriggerBeforeKey = "clipboardReader.readShortcutOne.triggerBefore"
+    private static let readShortcutOneTriggerAfterKey = "clipboardReader.readShortcutOne.triggerAfter"
+    private static let readShortcutOneSpeedKey = "clipboardReader.readShortcutOne.speedMultiplier"
+    private static let readShortcutTwoTriggerBeforeKey = "clipboardReader.readShortcutTwo.triggerBefore"
+    private static let readShortcutTwoTriggerAfterKey = "clipboardReader.readShortcutTwo.triggerAfter"
+    private static let readShortcutTwoSpeedKey = "clipboardReader.readShortcutTwo.speedMultiplier"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
     private static let presenterOverlayHideWhileSpeakingKey = "clipboardReader.hidePresenterOverlayWhileSpeaking"
@@ -353,16 +402,36 @@ final class AppModel: ObservableObject {
     @Published private var currentSceneIndex = 0
     @Published private var scriptScenes: [String] = []
     private var shouldAdvanceScriptSceneAfterSpeech = false
+    private var shouldTriggerRecordingShortcutAfterSpeech = false
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
 
         let storedSpeed = defaults.object(forKey: Self.speedKey) as? Double
-        self.speedMultiplier = SpeechRateMapper.clampMultiplier(storedSpeed ?? SpeechRateMapper.defaultMultiplier)
+        let legacyTriggerBefore = defaults.bool(forKey: Self.legacyRecordingShortcutTriggerKey)
+        let initialSpeedMultiplier = SpeechRateMapper.clampMultiplier(storedSpeed ?? SpeechRateMapper.defaultMultiplier)
+        self.speedMultiplier = initialSpeedMultiplier
         self.selectedVoiceIdentifier = defaults.string(forKey: Self.voiceKey)
         self.readsTypedTextInsteadOfClipboard = defaults.bool(forKey: Self.inputModeKey)
         self.scriptModeEnabled = defaults.bool(forKey: Self.scriptModeKey)
-        self.triggerRecordingShortcutWhenAudioStarts = defaults.bool(forKey: Self.recordingShortcutTriggerKey)
+        self.readShortcutOneTriggersBefore = Self.storedBool(
+            in: defaults,
+            forKey: Self.readShortcutOneTriggerBeforeKey,
+            defaultValue: legacyTriggerBefore
+        )
+        self.readShortcutOneTriggersAfter = defaults.bool(forKey: Self.readShortcutOneTriggerAfterKey)
+        self.readShortcutOneSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
+            in: defaults,
+            forKey: Self.readShortcutOneSpeedKey,
+            defaultValue: initialSpeedMultiplier
+        ))
+        self.readShortcutTwoTriggersBefore = defaults.bool(forKey: Self.readShortcutTwoTriggerBeforeKey)
+        self.readShortcutTwoTriggersAfter = defaults.bool(forKey: Self.readShortcutTwoTriggerAfterKey)
+        self.readShortcutTwoSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
+            in: defaults,
+            forKey: Self.readShortcutTwoSpeedKey,
+            defaultValue: initialSpeedMultiplier
+        ))
         self.recordingTriggerShortcut = Self.storedRecordingTriggerShortcut(in: defaults)
         self.isShortcutTriggerAccessibilityTrusted = ShortcutTriggerService.isAccessibilityTrusted
         self.showPresenterOverlay = defaults.bool(forKey: Self.presenterOverlayKey)
@@ -430,16 +499,30 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func readNow() {
+    func readNow(triggerBefore: Bool = false, triggerAfter: Bool = false, speedMultiplier: Double? = nil) {
+        let resolvedSpeedMultiplier = speedMultiplier ?? self.speedMultiplier
+
         if scriptModeEnabled {
-            readCurrentScriptSceneNow()
+            readCurrentScriptSceneNow(
+                triggerBefore: triggerBefore,
+                triggerAfter: triggerAfter,
+                speedMultiplier: resolvedSpeedMultiplier
+            )
             return
         }
 
         if readsTypedTextInsteadOfClipboard {
-            readTypedTextNow()
+            readTypedTextNow(
+                triggerBefore: triggerBefore,
+                triggerAfter: triggerAfter,
+                speedMultiplier: resolvedSpeedMultiplier
+            )
         } else {
-            readClipboardNow()
+            readClipboardNow(
+                triggerBefore: triggerBefore,
+                triggerAfter: triggerAfter,
+                speedMultiplier: resolvedSpeedMultiplier
+            )
         }
     }
 
@@ -574,13 +657,13 @@ final class AppModel: ObservableObject {
         readCurrentScriptSceneNow(advancesAfterSpeech: false)
     }
 
-    private func readClipboardNow() {
+    private func readClipboardNow(triggerBefore: Bool, triggerAfter: Bool, speedMultiplier: Double) {
         guard let text = clipboardService.currentText() else {
             statusMessage = "Clipboard is empty."
             return
         }
 
-        triggerRecordingShortcutIfNeeded()
+        prepareRecordingShortcutTriggers(triggerBefore: triggerBefore, triggerAfter: triggerAfter)
         ttsManager.speak(
             text: text,
             speedMultiplier: speedMultiplier,
@@ -589,14 +672,14 @@ final class AppModel: ObservableObject {
         statusMessage = "Reading clipboard…"
     }
 
-    private func readTypedTextNow() {
+    private func readTypedTextNow(triggerBefore: Bool, triggerAfter: Bool, speedMultiplier: Double) {
         let text = clipboardService.normalize(typedText)
         guard !text.isEmpty else {
             statusMessage = "Text field is empty."
             return
         }
 
-        triggerRecordingShortcutIfNeeded()
+        prepareRecordingShortcutTriggers(triggerBefore: triggerBefore, triggerAfter: triggerAfter)
         ttsManager.speak(
             text: text,
             speedMultiplier: speedMultiplier,
@@ -606,10 +689,24 @@ final class AppModel: ObservableObject {
     }
 
     private func readCurrentScriptSceneNow() {
-        readCurrentScriptSceneNow(advancesAfterSpeech: true)
+        readCurrentScriptSceneNow(advancesAfterSpeech: true, triggerBefore: false, triggerAfter: false, speedMultiplier: speedMultiplier)
     }
 
-    private func readCurrentScriptSceneNow(advancesAfterSpeech: Bool) {
+    private func readCurrentScriptSceneNow(triggerBefore: Bool, triggerAfter: Bool, speedMultiplier: Double) {
+        readCurrentScriptSceneNow(
+            advancesAfterSpeech: true,
+            triggerBefore: triggerBefore,
+            triggerAfter: triggerAfter,
+            speedMultiplier: speedMultiplier
+        )
+    }
+
+    private func readCurrentScriptSceneNow(
+        advancesAfterSpeech: Bool,
+        triggerBefore: Bool = false,
+        triggerAfter: Bool = false,
+        speedMultiplier: Double? = nil
+    ) {
         refreshScriptScenes()
 
         guard let scene = currentSceneText else {
@@ -618,10 +715,10 @@ final class AppModel: ObservableObject {
         }
 
         shouldAdvanceScriptSceneAfterSpeech = advancesAfterSpeech
-        triggerRecordingShortcutIfNeeded()
+        prepareRecordingShortcutTriggers(triggerBefore: triggerBefore, triggerAfter: triggerAfter)
         ttsManager.speak(
             text: scene,
-            speedMultiplier: speedMultiplier,
+            speedMultiplier: speedMultiplier ?? self.speedMultiplier,
             voiceIdentifier: selectedVoiceIdentifier
         )
         statusMessage = advancesAfterSpeech ? "Reading \(scriptSceneProgress)…" : "Replaying \(scriptSceneProgress)…"
@@ -629,6 +726,7 @@ final class AppModel: ObservableObject {
 
     func stopReading() {
         shouldAdvanceScriptSceneAfterSpeech = false
+        shouldTriggerRecordingShortcutAfterSpeech = false
         ttsManager.stop()
     }
 
@@ -642,14 +740,22 @@ final class AppModel: ObservableObject {
 
     private func stopSpeechForSceneNavigation() {
         shouldAdvanceScriptSceneAfterSpeech = false
+        shouldTriggerRecordingShortcutAfterSpeech = false
         if speechState == .speaking || speechState == .paused || speechState == .stopping {
             ttsManager.stop()
         }
     }
 
-    private func triggerRecordingShortcutIfNeeded() {
-        guard triggerRecordingShortcutWhenAudioStarts,
-              let shortcut = recordingTriggerShortcut
+    private func prepareRecordingShortcutTriggers(triggerBefore: Bool, triggerAfter: Bool) {
+        shouldTriggerRecordingShortcutAfterSpeech = triggerAfter
+
+        if triggerBefore {
+            triggerRecordingShortcutIfPossible()
+        }
+    }
+
+    private func triggerRecordingShortcutIfPossible() {
+        guard let shortcut = recordingTriggerShortcut
         else {
             return
         }
@@ -704,9 +810,23 @@ final class AppModel: ObservableObject {
             .dropFirst()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.advanceScriptSceneAfterCompletedSpeech()
+                self?.handleCompletedSpeech()
             }
             .store(in: &cancellables)
+    }
+
+    private func handleCompletedSpeech() {
+        triggerRecordingShortcutAfterCompletedSpeechIfNeeded()
+        advanceScriptSceneAfterCompletedSpeech()
+    }
+
+    private func triggerRecordingShortcutAfterCompletedSpeechIfNeeded() {
+        guard shouldTriggerRecordingShortcutAfterSpeech else {
+            return
+        }
+
+        shouldTriggerRecordingShortcutAfterSpeech = false
+        triggerRecordingShortcutIfPossible()
     }
 
     private func advanceScriptSceneAfterCompletedSpeech() {
@@ -728,7 +848,29 @@ final class AppModel: ObservableObject {
     private func registerShortcutHandlers() {
         KeyboardShortcuts.onKeyUp(for: .readClipboard) { [weak self] in
             Task { @MainActor in
-                self?.readNow()
+                guard let self else {
+                    return
+                }
+
+                self.readNow(
+                    triggerBefore: self.readShortcutOneTriggersBefore,
+                    triggerAfter: self.readShortcutOneTriggersAfter,
+                    speedMultiplier: self.readShortcutOneSpeedMultiplier
+                )
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .readCurrentInputSecondary) { [weak self] in
+            Task { @MainActor in
+                guard let self else {
+                    return
+                }
+
+                self.readNow(
+                    triggerBefore: self.readShortcutTwoTriggersBefore,
+                    triggerAfter: self.readShortcutTwoTriggersAfter,
+                    speedMultiplier: self.readShortcutTwoSpeedMultiplier
+                )
             }
         }
 
@@ -775,6 +917,14 @@ final class AppModel: ObservableObject {
         }
 
         return defaults.double(forKey: key)
+    }
+
+    private static func storedBool(in defaults: UserDefaults, forKey key: String, defaultValue: Bool) -> Bool {
+        guard defaults.object(forKey: key) != nil else {
+            return defaultValue
+        }
+
+        return defaults.bool(forKey: key)
     }
 
     private static func clamp(_ value: Double, min minValue: Double, max maxValue: Double) -> Double {

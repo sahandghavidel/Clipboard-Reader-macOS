@@ -213,34 +213,10 @@ struct MenuBarView: View {
                     step: 0.05
                 )
 
-                Text("Range: 0.5x to 1.5x")
+                Text("Range: 0.25x to 2.5x")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Recording Shortcut Trigger")
-                    .font(.subheadline.bold())
-
-                Toggle("Trigger shortcut when audio starts", isOn: $appModel.triggerRecordingShortcutWhenAudioStarts)
-
-                TriggerShortcutCaptureView()
-                    .disabled(!appModel.triggerRecordingShortcutWhenAudioStarts)
-
-                Text(appModel.isShortcutTriggerAccessibilityTrusted ? "Accessibility permission granted." : "Accessibility permission required to trigger shortcuts.")
-                    .font(.caption2)
-                    .foregroundStyle(appModel.isShortcutTriggerAccessibilityTrusted ? Color.secondary : Color.orange)
-
-                Button("Open Accessibility Settings") {
-                    appModel.openShortcutTriggerAccessibilitySettings()
-                }
-
-                Button("Request Accessibility Permission") {
-                    appModel.requestShortcutTriggerAccessibilityPermission()
-                }
-            }
-
-            Divider()
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("Voice")
@@ -279,7 +255,47 @@ struct MenuBarView: View {
                 Text("Global Shortcuts")
                     .font(.subheadline.bold())
 
-                KeyboardShortcuts.Recorder("Read Current Input", name: .readClipboard)
+                readShortcutSettings(
+                    title: "Read Current Input 1",
+                    name: .readClipboard,
+                    speedMultiplier: $appModel.readShortcutOneSpeedMultiplier,
+                    triggerBefore: $appModel.readShortcutOneTriggersBefore,
+                    triggerAfter: $appModel.readShortcutOneTriggersAfter
+                )
+
+                Divider()
+
+                readShortcutSettings(
+                    title: "Read Current Input 2",
+                    name: .readCurrentInputSecondary,
+                    speedMultiplier: $appModel.readShortcutTwoSpeedMultiplier,
+                    triggerBefore: $appModel.readShortcutTwoTriggersBefore,
+                    triggerAfter: $appModel.readShortcutTwoTriggersAfter
+                )
+
+                Divider()
+
+                Text("External Trigger Shortcut")
+                    .font(.caption.bold())
+
+                TriggerShortcutCaptureView()
+
+                Text(appModel.isShortcutTriggerAccessibilityTrusted ? "Accessibility permission granted." : "Accessibility permission required to trigger external shortcuts.")
+                    .font(.caption2)
+                    .foregroundStyle(appModel.isShortcutTriggerAccessibilityTrusted ? Color.secondary : Color.orange)
+
+                HStack(spacing: 8) {
+                    Button("Open Accessibility Settings") {
+                        appModel.openShortcutTriggerAccessibilitySettings()
+                    }
+
+                    Button("Request Permission") {
+                        appModel.requestShortcutTriggerAccessibilityPermission()
+                    }
+                }
+
+                Divider()
+
                 KeyboardShortcuts.Recorder("Stop Reading", name: .stopReading)
                 KeyboardShortcuts.Recorder("Pause / Resume", name: .pauseResumeReading)
                 KeyboardShortcuts.Recorder("Replay Scene", name: .replayScriptScene)
@@ -299,6 +315,34 @@ struct MenuBarView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(width: 460, height: 720)
+    }
+
+    private func readShortcutSettings(
+        title: String,
+        name: KeyboardShortcuts.Name,
+        speedMultiplier: Binding<Double>,
+        triggerBefore: Binding<Bool>,
+        triggerAfter: Binding<Bool>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            KeyboardShortcuts.Recorder(title, name: name)
+
+            Text("Speech Speed: \(speedMultiplier.wrappedValue, specifier: "%.2f")x")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Slider(
+                value: speedMultiplier,
+                in: SpeechRateMapper.minMultiplier...SpeechRateMapper.maxMultiplier,
+                step: 0.05
+            )
+
+            Toggle("Trigger external shortcut before reading", isOn: triggerBefore)
+                .font(.caption)
+
+            Toggle("Trigger external shortcut after reading", isOn: triggerAfter)
+                .font(.caption)
+        }
     }
 
     private func overlaySlider(
