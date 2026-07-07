@@ -275,6 +275,20 @@ struct MenuBarView: View {
 
                 Divider()
 
+                readShortcutSettings(
+                    title: "Read Clipboard Always",
+                    name: .readClipboardAlways,
+                    speedMultiplier: $appModel.readClipboardAlwaysSpeedMultiplier,
+                    triggerBefore: $appModel.readClipboardAlwaysTriggersBefore,
+                    triggerAfter: $appModel.readClipboardAlwaysTriggersAfter
+                )
+
+                Text("Ignores typed-text mode and Script mode.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
                 Text("External Trigger Shortcut")
                     .font(.caption.bold())
 

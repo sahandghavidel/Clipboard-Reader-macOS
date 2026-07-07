@@ -11,6 +11,11 @@ extension KeyboardShortcuts.Name {
         default: KeyboardShortcuts.Shortcut(.r, modifiers: [.command, .option, .shift])
     )
 
+    static let readClipboardAlways = Self(
+        "readClipboardAlways",
+        default: KeyboardShortcuts.Shortcut(.c, modifiers: [.command, .option, .shift])
+    )
+
     static let stopReading = Self(
         "stopReading",
         default: KeyboardShortcuts.Shortcut(.s, modifiers: [.command, .option])

@@ -66,6 +66,32 @@ final class AppModel: ObservableObject {
         }
     }
 
+    @Published var readClipboardAlwaysTriggersBefore: Bool {
+        didSet {
+            defaults.set(readClipboardAlwaysTriggersBefore, forKey: Self.readClipboardAlwaysTriggerBeforeKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readClipboardAlwaysTriggersAfter: Bool {
+        didSet {
+            defaults.set(readClipboardAlwaysTriggersAfter, forKey: Self.readClipboardAlwaysTriggerAfterKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readClipboardAlwaysSpeedMultiplier: Double {
+        didSet {
+            let clamped = SpeechRateMapper.clampMultiplier(readClipboardAlwaysSpeedMultiplier)
+            if clamped != readClipboardAlwaysSpeedMultiplier {
+                readClipboardAlwaysSpeedMultiplier = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.readClipboardAlwaysSpeedKey)
+        }
+    }
+
     @Published var showPresenterOverlay: Bool {
         didSet {
             defaults.set(showPresenterOverlay, forKey: Self.presenterOverlayKey)
@@ -352,6 +378,9 @@ final class AppModel: ObservableObject {
     private static let readShortcutTwoTriggerBeforeKey = "clipboardReader.readShortcutTwo.triggerBefore"
     private static let readShortcutTwoTriggerAfterKey = "clipboardReader.readShortcutTwo.triggerAfter"
     private static let readShortcutTwoSpeedKey = "clipboardReader.readShortcutTwo.speedMultiplier"
+    private static let readClipboardAlwaysTriggerBeforeKey = "clipboardReader.readClipboardAlways.triggerBefore"
+    private static let readClipboardAlwaysTriggerAfterKey = "clipboardReader.readClipboardAlways.triggerAfter"
+    private static let readClipboardAlwaysSpeedKey = "clipboardReader.readClipboardAlways.speedMultiplier"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
     private static let presenterOverlayHideWhileSpeakingKey = "clipboardReader.hidePresenterOverlayWhileSpeaking"
@@ -430,6 +459,13 @@ final class AppModel: ObservableObject {
         self.readShortcutTwoSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readShortcutTwoSpeedKey,
+            defaultValue: initialSpeedMultiplier
+        ))
+        self.readClipboardAlwaysTriggersBefore = defaults.bool(forKey: Self.readClipboardAlwaysTriggerBeforeKey)
+        self.readClipboardAlwaysTriggersAfter = defaults.bool(forKey: Self.readClipboardAlwaysTriggerAfterKey)
+        self.readClipboardAlwaysSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
+            in: defaults,
+            forKey: Self.readClipboardAlwaysSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
         self.recordingTriggerShortcut = Self.storedRecordingTriggerShortcut(in: defaults)
@@ -524,6 +560,14 @@ final class AppModel: ObservableObject {
                 speedMultiplier: resolvedSpeedMultiplier
             )
         }
+    }
+
+    func readClipboardAlways(triggerBefore: Bool = false, triggerAfter: Bool = false, speedMultiplier: Double? = nil) {
+        readClipboardNow(
+            triggerBefore: triggerBefore,
+            triggerAfter: triggerAfter,
+            speedMultiplier: speedMultiplier ?? self.speedMultiplier
+        )
     }
 
     func clearTypedText() {
@@ -870,6 +914,20 @@ final class AppModel: ObservableObject {
                     triggerBefore: self.readShortcutTwoTriggersBefore,
                     triggerAfter: self.readShortcutTwoTriggersAfter,
                     speedMultiplier: self.readShortcutTwoSpeedMultiplier
+                )
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .readClipboardAlways) { [weak self] in
+            Task { @MainActor in
+                guard let self else {
+                    return
+                }
+
+                self.readClipboardAlways(
+                    triggerBefore: self.readClipboardAlwaysTriggersBefore,
+                    triggerAfter: self.readClipboardAlwaysTriggersAfter,
+                    speedMultiplier: self.readClipboardAlwaysSpeedMultiplier
                 )
             }
         }
