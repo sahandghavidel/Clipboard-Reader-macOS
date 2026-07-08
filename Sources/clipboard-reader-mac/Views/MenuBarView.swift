@@ -336,6 +336,7 @@ struct MenuBarView: View {
                 KeyboardShortcuts.Recorder("Previous Scene", name: .previousScriptScene)
                 KeyboardShortcuts.Recorder("Next Scene", name: .nextScriptScene)
                 KeyboardShortcuts.Recorder("Toggle Overlay", name: .togglePresenterOverlay)
+                KeyboardShortcuts.Recorder("Edit Current Scene", name: .editCurrentScene)
             }
 
             Divider()

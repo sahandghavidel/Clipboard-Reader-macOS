@@ -15,10 +15,7 @@ final class SceneEditorController {
             return
         }
 
-        guard let currentSceneText = appModel.currentSceneText else {
-            appModel.statusMessage = "No current scene to edit."
-            return
-        }
+        let currentSceneText = appModel.currentSceneText ?? ""
 
         let panel = makePanel(appModel: appModel, initialText: currentSceneText)
         self.panel = panel
@@ -46,6 +43,7 @@ final class SceneEditorController {
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.minSize = NSSize(width: 520, height: 260)
+        panel.sharingType = .none
         panel.title = "Edit Current Scene"
 
         return panel

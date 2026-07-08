@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CurrentSceneEditorView: View {
     @EnvironmentObject private var appModel: AppModel
+    @FocusState private var isEditorFocused: Bool
     @State private var draftText: String
     let close: () -> Void
 
@@ -17,6 +18,7 @@ struct CurrentSceneEditorView: View {
 
             TextEditor(text: $draftText)
                 .font(.system(size: 18))
+                .focused($isEditorFocused)
                 .frame(minHeight: 190)
                 .overlay(
                     RoundedRectangle(cornerRadius: 6)
@@ -26,19 +28,24 @@ struct CurrentSceneEditorView: View {
             HStack {
                 Spacer()
 
-                Button("Cancel") {
-                    close()
+                Button("Done") {
+                    saveAndClose()
                 }
-
-                Button("Save") {
-                    appModel.saveCurrentSceneEdit(draftText)
-                    close()
-                }
-                .keyboardShortcut(.defaultAction)
+                .keyboardShortcut(.cancelAction)
                 .disabled(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
         .padding(18)
         .frame(minWidth: 520, minHeight: 260)
+        .onAppear {
+            DispatchQueue.main.async {
+                isEditorFocused = true
+            }
+        }
+    }
+
+    private func saveAndClose() {
+        appModel.saveCurrentSceneEdit(draftText)
+        close()
     }
 }

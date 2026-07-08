@@ -55,4 +55,9 @@ extension KeyboardShortcuts.Name {
         "togglePresenterOverlay",
         default: KeyboardShortcuts.Shortcut(.o, modifiers: [.command, .option])
     )
+
+    static let editCurrentScene = Self(
+        "editCurrentScene",
+        default: KeyboardShortcuts.Shortcut(.e, modifiers: [.command, .option])
+    )
 }

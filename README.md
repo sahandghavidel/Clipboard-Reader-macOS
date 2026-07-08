@@ -2,7 +2,7 @@
 
 A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.21`.
+Current local version: `1.22`.
 
 ## Requirements
 
@@ -56,7 +56,7 @@ The overlay settings let you adjust opacity, width, height, bottom position, hor
 
 Use the **Toggle Overlay** shortcut to show or hide the presenter overlay without opening the menu. The default shortcut is `Command+Option+O`. Turn on **Hide overlay while audio is playing** if you want the overlay visible while preparing but hidden during narration playback.
 
-Use the **Edit Scene** button in the top-right of the presenter overlay's current scene area to open a centered editor for the current scene. Saving replaces only the current scene in the full script.
+Use the **Edit Scene** button in the presenter overlay, or the **Edit Current Scene** global shortcut, to open a centered editor. The editor focuses the text box immediately; **Done** or **Escape** saves once and closes. If there is no scene yet, the typed text creates the first scene. The editor popup is hidden from standard screen recording capture.
 
 ## External shortcut triggers
 
@@ -129,9 +129,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>21</string>
+  <string>22</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.21</string>
+  <string>1.22</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -158,7 +158,7 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 6. Turn **Script mode** on and paste a multi-sentence tutorial script.
 7. Trigger **Play Scene** or the read shortcut, then confirm it reads one scene and advances to the next.
 8. Use **Previous**, **Replay**, **Next**, and **Restart** to navigate scenes.
-9. Use the overlay **Edit Scene** button, change the current scene, save, and confirm previous/current/next update.
+9. Use the overlay **Edit Scene** button or **Edit Current Scene** shortcut, change the current scene, press **Escape**, and confirm previous/current/next update.
 10. Turn **Show presenter overlay** on and confirm previous/current/next scenes appear near the bottom of the screen.
 11. Adjust overlay opacity, width, height, position, font sizes, text colors, and text transparency.
 12. Use the **Toggle Overlay** shortcut and confirm the overlay shows/hides.

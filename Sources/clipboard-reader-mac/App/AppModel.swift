@@ -650,9 +650,8 @@ final class AppModel: ObservableObject {
     }
 
     func openCurrentSceneEditor() {
-        guard scriptModeEnabled else {
-            statusMessage = "Turn on Script mode to edit the current scene."
-            return
+        if !scriptModeEnabled {
+            scriptModeEnabled = true
         }
 
         refreshScriptScenes()
@@ -668,7 +667,11 @@ final class AppModel: ObservableObject {
 
         let scenes = ScriptSceneSplitter.sceneRanges(from: typedText)
         guard scenes.indices.contains(currentSceneIndex) else {
-            statusMessage = "No current scene to edit."
+            typedText = replacement
+            refreshScriptScenes()
+            currentSceneIndex = 0
+            statusMessage = "Current scene created."
+            presenterOverlayController?.updateLayout()
             return
         }
 
@@ -1100,6 +1103,12 @@ final class AppModel: ObservableObject {
         KeyboardShortcuts.onKeyUp(for: .togglePresenterOverlay) { [weak self] in
             Task { @MainActor in
                 self?.togglePresenterOverlay()
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .editCurrentScene) { [weak self] in
+            Task { @MainActor in
+                self?.openCurrentSceneEditor()
             }
         }
 
