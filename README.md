@@ -2,7 +2,7 @@
 
 A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.18`.
+Current local version: `1.19`.
 
 ## Requirements
 
@@ -62,11 +62,13 @@ The **Global Shortcuts** section includes two separate read shortcuts:
 
 - **Read Current Input 1**
 - **Read Current Input 2**
-- **Read Clipboard Always**
+- **Read Clipboard Always 1**
+- **Read Clipboard Always 2**
+- **Read Clipboard Always 3**
 
 Both read the same current input: clipboard mode reads the clipboard, typed text mode reads the text box, and Script mode plays the current scene. Each read shortcut has its own speech speed plus options to trigger an external shortcut before reading, after reading, or both.
 
-**Read Clipboard Always** ignores typed-text mode and Script mode. It always reads the current macOS clipboard, and it also has its own speech speed plus before/after external trigger options.
+All **Read Clipboard Always** shortcuts ignore typed-text mode and Script mode. They always read the current macOS clipboard, and each one has its own speech speed plus before/after external trigger options.
 
 The global read speed and shortcut-specific speeds support `0.25x` through `2.5x`.
 
@@ -125,9 +127,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>18</string>
+  <string>19</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.18</string>
+  <string>1.19</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -165,7 +167,7 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 17. Trigger **Stop** → speech stops immediately.
 18. Configure **Read Current Input 1** and **Read Current Input 2** with different shortcut combinations.
 19. Set **Read Current Input 1** to `0.5x` and **Read Current Input 2** to `1.5x`, then verify each shortcut uses its own speed.
-20. Turn **Read typed text instead of clipboard** on, then trigger **Read Clipboard Always** and confirm it still reads the clipboard.
+20. Turn **Read typed text instead of clipboard** on, then trigger **Read Clipboard Always 1**, **2**, and **3** and confirm each still reads the clipboard.
 21. Enable **Trigger external shortcut before reading** and verify the recording app receives the external shortcut before speech starts.
 22. Enable **Trigger external shortcut after reading** and verify the recording app receives the external shortcut after speech finishes.
 23. Move speed sliders to **0.25x** and **2.5x**, verify slower/faster speech.

@@ -276,11 +276,31 @@ struct MenuBarView: View {
                 Divider()
 
                 readShortcutSettings(
-                    title: "Read Clipboard Always",
+                    title: "Read Clipboard Always 1",
                     name: .readClipboardAlways,
                     speedMultiplier: $appModel.readClipboardAlwaysSpeedMultiplier,
                     triggerBefore: $appModel.readClipboardAlwaysTriggersBefore,
                     triggerAfter: $appModel.readClipboardAlwaysTriggersAfter
+                )
+
+                Divider()
+
+                readShortcutSettings(
+                    title: "Read Clipboard Always 2",
+                    name: .readClipboardAlwaysSecondary,
+                    speedMultiplier: $appModel.readClipboardAlwaysTwoSpeedMultiplier,
+                    triggerBefore: $appModel.readClipboardAlwaysTwoTriggersBefore,
+                    triggerAfter: $appModel.readClipboardAlwaysTwoTriggersAfter
+                )
+
+                Divider()
+
+                readShortcutSettings(
+                    title: "Read Clipboard Always 3",
+                    name: .readClipboardAlwaysTertiary,
+                    speedMultiplier: $appModel.readClipboardAlwaysThreeSpeedMultiplier,
+                    triggerBefore: $appModel.readClipboardAlwaysThreeTriggersBefore,
+                    triggerAfter: $appModel.readClipboardAlwaysThreeTriggersAfter
                 )
 
                 Text("Ignores typed-text mode and Script mode.")

@@ -92,6 +92,58 @@ final class AppModel: ObservableObject {
         }
     }
 
+    @Published var readClipboardAlwaysTwoTriggersBefore: Bool {
+        didSet {
+            defaults.set(readClipboardAlwaysTwoTriggersBefore, forKey: Self.readClipboardAlwaysTwoTriggerBeforeKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readClipboardAlwaysTwoTriggersAfter: Bool {
+        didSet {
+            defaults.set(readClipboardAlwaysTwoTriggersAfter, forKey: Self.readClipboardAlwaysTwoTriggerAfterKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readClipboardAlwaysTwoSpeedMultiplier: Double {
+        didSet {
+            let clamped = SpeechRateMapper.clampMultiplier(readClipboardAlwaysTwoSpeedMultiplier)
+            if clamped != readClipboardAlwaysTwoSpeedMultiplier {
+                readClipboardAlwaysTwoSpeedMultiplier = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.readClipboardAlwaysTwoSpeedKey)
+        }
+    }
+
+    @Published var readClipboardAlwaysThreeTriggersBefore: Bool {
+        didSet {
+            defaults.set(readClipboardAlwaysThreeTriggersBefore, forKey: Self.readClipboardAlwaysThreeTriggerBeforeKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readClipboardAlwaysThreeTriggersAfter: Bool {
+        didSet {
+            defaults.set(readClipboardAlwaysThreeTriggersAfter, forKey: Self.readClipboardAlwaysThreeTriggerAfterKey)
+            refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    @Published var readClipboardAlwaysThreeSpeedMultiplier: Double {
+        didSet {
+            let clamped = SpeechRateMapper.clampMultiplier(readClipboardAlwaysThreeSpeedMultiplier)
+            if clamped != readClipboardAlwaysThreeSpeedMultiplier {
+                readClipboardAlwaysThreeSpeedMultiplier = clamped
+                return
+            }
+
+            defaults.set(clamped, forKey: Self.readClipboardAlwaysThreeSpeedKey)
+        }
+    }
+
     @Published var showPresenterOverlay: Bool {
         didSet {
             defaults.set(showPresenterOverlay, forKey: Self.presenterOverlayKey)
@@ -381,6 +433,12 @@ final class AppModel: ObservableObject {
     private static let readClipboardAlwaysTriggerBeforeKey = "clipboardReader.readClipboardAlways.triggerBefore"
     private static let readClipboardAlwaysTriggerAfterKey = "clipboardReader.readClipboardAlways.triggerAfter"
     private static let readClipboardAlwaysSpeedKey = "clipboardReader.readClipboardAlways.speedMultiplier"
+    private static let readClipboardAlwaysTwoTriggerBeforeKey = "clipboardReader.readClipboardAlwaysTwo.triggerBefore"
+    private static let readClipboardAlwaysTwoTriggerAfterKey = "clipboardReader.readClipboardAlwaysTwo.triggerAfter"
+    private static let readClipboardAlwaysTwoSpeedKey = "clipboardReader.readClipboardAlwaysTwo.speedMultiplier"
+    private static let readClipboardAlwaysThreeTriggerBeforeKey = "clipboardReader.readClipboardAlwaysThree.triggerBefore"
+    private static let readClipboardAlwaysThreeTriggerAfterKey = "clipboardReader.readClipboardAlwaysThree.triggerAfter"
+    private static let readClipboardAlwaysThreeSpeedKey = "clipboardReader.readClipboardAlwaysThree.speedMultiplier"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
     private static let presenterOverlayHideWhileSpeakingKey = "clipboardReader.hidePresenterOverlayWhileSpeaking"
@@ -466,6 +524,20 @@ final class AppModel: ObservableObject {
         self.readClipboardAlwaysSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readClipboardAlwaysSpeedKey,
+            defaultValue: initialSpeedMultiplier
+        ))
+        self.readClipboardAlwaysTwoTriggersBefore = defaults.bool(forKey: Self.readClipboardAlwaysTwoTriggerBeforeKey)
+        self.readClipboardAlwaysTwoTriggersAfter = defaults.bool(forKey: Self.readClipboardAlwaysTwoTriggerAfterKey)
+        self.readClipboardAlwaysTwoSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
+            in: defaults,
+            forKey: Self.readClipboardAlwaysTwoSpeedKey,
+            defaultValue: initialSpeedMultiplier
+        ))
+        self.readClipboardAlwaysThreeTriggersBefore = defaults.bool(forKey: Self.readClipboardAlwaysThreeTriggerBeforeKey)
+        self.readClipboardAlwaysThreeTriggersAfter = defaults.bool(forKey: Self.readClipboardAlwaysThreeTriggerAfterKey)
+        self.readClipboardAlwaysThreeSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
+            in: defaults,
+            forKey: Self.readClipboardAlwaysThreeSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
         self.recordingTriggerShortcut = Self.storedRecordingTriggerShortcut(in: defaults)
@@ -928,6 +1000,34 @@ final class AppModel: ObservableObject {
                     triggerBefore: self.readClipboardAlwaysTriggersBefore,
                     triggerAfter: self.readClipboardAlwaysTriggersAfter,
                     speedMultiplier: self.readClipboardAlwaysSpeedMultiplier
+                )
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .readClipboardAlwaysSecondary) { [weak self] in
+            Task { @MainActor in
+                guard let self else {
+                    return
+                }
+
+                self.readClipboardAlways(
+                    triggerBefore: self.readClipboardAlwaysTwoTriggersBefore,
+                    triggerAfter: self.readClipboardAlwaysTwoTriggersAfter,
+                    speedMultiplier: self.readClipboardAlwaysTwoSpeedMultiplier
+                )
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .readClipboardAlwaysTertiary) { [weak self] in
+            Task { @MainActor in
+                guard let self else {
+                    return
+                }
+
+                self.readClipboardAlways(
+                    triggerBefore: self.readClipboardAlwaysThreeTriggersBefore,
+                    triggerAfter: self.readClipboardAlwaysThreeTriggersAfter,
+                    speedMultiplier: self.readClipboardAlwaysThreeSpeedMultiplier
                 )
             }
         }
