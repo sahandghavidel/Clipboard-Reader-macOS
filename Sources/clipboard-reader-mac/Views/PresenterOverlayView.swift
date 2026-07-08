@@ -8,9 +8,37 @@ struct PresenterOverlayView: View {
             sceneColumn(title: "Previous", text: appModel.previousSceneText, isCurrent: false)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(appModel.scriptSceneProgress)
+                HStack(spacing: 8) {
+                    Text(appModel.scriptSceneProgress)
+                        .font(.caption.bold())
+                        .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(appModel.presenterOverlaySecondaryTextOpacity))
+
+                    Spacer()
+
+                    Button {
+                        appModel.openCurrentSceneEditor()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "pencil")
+                            Text("Edit Scene")
+                        }
+                    }
+                    .buttonStyle(.plain)
                     .font(.caption.bold())
-                    .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(appModel.presenterOverlaySecondaryTextOpacity))
+                    .foregroundStyle(appModel.presenterOverlayCurrentTextColor.opacity(0.95))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        Capsule()
+                            .fill(.white.opacity(0.16))
+                            .overlay(
+                                Capsule()
+                                    .stroke(appModel.presenterOverlayCurrentTextColor.opacity(0.35))
+                            )
+                    )
+                    .help("Edit current scene")
+                    .disabled(appModel.currentSceneText == nil)
+                }
 
                 Text(appModel.currentSceneText ?? "Paste a script and turn on Script mode.")
                     .font(.system(size: CGFloat(appModel.presenterOverlayCurrentFontSize), weight: .semibold))

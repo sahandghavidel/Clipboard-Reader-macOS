@@ -58,7 +58,7 @@ final class PresenterOverlayController {
         )
         panel.hasShadow = true
         panel.hidesOnDeactivate = false
-        panel.ignoresMouseEvents = true
+        panel.ignoresMouseEvents = false
         panel.isFloatingPanel = true
         panel.isOpaque = false
         panel.level = .statusBar

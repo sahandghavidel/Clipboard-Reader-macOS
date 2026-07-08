@@ -7,7 +7,7 @@ import SwiftUI
 @MainActor
 final class AppModel: ObservableObject {
     @Published private(set) var speechState: SpeechState = .idle
-    @Published private(set) var statusMessage: String = SpeechState.idle.label
+    @Published var statusMessage: String = SpeechState.idle.label
     @Published private(set) var outputVoiceDescription: String = "System Default"
     @Published private(set) var outputVoiceNote: String?
     @Published private(set) var isShortcutTriggerAccessibilityTrusted: Bool
@@ -486,6 +486,7 @@ final class AppModel: ObservableObject {
     private let ttsManager = TTSManager()
     private var cancellables = Set<AnyCancellable>()
     private var presenterOverlayController: PresenterOverlayController?
+    private var sceneEditorController: SceneEditorController?
     @Published private var currentSceneIndex = 0
     @Published private var scriptScenes: [String] = []
     private var shouldAdvanceScriptSceneAfterSpeech = false
@@ -602,6 +603,7 @@ final class AppModel: ObservableObject {
         bindSpeechState()
         registerShortcutHandlers()
         presenterOverlayController = PresenterOverlayController(appModel: self)
+        sceneEditorController = SceneEditorController(appModel: self)
         DispatchQueue.main.async { [weak self] in
             self?.refreshPresenterOverlayVisibility()
         }
@@ -645,6 +647,39 @@ final class AppModel: ObservableObject {
     func clearTypedText() {
         typedText = ""
         refreshScriptScenes()
+    }
+
+    func openCurrentSceneEditor() {
+        guard scriptModeEnabled else {
+            statusMessage = "Turn on Script mode to edit the current scene."
+            return
+        }
+
+        refreshScriptScenes()
+        sceneEditorController?.show()
+    }
+
+    func saveCurrentSceneEdit(_ editedText: String) {
+        let replacement = editedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !replacement.isEmpty else {
+            statusMessage = "Current scene cannot be empty."
+            return
+        }
+
+        let scenes = ScriptSceneSplitter.sceneRanges(from: typedText)
+        guard scenes.indices.contains(currentSceneIndex) else {
+            statusMessage = "No current scene to edit."
+            return
+        }
+
+        let currentIndex = currentSceneIndex
+        var normalizedScript = ScriptSceneSplitter.normalized(typedText)
+        normalizedScript.replaceSubrange(scenes[currentIndex].range, with: replacement)
+        typedText = normalizedScript
+        refreshScriptScenes()
+        currentSceneIndex = min(currentIndex, max(scriptScenes.count - 1, 0))
+        statusMessage = "Current scene updated."
+        presenterOverlayController?.updateLayout()
     }
 
     func refreshScriptScenes() {
@@ -1067,6 +1102,7 @@ final class AppModel: ObservableObject {
                 self?.togglePresenterOverlay()
             }
         }
+
     }
 
     private static func storedDouble(in defaults: UserDefaults, forKey key: String, defaultValue: Double) -> Double {

@@ -2,7 +2,7 @@
 
 A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
 
-Current local version: `1.19`.
+Current local version: `1.21`.
 
 ## Requirements
 
@@ -55,6 +55,8 @@ Turn on **Show presenter overlay** inside Script mode to show previous, current,
 The overlay settings let you adjust opacity, width, height, bottom position, horizontal position, current text size, previous/next text size, text colors, text transparency, and quick color presets. Use **Reset overlay defaults** to return to the default presenter layout.
 
 Use the **Toggle Overlay** shortcut to show or hide the presenter overlay without opening the menu. The default shortcut is `Command+Option+O`. Turn on **Hide overlay while audio is playing** if you want the overlay visible while preparing but hidden during narration playback.
+
+Use the **Edit Scene** button in the top-right of the presenter overlay's current scene area to open a centered editor for the current scene. Saving replaces only the current scene in the full script.
 
 ## External shortcut triggers
 
@@ -127,9 +129,9 @@ cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>19</string>
+  <string>21</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.19</string>
+  <string>1.21</string>
   <key>CFBundleExecutable</key>
   <string>ClipboardReaderMac</string>
   <key>CFBundlePackageType</key>
@@ -156,22 +158,23 @@ After this, you can launch it from Spotlight/Finder like a normal app.
 6. Turn **Script mode** on and paste a multi-sentence tutorial script.
 7. Trigger **Play Scene** or the read shortcut, then confirm it reads one scene and advances to the next.
 8. Use **Previous**, **Replay**, **Next**, and **Restart** to navigate scenes.
-9. Turn **Show presenter overlay** on and confirm previous/current/next scenes appear near the bottom of the screen.
-10. Adjust overlay opacity, width, height, position, font sizes, text colors, and text transparency.
-11. Use the **Toggle Overlay** shortcut and confirm the overlay shows/hides.
-12. Turn **Hide overlay while audio is playing** on and confirm the overlay hides during speech, then returns after speech stops or finishes.
-13. Use **Reset overlay defaults** and confirm the overlay returns to the default layout.
-14. Start a short screen recording and verify the overlay behavior with **Hide overlay from screen recordings** on and off.
-15. Trigger **Pause/Resume** once → pauses.
-16. Trigger **Pause/Resume** again → resumes.
-17. Trigger **Stop** → speech stops immediately.
-18. Configure **Read Current Input 1** and **Read Current Input 2** with different shortcut combinations.
-19. Set **Read Current Input 1** to `0.5x` and **Read Current Input 2** to `1.5x`, then verify each shortcut uses its own speed.
-20. Turn **Read typed text instead of clipboard** on, then trigger **Read Clipboard Always 1**, **2**, and **3** and confirm each still reads the clipboard.
-21. Enable **Trigger external shortcut before reading** and verify the recording app receives the external shortcut before speech starts.
-22. Enable **Trigger external shortcut after reading** and verify the recording app receives the external shortcut after speech finishes.
-23. Move speed sliders to **0.25x** and **2.5x**, verify slower/faster speech.
-24. Reassign shortcuts and verify they still work globally.
+9. Use the overlay **Edit Scene** button, change the current scene, save, and confirm previous/current/next update.
+10. Turn **Show presenter overlay** on and confirm previous/current/next scenes appear near the bottom of the screen.
+11. Adjust overlay opacity, width, height, position, font sizes, text colors, and text transparency.
+12. Use the **Toggle Overlay** shortcut and confirm the overlay shows/hides.
+13. Turn **Hide overlay while audio is playing** on and confirm the overlay hides during speech, then returns after speech stops or finishes.
+14. Use **Reset overlay defaults** and confirm the overlay returns to the default layout.
+15. Start a short screen recording and verify the overlay behavior with **Hide overlay from screen recordings** on and off.
+16. Trigger **Pause/Resume** once → pauses.
+17. Trigger **Pause/Resume** again → resumes.
+18. Trigger **Stop** → speech stops immediately.
+19. Configure **Read Current Input 1** and **Read Current Input 2** with different shortcut combinations.
+20. Set **Read Current Input 1** to `0.5x` and **Read Current Input 2** to `1.5x`, then verify each shortcut uses its own speed.
+21. Turn **Read typed text instead of clipboard** on, then trigger **Read Clipboard Always 1**, **2**, and **3** and confirm each still reads the clipboard.
+22. Enable **Trigger external shortcut before reading** and verify the recording app receives the external shortcut before speech starts.
+23. Enable **Trigger external shortcut after reading** and verify the recording app receives the external shortcut after speech finishes.
+24. Move speed sliders to **0.25x** and **2.5x**, verify slower/faster speech.
+25. Reassign shortcuts and verify they still work globally.
 
 ## Troubleshooting
 
