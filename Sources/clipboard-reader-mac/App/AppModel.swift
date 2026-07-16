@@ -374,6 +374,14 @@ final class AppModel: ObservableObject {
         return scriptScenes[currentSceneIndex]
     }
 
+    var allSceneTexts: [String] {
+        scriptScenes
+    }
+
+    var currentSceneIndexForEditor: Int {
+        currentSceneIndex
+    }
+
     var previousSceneText: String? {
         let previousIndex = currentSceneIndex - 1
         guard scriptScenes.indices.contains(previousIndex) else {
@@ -489,6 +497,8 @@ final class AppModel: ObservableObject {
     private var sceneEditorController: SceneEditorController?
     @Published private var currentSceneIndex = 0
     @Published private var scriptScenes: [String] = []
+    private var manualSceneOverride: [String]?
+    private var manualSceneOverrideSource: String?
     private var shouldAdvanceScriptSceneAfterSpeech = false
     private var shouldTriggerRecordingShortcutAfterSpeech = false
 
@@ -645,6 +655,8 @@ final class AppModel: ObservableObject {
     }
 
     func clearTypedText() {
+        manualSceneOverride = nil
+        manualSceneOverrideSource = nil
         typedText = ""
         refreshScriptScenes()
     }
@@ -662,6 +674,18 @@ final class AppModel: ObservableObject {
         let replacement = editedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !replacement.isEmpty else {
             statusMessage = "Current scene cannot be empty."
+            return
+        }
+
+        if manualSceneOverride != nil {
+            var scenes = scriptScenes
+            if scenes.indices.contains(currentSceneIndex) {
+                scenes[currentSceneIndex] = replacement
+            } else {
+                scenes = [replacement]
+            }
+
+            saveSceneManagerScenes(scenes, selectedIndex: currentSceneIndex)
             return
         }
 
@@ -685,7 +709,58 @@ final class AppModel: ObservableObject {
         presenterOverlayController?.updateLayout()
     }
 
+    func saveSceneManagerScenes(_ scenes: [String], selectedIndex: Int) {
+        let cleanedScenes = scenes
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        guard !cleanedScenes.isEmpty else {
+            manualSceneOverride = nil
+            manualSceneOverrideSource = nil
+            typedText = ""
+            refreshScriptScenes()
+            currentSceneIndex = 0
+            statusMessage = "Script cleared."
+            presenterOverlayController?.updateLayout()
+            return
+        }
+
+        let updatedScript = cleanedScenes.joined(separator: "\n\n")
+        manualSceneOverride = cleanedScenes
+        manualSceneOverrideSource = ScriptSceneSplitter.normalized(updatedScript)
+        typedText = updatedScript
+        refreshScriptScenes()
+        currentSceneIndex = min(max(selectedIndex, 0), max(scriptScenes.count - 1, 0))
+        statusMessage = "Scenes updated."
+        presenterOverlayController?.updateLayout()
+    }
+
+    func selectSceneForEditing(_ index: Int) {
+        refreshScriptScenes()
+        guard scriptScenes.indices.contains(index) else {
+            return
+        }
+
+        currentSceneIndex = index
+        statusMessage = scriptSceneProgress
+        presenterOverlayController?.updateLayout()
+    }
+
     func refreshScriptScenes() {
+        let normalizedText = ScriptSceneSplitter.normalized(typedText)
+        if let manualSceneOverride,
+           manualSceneOverrideSource == normalizedText {
+            scriptScenes = manualSceneOverride
+            if scriptScenes.isEmpty {
+                currentSceneIndex = 0
+            } else {
+                currentSceneIndex = min(currentSceneIndex, scriptScenes.count - 1)
+            }
+            return
+        }
+
+        manualSceneOverride = nil
+        manualSceneOverrideSource = nil
         scriptScenes = ScriptSceneSplitter.scenes(from: typedText)
         if scriptScenes.isEmpty {
             currentSceneIndex = 0
@@ -808,7 +883,10 @@ final class AppModel: ObservableObject {
             return
         }
 
-        readCurrentScriptSceneNow(advancesAfterSpeech: false)
+        readCurrentScriptSceneNow(
+            advancesAfterSpeech: false,
+            includesBracketedDirections: true
+        )
     }
 
     private func readClipboardNow(triggerBefore: Bool, triggerAfter: Bool, speedMultiplier: Double) {
@@ -857,6 +935,7 @@ final class AppModel: ObservableObject {
 
     private func readCurrentScriptSceneNow(
         advancesAfterSpeech: Bool,
+        includesBracketedDirections: Bool = false,
         triggerBefore: Bool = false,
         triggerAfter: Bool = false,
         speedMultiplier: Double? = nil
@@ -873,7 +952,8 @@ final class AppModel: ObservableObject {
         ttsManager.speak(
             text: scene,
             speedMultiplier: speedMultiplier ?? self.speedMultiplier,
-            voiceIdentifier: selectedVoiceIdentifier
+            voiceIdentifier: selectedVoiceIdentifier,
+            includesBracketedDirections: includesBracketedDirections
         )
         statusMessage = advancesAfterSpeech ? "Reading \(scriptSceneProgress)…" : "Replaying \(scriptSceneProgress)…"
     }

@@ -27,20 +27,28 @@ final class TTSManager: NSObject, ObservableObject {
         systemSynthesizer.delegate = self
     }
 
-    func speak(text: String, speedMultiplier: Double, voiceIdentifier: String?) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
+    func speak(
+        text: String,
+        speedMultiplier: Double,
+        voiceIdentifier: String?,
+        includesBracketedDirections: Bool = false
+    ) {
+        let spokenText = SpokenTextSanitizer.preparingForSpeech(
+            text,
+            includesBracketedDirections: includesBracketedDirections
+        )
+        guard !spokenText.isEmpty else {
             return
         }
 
         stopActiveSpeechBeforeStarting()
 
         if shouldUseSystemDefaultSpeechRoute(for: voiceIdentifier) {
-            speakWithSystemDefaultSynthesizer(text: trimmed, speedMultiplier: speedMultiplier)
+            speakWithSystemDefaultSynthesizer(text: spokenText, speedMultiplier: speedMultiplier)
             return
         }
 
-        speakWithAVSpeech(text: trimmed, speedMultiplier: speedMultiplier, voiceIdentifier: voiceIdentifier)
+        speakWithAVSpeech(text: spokenText, speedMultiplier: speedMultiplier, voiceIdentifier: voiceIdentifier)
     }
 
     private func shouldUseSystemDefaultSpeechRoute(for voiceIdentifier: String?) -> Bool {
