@@ -1,30 +1,63 @@
+<div align="center">
+
 # Narration Pilot
 
-Narration Pilot is a native macOS menu bar companion for scene-by-scene narration and screen-recording workflows. Paste or type a script, organize it into scenes, play each scene with macOS speech, and control the session with global shortcuts while you record.
+**A scene-by-scene narration companion for macOS.**
 
-Current version: `1.25`
+[![macOS 15+](https://img.shields.io/badge/macOS-15%2B-111827?logo=apple)](https://www.apple.com/macos/)
+[![Swift 6.3](https://img.shields.io/badge/Swift-6.3-F05138?logo=swift&logoColor=white)](https://www.swift.org/)
+[![MIT License](https://img.shields.io/badge/License-MIT-22C55E.svg)](LICENSE)
+[![Local first](https://img.shields.io/badge/Privacy-Local--first-38BDF8)](#privacy)
+
+![Narration Pilot — scene-by-scene narration for macOS](docs/images/narration-pilot-hero.svg)
+
+</div>
+
+Narration Pilot is a native macOS menu bar app for tutorial creators, screen recorders, and anyone who needs reliable text-to-speech while working through a script. Paste or type a script, organize it into scenes, play one scene at a time, and control the entire session with global shortcuts.
+
+## Why Narration Pilot?
+
+Traditional text-to-speech tools read a whole document. Narration Pilot treats a script as a production workflow: the current scene stays in focus, recording directions can remain visible without being narrated, and external shortcuts can start or stop another recording app around speech.
 
 ## Features
 
-- Clipboard, typed-text, and scene-based script reading
-- Automatic sentence-based scene splitting
-- Scene Manager for editing, splitting, merging, deleting, and selecting scenes
-- Previous, replay, next, and restart controls
-- Presenter overlay with previous, current, and next scene context
-- Optional capture-hidden overlay and Scene Manager windows
-- Adjustable voice, speech rate, colors, sizes, position, and opacity
-- Configurable global shortcuts with per-shortcut speech speeds
-- Optional external shortcut triggers before or after narration
-- Bracketed production directions skipped during normal playback and included during Replay Scene
-- Local-first operation using macOS speech services
+| Area | What Narration Pilot provides |
+| --- | --- |
+| **Scene playback** | Automatic sentence splitting, one-scene-at-a-time narration, previous, replay, next, and restart controls |
+| **Scene Manager** | Select, edit, split, merge, and delete scenes while preserving manual scene boundaries |
+| **Production directions** | Normal playback skips text inside square brackets; Replay Scene includes it |
+| **Presenter overlay** | Previous, current, and next scene context with adjustable placement, size, opacity, typography, and colors |
+| **Recording-friendly UI** | Presenter overlay and Scene Manager can be hidden from standard macOS screen capture |
+| **Global shortcuts** | Two current-input shortcuts and three always-read-clipboard shortcuts, each with its own speech speed |
+| **Recording automation** | Optionally send an external shortcut before narration, after narration, or both |
+| **Speech controls** | macOS voices, adjustable rate, pause, resume, stop, and replay |
+| **Input choices** | Read the clipboard, entered text, or a scene-based script |
+| **Privacy** | Local-first operation with no analytics, accounts, advertising, or project-owned cloud storage |
+
+## How it works
+
+1. Paste a tutorial script or enter text directly.
+2. Turn on **Script mode** to create sentence-based scenes.
+3. Use **Play Scene** or a global shortcut to narrate the current scene.
+4. Narration Pilot advances to the next scene when speech finishes.
+
+For example:
+
+```text
+[On screen: Open the image overlay window.] Yesterday, I wanted to add a new option here.
+```
+
+Normal playback reads only the narration. **Replay Scene** reads the complete scene, including the bracketed direction.
 
 ## Requirements
 
 - macOS 15 or newer
-- Xcode and the Xcode Command Line Tools
-- Apple Silicon is the currently tested architecture
+- Apple Silicon Mac—the currently tested architecture
+- Xcode and the Xcode Command Line Tools when building from source
 
-## Build from source
+## Quick start
+
+Clone and build the project:
 
 ```bash
 git clone https://github.com/sahandghavidel/narration-pilot.git
@@ -32,27 +65,28 @@ cd narration-pilot
 swift build
 ```
 
-Launch the latest debug build:
+Run the newest debug build:
 
 ```bash
 ./scripts/dev-run.sh
 ```
 
-Launch an optimized release build without installing an app bundle:
+Run an optimized release build without installing an app bundle:
 
 ```bash
 ./scripts/dev-release-run.sh
 ```
 
-The raw SwiftPM executable and the installed app use different macOS preferences domains. Use the installed app for your normal workflow if you want to keep one stable set of shortcuts and settings.
-
-## Install a local app bundle
+## Install the macOS app locally
 
 ```bash
 ./scripts/install-local-app.sh
 ```
 
-This installs `Narration Pilot.app` in `~/Applications`. Upgrades retain the legacy `local.clipboardreadermac` bundle identifier so existing Clipboard Reader users keep their shortcuts and settings after renaming.
+This installs `Narration Pilot.app` in `~/Applications` and launches it. Upgrades retain the legacy `local.clipboardreadermac` bundle identifier so people upgrading from Clipboard Reader keep their shortcuts and settings.
+
+> [!NOTE]
+> The raw SwiftPM executable and the installed app use different macOS preferences domains. Use the installed app for normal work when you want one stable set of shortcuts and settings.
 
 ## Using Narration Pilot
 
@@ -64,23 +98,21 @@ This installs `Narration Pilot.app` in `~/Applications`. Upgrades retain the leg
 
 ### Scene workflow
 
-Normal scene playback skips production directions enclosed in square brackets. **Replay Scene** reads the complete scene, including bracketed directions.
-
-Use **Previous**, **Replay**, **Next**, and **Restart** to navigate. Open **Edit Current Scene** to select, edit, split, merge, or delete scenes. Manual scene boundaries are retained until the raw script is changed directly.
+Use **Previous**, **Replay**, **Next**, and **Restart** to navigate. Open **Edit Current Scene** to select, edit, split, merge, or delete scenes. Manual boundaries remain in place until the raw script is changed directly.
 
 ### Presenter overlay
 
-The overlay shows the previous, current, and next scenes. It supports custom sizing, placement, opacity, typography, and colors. It can also be hidden from standard macOS screen capture or hidden automatically while speech is playing.
+The overlay shows the previous, current, and next scenes. It supports custom sizing, placement, opacity, typography, colors, and quick color presets. You can hide it from standard macOS screen capture or hide it automatically while speech is playing.
 
 ### Shortcuts and recording triggers
 
-Narration Pilot provides two shortcuts for reading the current input and three shortcuts that always read the clipboard. Each read shortcut can use a different speed and optionally send a configured recording shortcut before speech, after speech, or both.
+Narration Pilot provides two shortcuts for reading the current input and three shortcuts that always read the clipboard. Every read shortcut can use a different speed and optionally send a configured recording shortcut before speech, after speech, or both.
 
-Sending external shortcuts requires macOS Accessibility permission.
+Sending external shortcuts requires macOS Accessibility permission. Narration Pilot requests that permission only when you ask it to.
 
-## VS Code
+## VS Code development
 
-Open the repository and choose one of these tasks from **Terminal > Run Task**:
+Open the repository and choose one of these tasks from **Terminal → Run Task**:
 
 - **Dev Run Narration Pilot**
 - **Dev Release Run Narration Pilot**
@@ -95,16 +127,16 @@ swift build -c release
 swift test
 ```
 
-Some standalone Swift toolchains may not provide XCTest. In that environment the executable builds still work, but `swift test` reports `no such module 'XCTest'`.
+Some standalone Swift toolchains do not provide XCTest. In that environment the executable builds still work, but `swift test` reports `no such module 'XCTest'`.
 
 ## Privacy
 
-Narration Pilot is local-first. Script text is passed to macOS speech services and is not uploaded by this project. The app does not include analytics, accounts, advertising, or remote storage.
+Narration Pilot is local-first. Script text is passed to macOS speech services and is not uploaded by this project. The app contains no analytics, accounts, advertising, or remote storage.
 
 ## Contributing
 
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ## License
 
-Narration Pilot is available under the [MIT License](LICENSE).
+Narration Pilot is open source under the [MIT License](LICENSE).

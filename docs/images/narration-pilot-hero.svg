@@ -1,0 +1,103 @@
+<svg width="1440" height="720" viewBox="0 0 1440 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title description">
+  <title id="title">Narration Pilot</title>
+  <desc id="description">A scene-by-scene narration companion for macOS</desc>
+  <defs>
+    <linearGradient id="background" x1="70" y1="20" x2="1370" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#07111F"/>
+      <stop offset="0.52" stop-color="#10233E"/>
+      <stop offset="1" stop-color="#193352"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="170" y1="190" x2="680" y2="530" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#65D6FF"/>
+      <stop offset="1" stop-color="#8B7CFF"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="825" y1="105" x2="1250" y2="625" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#213B5E" stop-opacity="0.94"/>
+      <stop offset="1" stop-color="#12253E" stop-opacity="0.98"/>
+    </linearGradient>
+    <filter id="shadow" x="695" y="30" width="690" height="660" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#020812" flood-opacity="0.45"/>
+    </filter>
+    <filter id="glow" x="30" y="100" width="770" height="520" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="60"/>
+    </filter>
+  </defs>
+
+  <rect width="1440" height="720" rx="36" fill="url(#background)"/>
+  <circle cx="274" cy="350" r="205" fill="#2485D8" fill-opacity="0.14" filter="url(#glow)"/>
+  <circle cx="1280" cy="130" r="170" fill="#7D68FF" fill-opacity="0.12"/>
+
+  <g opacity="0.5">
+    <path d="M0 610C210 545 310 675 520 612C730 549 865 515 1070 585C1240 643 1340 605 1440 554V720H0V610Z" fill="#0B1B2D"/>
+    <path d="M0 632C205 580 330 689 540 634C750 579 875 548 1080 612C1240 662 1355 628 1440 592" stroke="#65D6FF" stroke-opacity="0.13" stroke-width="2"/>
+  </g>
+
+  <g transform="translate(110 156)">
+    <g>
+      <rect width="72" height="72" rx="20" fill="url(#accent)"/>
+      <path d="M23 42V30M31 49V23M39 45V27M47 39V33" stroke="white" stroke-width="5" stroke-linecap="round"/>
+    </g>
+    <text x="0" y="145" fill="white" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="74" font-weight="760" letter-spacing="-2.5">Narration Pilot</text>
+    <text x="2" y="205" fill="#BBD0E8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="27" font-weight="450">Scene-by-scene narration for macOS</text>
+
+    <g transform="translate(0 264)">
+      <rect width="178" height="48" rx="24" fill="#65D6FF" fill-opacity="0.12" stroke="#65D6FF" stroke-opacity="0.34"/>
+      <circle cx="25" cy="24" r="6" fill="#65D6FF"/>
+      <text x="42" y="31" fill="#D9F4FF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="600">Local-first</text>
+    </g>
+    <g transform="translate(194 264)">
+      <rect width="210" height="48" rx="24" fill="#8B7CFF" fill-opacity="0.12" stroke="#8B7CFF" stroke-opacity="0.38"/>
+      <path d="M20 18L30 24L20 30V18Z" fill="#AFA5FF"/>
+      <text x="43" y="31" fill="#E6E2FF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="600">Recording-ready</text>
+    </g>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="765" y="75" width="560" height="570" rx="28" fill="url(#panel)" stroke="#7090B5" stroke-opacity="0.35"/>
+    <rect x="765" y="75" width="560" height="62" rx="28" fill="#29476D" fill-opacity="0.88"/>
+    <rect x="765" y="112" width="560" height="25" fill="#29476D" fill-opacity="0.88"/>
+    <circle cx="799" cy="106" r="7" fill="#FF6B6B"/>
+    <circle cx="824" cy="106" r="7" fill="#FFD166"/>
+    <circle cx="849" cy="106" r="7" fill="#52D273"/>
+    <text x="882" y="113" fill="#EAF4FF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="19" font-weight="650">Narration Pilot</text>
+
+    <text x="805" y="181" fill="#88A4C2" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="650" letter-spacing="1.5">SCENE 2 OF 4</text>
+
+    <rect x="805" y="205" width="480" height="66" rx="14" fill="#11243B" fill-opacity="0.62"/>
+    <text x="826" y="232" fill="#7892AE" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600">PREVIOUS</text>
+    <rect x="826" y="244" width="272" height="8" rx="4" fill="#5B7693" fill-opacity="0.42"/>
+
+    <rect x="805" y="287" width="480" height="130" rx="16" fill="#284A70" stroke="#65D6FF" stroke-opacity="0.6"/>
+    <text x="826" y="316" fill="#83E1FF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="700">CURRENT SCENE</text>
+    <rect x="826" y="336" width="404" height="10" rx="5" fill="#EAF4FF" fill-opacity="0.9"/>
+    <rect x="826" y="357" width="365" height="10" rx="5" fill="#EAF4FF" fill-opacity="0.72"/>
+    <rect x="826" y="378" width="286" height="10" rx="5" fill="#EAF4FF" fill-opacity="0.48"/>
+
+    <rect x="805" y="433" width="480" height="66" rx="14" fill="#11243B" fill-opacity="0.62"/>
+    <text x="826" y="460" fill="#7892AE" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600">NEXT</text>
+    <rect x="826" y="472" width="318" height="8" rx="4" fill="#5B7693" fill-opacity="0.42"/>
+
+    <g transform="translate(805 528)">
+      <rect width="102" height="48" rx="13" fill="#1A324F"/>
+      <path d="M42 15L29 24L42 33V15Z" fill="#9EB6CE"/>
+      <path d="M52 15L39 24L52 33V15Z" fill="#9EB6CE"/>
+      <text x="61" y="30" fill="#D6E6F5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600">Prev</text>
+    </g>
+    <g transform="translate(920 528)">
+      <rect width="112" height="48" rx="13" fill="url(#accent)"/>
+      <path d="M28 14L44 24L28 34V14Z" fill="white"/>
+      <text x="54" y="30" fill="white" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="700">Play</text>
+    </g>
+    <g transform="translate(1045 528)">
+      <rect width="108" height="48" rx="13" fill="#1A324F"/>
+      <path d="M60 15L73 24L60 33V15Z" fill="#9EB6CE"/>
+      <path d="M50 15L63 24L50 33V15Z" fill="#9EB6CE"/>
+      <text x="14" y="30" fill="#D6E6F5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600">Next</text>
+    </g>
+    <g transform="translate(1166 528)">
+      <rect width="119" height="48" rx="13" fill="#1A324F"/>
+      <circle cx="25" cy="24" r="7" fill="#FF646F"/>
+      <text x="42" y="30" fill="#FFDDE0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="650">Recording</text>
+    </g>
+  </g>
+</svg>
