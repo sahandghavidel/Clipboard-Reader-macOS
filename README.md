@@ -1,189 +1,110 @@
-# Clipboard Reader (macOS)
+# Narration Pilot
 
-A native macOS menu bar app that reads clipboard text, typed text, or tutorial scripts aloud with built-in speech.
+Narration Pilot is a native macOS menu bar companion for scene-by-scene narration and screen-recording workflows. Paste or type a script, organize it into scenes, play each scene with macOS speech, and control the session with global shortcuts while you record.
 
-Current local version: `1.24`.
+Current version: `1.25`
+
+## Features
+
+- Clipboard, typed-text, and scene-based script reading
+- Automatic sentence-based scene splitting
+- Scene Manager for editing, splitting, merging, deleting, and selecting scenes
+- Previous, replay, next, and restart controls
+- Presenter overlay with previous, current, and next scene context
+- Optional capture-hidden overlay and Scene Manager windows
+- Adjustable voice, speech rate, colors, sizes, position, and opacity
+- Configurable global shortcuts with per-shortcut speech speeds
+- Optional external shortcut triggers before or after narration
+- Bracketed production directions skipped during normal playback and included during Replay Scene
+- Local-first operation using macOS speech services
 
 ## Requirements
 
-- Apple Silicon Mac
-- macOS 15+ (this project currently targets `macOS(.v15)`)
-- Xcode + Command Line Tools
+- macOS 15 or newer
+- Xcode and the Xcode Command Line Tools
+- Apple Silicon is the currently tested architecture
 
-## Fastest way to develop
-
-Use the local development runner while changing code. It quits any existing copy of the app, rebuilds this project, and launches the newest debug binary directly from `.build`.
+## Build from source
 
 ```bash
-cd /Users/sahand/Desktop/projects-test/clipboard-reader-mac
+git clone https://github.com/sahandghavidel/narration-pilot.git
+cd narration-pilot
+swift build
+```
+
+Launch the latest debug build:
+
+```bash
 ./scripts/dev-run.sh
 ```
 
-When you change code, quit the menu bar app or stop the terminal command, then run the same script again. You do not need to reinstall the `.app` package while developing.
-
-If you want to test the optimized release binary without installing it:
+Launch an optimized release build without installing an app bundle:
 
 ```bash
 ./scripts/dev-release-run.sh
 ```
 
-Important: if you installed `ClipboardReaderMac.app` in `~/Applications`, make sure it is not still running while testing local builds. Otherwise you may be looking at the old installed app instead of the newest code.
+The raw SwiftPM executable and the installed app use different macOS preferences domains. Use the installed app for your normal workflow if you want to keep one stable set of shortcuts and settings.
 
-## Reading modes
-
-The menu bar app has a toggle named **Read typed text instead of clipboard**.
-
-- Toggle off: **Read Clipboard** and the read shortcut use the macOS clipboard.
-- Toggle on: **Read Text** and the same read shortcut use the text typed into the app.
-- Stop, pause/resume, speed, voice, and shortcut settings work the same in both modes.
-- Typed text is not saved when the app quits.
-
-## Script mode
-
-Turn on **Script mode** when the text box contains a tutorial script.
-
-- The app splits the script into sentence-based scenes.
-- **Play Scene** and the read shortcut read one scene, stop, then advance to the next scene after speech finishes.
-- Use **Previous**, **Replay**, **Next**, and **Restart** to control the current scene.
-- Default scene shortcuts are `Command+Option+Up` for replay, `Command+Option+Left` for previous, and `Command+Option+Right` for next.
-- The current scene preview shows what will be read next.
-
-## Presenter overlay
-
-Turn on **Show presenter overlay** inside Script mode to show previous, current, and next scenes in a floating bottom overlay. Use **Hide overlay from screen recordings** to ask macOS not to include the overlay in standard screen capture output.
-
-The overlay settings let you adjust opacity, width, height, bottom position, horizontal position, current text size, previous/next text size, text colors, text transparency, and quick color presets. Use **Reset overlay defaults** to return to the default presenter layout.
-
-Use the **Toggle Overlay** shortcut to show or hide the presenter overlay without opening the menu. The default shortcut is `Command+Option+O`. Turn on **Hide overlay while audio is playing** if you want the overlay visible while preparing but hidden during narration playback.
-
-Use the **Edit Scene** button in the presenter overlay, or the **Edit Current Scene** global shortcut, to open the hidden-from-recording Scene Manager. It shows all scenes, lets you select the current scene, edit text, split, merge, and delete scenes. Merged scenes stay merged after saving and reopening the manager. The editor focuses the text box immediately; **Done** or **Escape** saves once and closes.
-
-## External shortcut triggers
-
-The **Global Shortcuts** section includes two separate read shortcuts:
-
-- **Read Current Input 1**
-- **Read Current Input 2**
-- **Read Clipboard Always 1**
-- **Read Clipboard Always 2**
-- **Read Clipboard Always 3**
-
-Both read the same current input: clipboard mode reads the clipboard, typed text mode reads the text box, and Script mode plays the current scene. Each read shortcut has its own speech speed plus options to trigger an external shortcut before reading, after reading, or both.
-
-All **Read Clipboard Always** shortcuts ignore typed-text mode and Script mode. They always read the current macOS clipboard, and each one has its own speech speed plus before/after external trigger options.
-
-The global read speed and shortcut-specific speeds support `0.25x` through `2.5x`.
-
-The external trigger shortcut is configured with modifier checkboxes and a key picker. It is not registered as a global shortcut by Clipboard Reader, so it can match a shortcut that already belongs to your recording app. macOS Accessibility permission is required to send the external shortcut.
-
-The app does not repeatedly force the Accessibility permission dialog during playback. Use **Request Accessibility Permission** only when you want macOS to show the permission prompt again.
-
-### Run from VS Code
-
-1. Open this folder in VS Code.
-2. Open **Terminal > Run Task...**.
-3. Choose **Dev Run Clipboard Reader**.
-4. Look for the app in your menu bar.
-
-You can still use **Run and Debug** with the existing debug configuration, but the task is better when you want the old running app to be stopped automatically first.
-
-## Other ways to run
-
-### Run from VS Code debugger
-
-1. Open this folder in VS Code.
-2. Open **Run and Debug**.
-3. Choose **Debug clipboard-reader-mac**.
-4. Start debugging.
-5. Look for the app in your menu bar.
-
-### Run manually from Terminal
+## Install a local app bundle
 
 ```bash
-cd /Users/sahand/Desktop/projects-test/clipboard-reader-mac
+./scripts/install-local-app.sh
+```
+
+This installs `Narration Pilot.app` in `~/Applications`. Upgrades retain the legacy `local.clipboardreadermac` bundle identifier so existing Clipboard Reader users keep their shortcuts and settings after renaming.
+
+## Using Narration Pilot
+
+### Reading modes
+
+- Leave **Read typed text instead of clipboard** off to read the current clipboard.
+- Turn it on to read text entered in the app.
+- Turn on **Script mode** to split a tutorial script into scenes and play one scene at a time.
+
+### Scene workflow
+
+Normal scene playback skips production directions enclosed in square brackets. **Replay Scene** reads the complete scene, including bracketed directions.
+
+Use **Previous**, **Replay**, **Next**, and **Restart** to navigate. Open **Edit Current Scene** to select, edit, split, merge, or delete scenes. Manual scene boundaries are retained until the raw script is changed directly.
+
+### Presenter overlay
+
+The overlay shows the previous, current, and next scenes. It supports custom sizing, placement, opacity, typography, and colors. It can also be hidden from standard macOS screen capture or hidden automatically while speech is playing.
+
+### Shortcuts and recording triggers
+
+Narration Pilot provides two shortcuts for reading the current input and three shortcuts that always read the clipboard. Each read shortcut can use a different speed and optionally send a configured recording shortcut before speech, after speech, or both.
+
+Sending external shortcuts requires macOS Accessibility permission.
+
+## VS Code
+
+Open the repository and choose one of these tasks from **Terminal > Run Task**:
+
+- **Dev Run Narration Pilot**
+- **Dev Release Run Narration Pilot**
+
+The Run and Debug panel also includes debug and release configurations for the `NarrationPilot` executable.
+
+## Testing
+
+```bash
 swift build
-./.build/arm64-apple-macosx/debug/clipboard-reader-mac
-```
-
-To stop it, use the app's **Quit** menu item (or `Ctrl+C` in Terminal).
-
-## Create a local "installed" app (.app)
-
-This project is currently a Swift Package executable. You can still make a local `.app` wrapper for easy launching after you are happy with a version. The installed app is a copied build artifact; it will not update automatically when you edit source files.
-
-```bash
-cd /Users/sahand/Desktop/projects-test/clipboard-reader-mac
 swift build -c release
-mkdir -p "$HOME/Applications/ClipboardReaderMac.app/Contents/MacOS"
-mkdir -p "$HOME/Applications/ClipboardReaderMac.app/Contents/Resources"
-cp ./.build/arm64-apple-macosx/release/clipboard-reader-mac "$HOME/Applications/ClipboardReaderMac.app/Contents/MacOS/ClipboardReaderMac"
-cat > "$HOME/Applications/ClipboardReaderMac.app/Contents/Info.plist" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleName</key>
-  <string>ClipboardReaderMac</string>
-  <key>CFBundleDisplayName</key>
-  <string>ClipboardReaderMac</string>
-  <key>CFBundleIdentifier</key>
-  <string>local.clipboardreadermac</string>
-  <key>CFBundleVersion</key>
-  <string>24</string>
-  <key>CFBundleShortVersionString</key>
-  <string>1.24</string>
-  <key>CFBundleExecutable</key>
-  <string>ClipboardReaderMac</string>
-  <key>CFBundlePackageType</key>
-  <string>APPL</string>
-  <key>LSUIElement</key>
-  <true/>
-</dict>
-</plist>
-PLIST
-chmod +x "$HOME/Applications/ClipboardReaderMac.app/Contents/MacOS/ClipboardReaderMac"
-codesign --force --deep --sign - "$HOME/Applications/ClipboardReaderMac.app"
-open "$HOME/Applications/ClipboardReaderMac.app"
+swift test
 ```
 
-After this, you can launch it from Spotlight/Finder like a normal app.
+Some standalone Swift toolchains may not provide XCTest. In that environment the executable builds still work, but `swift test` reports `no such module 'XCTest'`.
 
-## Manual test checklist
+## Privacy
 
-1. Copy text in any app.
-2. Leave **Read typed text instead of clipboard** off.
-3. Trigger **Read Clipboard** (button or shortcut), then confirm speech starts.
-4. Turn **Read typed text instead of clipboard** on and type text into the app.
-5. Trigger **Read Text** (button or same shortcut), then confirm it reads typed text instead of clipboard.
-6. Turn **Script mode** on and paste a multi-sentence tutorial script.
-7. Trigger **Play Scene** or the read shortcut, then confirm it reads one scene and advances to the next.
-8. Use **Previous**, **Replay**, **Next**, and **Restart** to navigate scenes.
-9. Use the overlay **Edit Scene** button or **Edit Current Scene** shortcut, select scenes, edit, split/merge/delete, press **Escape**, and confirm previous/current/next update.
-10. Turn **Show presenter overlay** on and confirm previous/current/next scenes appear near the bottom of the screen.
-11. Adjust overlay opacity, width, height, position, font sizes, text colors, and text transparency.
-12. Use the **Toggle Overlay** shortcut and confirm the overlay shows/hides.
-13. Turn **Hide overlay while audio is playing** on and confirm the overlay hides during speech, then returns after speech stops or finishes.
-14. Use **Reset overlay defaults** and confirm the overlay returns to the default layout.
-15. Start a short screen recording and verify the overlay behavior with **Hide overlay from screen recordings** on and off.
-16. Trigger **Pause/Resume** once → pauses.
-17. Trigger **Pause/Resume** again → resumes.
-18. Trigger **Stop** → speech stops immediately.
-19. Configure **Read Current Input 1** and **Read Current Input 2** with different shortcut combinations.
-20. Set **Read Current Input 1** to `0.5x` and **Read Current Input 2** to `1.5x`, then verify each shortcut uses its own speed.
-21. Turn **Read typed text instead of clipboard** on, then trigger **Read Clipboard Always 1**, **2**, and **3** and confirm each still reads the clipboard.
-22. Enable **Trigger external shortcut before reading** and verify the recording app receives the external shortcut before speech starts.
-23. Enable **Trigger external shortcut after reading** and verify the recording app receives the external shortcut after speech finishes.
-24. Move speed sliders to **0.25x** and **2.5x**, verify slower/faster speech.
-25. Reassign shortcuts and verify they still work globally.
+Narration Pilot is local-first. Script text is passed to macOS speech services and is not uploaded by this project. The app does not include analytics, accounts, advertising, or remote storage.
 
-## Troubleshooting
+## Contributing
 
-- If the menu bar icon does not appear, fully quit and relaunch.
-- If a shortcut does not trigger, check for conflicts and assign a different combination.
-- If no speech plays, verify your Mac output volume and selected voice.
-- If build fails on older macOS, lower deployment target in `Package.swift`.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
-## Notes
+## License
 
-- `swift build` and `swift build -c release` are verified in this environment.
-- CLI `swift test` may fail in some environments due missing test modules/toolchain setup.
+Narration Pilot is available under the [MIT License](LICENSE).

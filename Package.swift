@@ -4,14 +4,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "clipboard-reader-mac",
+    name: "narration-pilot",
     platforms: [
         .macOS(.v15),
     ],
     products: [
         .executable(
-            name: "clipboard-reader-mac",
-            targets: ["clipboard-reader-mac"]
+            name: "NarrationPilot",
+            targets: ["NarrationPilot"]
         ),
     ],
     dependencies: [
@@ -21,14 +21,14 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .executableTarget(
-            name: "clipboard-reader-mac",
+            name: "NarrationPilot",
             dependencies: [
                 .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
             ]
         ),
         .testTarget(
-            name: "clipboard-reader-macTests",
-            dependencies: ["clipboard-reader-mac"]
+            name: "NarrationPilotTests",
+            dependencies: ["NarrationPilot"]
         ),
     ],
     swiftLanguageModes: [.v6]

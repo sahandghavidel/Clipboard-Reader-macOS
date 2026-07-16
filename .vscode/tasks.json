@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Dev Run Clipboard Reader",
+      "label": "Dev Run Narration Pilot",
       "type": "shell",
       "command": "${workspaceFolder}/scripts/dev-run.sh",
       "options": {
@@ -16,7 +16,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Dev Release Run Clipboard Reader",
+      "label": "Dev Release Run Narration Pilot",
       "type": "shell",
       "command": "${workspaceFolder}/scripts/dev-release-run.sh",
       "options": {

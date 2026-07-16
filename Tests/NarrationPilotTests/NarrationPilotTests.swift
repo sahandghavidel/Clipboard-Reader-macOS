@@ -1,7 +1,7 @@
 import XCTest
-@testable import clipboard_reader_mac
+@testable import NarrationPilot
 
-final class ClipboardReaderMacTests: XCTestCase {
+final class NarrationPilotTests: XCTestCase {
     func testSpeedMultiplierClamps() {
         XCTAssertEqual(SpeechRateMapper.clampMultiplier(0.1), 0.5)
         XCTAssertEqual(SpeechRateMapper.clampMultiplier(1.0), 1.0)
