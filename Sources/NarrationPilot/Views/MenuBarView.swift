@@ -10,7 +10,7 @@ struct MenuBarView: View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Clipboard Reader")
+                Text("Narration Pilot")
                     .font(.headline)
 
                 Spacer()

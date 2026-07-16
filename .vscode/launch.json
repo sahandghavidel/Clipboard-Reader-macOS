@@ -4,21 +4,21 @@
       "type": "swift",
       "request": "launch",
       "args": [],
-      "cwd": "${workspaceFolder:clipboard-reader-mac}",
-      "name": "Debug clipboard-reader-mac",
-      "target": "clipboard-reader-mac",
+      "cwd": "${workspaceFolder}",
+      "name": "Debug Narration Pilot",
+      "target": "NarrationPilot",
       "configuration": "debug",
-      "preLaunchTask": "swift: Build Debug clipboard-reader-mac"
+      "preLaunchTask": "swift: Build Debug NarrationPilot"
     },
     {
       "type": "swift",
       "request": "launch",
       "args": [],
-      "cwd": "${workspaceFolder:clipboard-reader-mac}",
-      "name": "Release clipboard-reader-mac",
-      "target": "clipboard-reader-mac",
+      "cwd": "${workspaceFolder}",
+      "name": "Release Narration Pilot",
+      "target": "NarrationPilot",
       "configuration": "release",
-      "preLaunchTask": "swift: Build Release clipboard-reader-mac"
+      "preLaunchTask": "swift: Build Release NarrationPilot"
     }
   ]
 }

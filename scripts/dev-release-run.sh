@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_PROCESS_NAMES=("clipboard-reader-mac" "ClipboardReaderMac")
+APP_PROCESS_NAMES=("NarrationPilot" "ClipboardReaderMac" "clipboard-reader-mac")
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
 cd "$REPO_ROOT"
 
-echo "Stopping existing Clipboard Reader processes..."
+echo "Stopping existing Narration Pilot processes..."
 for process_name in "${APP_PROCESS_NAMES[@]}"; do
     if pgrep -x "$process_name" >/dev/null; then
         pkill -x "$process_name"
@@ -18,7 +18,7 @@ done
 echo "Building release binary..."
 swift build -c release
 BINARY_DIR="$(swift build -c release --show-bin-path)"
-BINARY_PATH="$BINARY_DIR/clipboard-reader-mac"
+BINARY_PATH="$BINARY_DIR/NarrationPilot"
 
 if [[ ! -x "$BINARY_PATH" ]]; then
     echo "Build completed, but expected binary was not found:"
