@@ -15,7 +15,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", exact: "1.9.4"),
+        .package(path: "Vendor/KeyboardShortcuts"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.

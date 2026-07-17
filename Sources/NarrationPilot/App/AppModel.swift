@@ -1180,6 +1180,12 @@ final class AppModel: ObservableObject {
             }
         }
 
+        KeyboardShortcuts.onKeyUp(for: .restartScript) { [weak self] in
+            Task { @MainActor in
+                self?.restartScript()
+            }
+        }
+
         KeyboardShortcuts.onKeyUp(for: .togglePresenterOverlay) { [weak self] in
             Task { @MainActor in
                 self?.togglePresenterOverlay()

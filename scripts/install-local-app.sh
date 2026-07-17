@@ -27,6 +27,16 @@ mkdir -p "$APP_PATH/Contents/MacOS" "$APP_PATH/Contents/Resources"
 cp "$BINARY_DIR/NarrationPilot" "$APP_PATH/Contents/MacOS/NarrationPilot"
 rm -f "$APP_PATH/Contents/MacOS/ClipboardReaderMac"
 
+# Remove resource bundles left by older installers from the app root. macOS
+# rejects that nonstandard layout when signing the application.
+find "$APP_PATH" -maxdepth 1 -type d -name '*.bundle' -exec rm -rf {} +
+find "$APP_PATH/Contents/Resources" -maxdepth 1 -type d -name '*.bundle' -exec rm -rf {} +
+
+# Keep SwiftPM dependency resources in the standard signed-app location.
+while IFS= read -r -d '' resource_bundle; do
+    cp -R "$resource_bundle" "$APP_PATH/Contents/Resources/"
+done < <(find "$BINARY_DIR" -maxdepth 1 -type d -name '*.bundle' -print0)
+
 cat > "$APP_PATH/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

@@ -51,6 +51,11 @@ extension KeyboardShortcuts.Name {
         default: KeyboardShortcuts.Shortcut(.rightArrow, modifiers: [.command, .option])
     )
 
+    static let restartScript = Self(
+        "restartScript",
+        default: KeyboardShortcuts.Shortcut(.downArrow, modifiers: [.command, .option])
+    )
+
     static let togglePresenterOverlay = Self(
         "togglePresenterOverlay",
         default: KeyboardShortcuts.Shortcut(.o, modifiers: [.command, .option])

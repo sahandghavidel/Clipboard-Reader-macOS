@@ -4,7 +4,10 @@ import SwiftUI
 
 struct MenuBarView: View {
     @EnvironmentObject private var appModel: AppModel
-    @State private var overlaySettingsExpanded = true
+    @State private var inputExpanded = true
+    @State private var overlaySettingsExpanded = false
+    @State private var speechSettingsExpanded = false
+    @State private var shortcutSettingsExpanded = false
 
     var body: some View {
         ScrollView(.vertical) {
@@ -24,90 +27,85 @@ struct MenuBarView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            VStack(alignment: .leading, spacing: 8) {
-                Toggle("Read typed text instead of clipboard", isOn: $appModel.readsTypedTextInsteadOfClipboard)
+            DisclosureGroup("Input", isExpanded: $inputExpanded) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Read typed text instead of clipboard", isOn: $appModel.readsTypedTextInsteadOfClipboard)
 
-                Toggle("Script mode", isOn: $appModel.scriptModeEnabled)
+                    Toggle("Script mode", isOn: $appModel.scriptModeEnabled)
 
-                Text(appModel.inputModeStatus)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    Text(appModel.inputModeStatus)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
 
-                TextEditor(text: $appModel.typedText)
-                    .font(.body)
-                    .frame(minHeight: 100)
-                    .onChange(of: appModel.typedText) {
-                        appModel.refreshScriptScenes()
+                    TextEditor(text: $appModel.typedText)
+                        .font(.body)
+                        .frame(height: 110)
+                        .onChange(of: appModel.typedText) {
+                            appModel.refreshScriptScenes()
+                        }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color.secondary.opacity(0.25))
+                        )
+
+                    HStack(spacing: 8) {
+                        Button(appModel.readButtonTitle) {
+                            appModel.readNow()
+                        }
+
+                        Button("Clear") {
+                            appModel.clearTypedText()
+                        }
+                        .disabled(appModel.typedText.isEmpty)
                     }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.secondary.opacity(0.25))
-                    )
+                }
+                .padding(.top, 6)
+            }
 
-                HStack(spacing: 8) {
-                    Button(appModel.readButtonTitle) {
-                        appModel.readNow()
-                    }
+            if appModel.scriptModeEnabled {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(appModel.scriptSceneProgress)
+                        .font(.subheadline.bold())
 
-                    Button("Clear") {
-                        appModel.clearTypedText()
+                    Text(appModel.currentSceneText ?? "Paste a script to create scenes.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    HStack(spacing: 8) {
+                        Button("Previous") {
+                            appModel.goToPreviousScene()
+                        }
+                        .disabled(!appModel.canGoToPreviousScene)
+
+                        Button("Replay") {
+                            appModel.replayCurrentScriptScene()
+                        }
+                        .disabled(appModel.currentSceneText == nil)
+
+                        Button("Next") {
+                            appModel.goToNextScene()
+                        }
+                        .disabled(!appModel.canGoToNextScene)
+
+                        Button("Restart") {
+                            appModel.restartScript()
+                        }
+                        .disabled(appModel.currentSceneText == nil)
                     }
-                    .disabled(appModel.typedText.isEmpty)
                 }
 
-                if appModel.scriptModeEnabled {
-                    Divider()
+                Toggle("Show presenter overlay", isOn: $appModel.showPresenterOverlay)
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(appModel.scriptSceneProgress)
-                            .font(.subheadline.bold())
+                DisclosureGroup("Presenter overlay settings", isExpanded: $overlaySettingsExpanded) {
+                    VStack(alignment: .leading, spacing: 10) {
+                                Toggle("Hide overlay from screen recordings", isOn: $appModel.hidePresenterOverlayFromCapture)
+                                    .disabled(!appModel.showPresenterOverlay)
 
-                        Text(appModel.currentSceneText ?? "Paste a script to create scenes.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(4)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                                Toggle("Hide overlay while audio is playing", isOn: $appModel.hidePresenterOverlayWhileSpeaking)
+                                    .disabled(!appModel.showPresenterOverlay)
 
-                        HStack(spacing: 8) {
-                            Button("Previous") {
-                                appModel.goToPreviousScene()
-                            }
-                            .disabled(!appModel.canGoToPreviousScene)
-
-                            Button("Replay") {
-                                appModel.replayCurrentScriptScene()
-                            }
-                            .disabled(appModel.currentSceneText == nil)
-
-                            Button("Next") {
-                                appModel.goToNextScene()
-                            }
-                            .disabled(!appModel.canGoToNextScene)
-
-                            Button("Restart") {
-                                appModel.restartScript()
-                            }
-                            .disabled(appModel.currentSceneText == nil)
-                        }
-                    }
-
-                    Divider()
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Toggle("Show presenter overlay", isOn: $appModel.showPresenterOverlay)
-
-                        Toggle("Hide overlay from screen recordings", isOn: $appModel.hidePresenterOverlayFromCapture)
-                            .disabled(!appModel.showPresenterOverlay)
-
-                        Toggle("Hide overlay while audio is playing", isOn: $appModel.hidePresenterOverlayWhileSpeaking)
-                            .disabled(!appModel.showPresenterOverlay)
-
-                        Text("Overlay shows previous, current, and next scenes at the bottom of the screen.")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-
-                        DisclosureGroup("Presenter overlay settings", isExpanded: $overlaySettingsExpanded) {
-                            VStack(alignment: .leading, spacing: 10) {
                                 overlaySlider(
                                     "Opacity",
                                     value: $appModel.presenterOverlayOpacity,
@@ -182,10 +180,8 @@ struct MenuBarView: View {
                                 Button("Reset overlay defaults") {
                                     appModel.resetPresenterOverlayDefaults()
                                 }
-                            }
-                            .padding(.top, 6)
-                        }
                     }
+                    .padding(.top, 6)
                 }
             }
 
@@ -201,60 +197,47 @@ struct MenuBarView: View {
                 .disabled(appModel.speechState == .idle || appModel.speechState == .stopping)
             }
 
-            Divider()
+            DisclosureGroup("Speech settings", isExpanded: $speechSettingsExpanded) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Read Speed: \(appModel.speedMultiplier, specifier: "%.2f")x")
+                        .font(.subheadline)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Read Speed: \(appModel.speedMultiplier, specifier: "%.2f")x")
-                    .font(.subheadline)
-
-                Slider(
-                    value: $appModel.speedMultiplier,
-                    in: SpeechRateMapper.minMultiplier...SpeechRateMapper.maxMultiplier,
-                    step: 0.05
-                )
-
-                Text("Range: 0.25x to 2.5x")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Voice")
-                    .font(.subheadline)
-
-                Text("Using: \(appModel.outputVoiceDescription)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if let note = appModel.outputVoiceNote {
-                    Text(note)
-                        .font(.caption2)
-                        .foregroundStyle(.orange)
-                }
-
-                Picker(
-                    "Voice",
-                    selection: Binding(
-                        get: { appModel.selectedVoiceIdentifierForPicker },
-                        set: { appModel.updateVoiceSelection($0) }
+                    Slider(
+                        value: $appModel.speedMultiplier,
+                        in: SpeechRateMapper.minMultiplier...SpeechRateMapper.maxMultiplier,
+                        step: 0.05
                     )
-                ) {
-                    Text("System Default").tag("")
-                    ForEach(appModel.availableVoices, id: \.identifier) { voice in
-                        Text("\(voice.name) (\(voice.language))")
-                            .tag(voice.identifier)
+
+                    Text("Using: \(appModel.outputVoiceDescription)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    if let note = appModel.outputVoiceNote {
+                        Text(note)
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
                     }
+
+                    Picker(
+                        "Voice",
+                        selection: Binding(
+                            get: { appModel.selectedVoiceIdentifierForPicker },
+                            set: { appModel.updateVoiceSelection($0) }
+                        )
+                    ) {
+                        Text("System Default").tag("")
+                        ForEach(appModel.availableVoices, id: \.identifier) { voice in
+                            Text("\(voice.name) (\(voice.language))")
+                                .tag(voice.identifier)
+                        }
+                    }
+                    .pickerStyle(.menu)
                 }
-                .labelsHidden()
-                .pickerStyle(.menu)
+                .padding(.top, 6)
             }
 
-            Divider()
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Global Shortcuts")
-                    .font(.subheadline.bold())
-
+            DisclosureGroup("Global shortcuts", isExpanded: $shortcutSettingsExpanded) {
+                VStack(alignment: .leading, spacing: 8) {
                 readShortcutSettings(
                     title: "Read Current Input 1",
                     name: .readClipboard,
@@ -309,34 +292,44 @@ struct MenuBarView: View {
 
                 Divider()
 
-                Text("External Trigger Shortcut")
-                    .font(.caption.bold())
+                DisclosureGroup("External trigger shortcut") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        TriggerShortcutCaptureView()
 
-                TriggerShortcutCaptureView()
+                        Text(appModel.isShortcutTriggerAccessibilityTrusted ? "Accessibility permission granted." : "Accessibility permission required to trigger external shortcuts.")
+                            .font(.caption2)
+                            .foregroundStyle(appModel.isShortcutTriggerAccessibilityTrusted ? Color.secondary : Color.orange)
 
-                Text(appModel.isShortcutTriggerAccessibilityTrusted ? "Accessibility permission granted." : "Accessibility permission required to trigger external shortcuts.")
-                    .font(.caption2)
-                    .foregroundStyle(appModel.isShortcutTriggerAccessibilityTrusted ? Color.secondary : Color.orange)
+                        HStack(spacing: 8) {
+                            Button("Open Accessibility Settings") {
+                                appModel.openShortcutTriggerAccessibilitySettings()
+                            }
 
-                HStack(spacing: 8) {
-                    Button("Open Accessibility Settings") {
-                        appModel.openShortcutTriggerAccessibilitySettings()
+                            Button("Request Permission") {
+                                appModel.requestShortcutTriggerAccessibilityPermission()
+                            }
+                        }
                     }
-
-                    Button("Request Permission") {
-                        appModel.requestShortcutTriggerAccessibilityPermission()
-                    }
+                    .padding(.top, 6)
                 }
 
                 Divider()
 
-                KeyboardShortcuts.Recorder("Stop Reading", name: .stopReading)
-                KeyboardShortcuts.Recorder("Pause / Resume", name: .pauseResumeReading)
-                KeyboardShortcuts.Recorder("Replay Scene", name: .replayScriptScene)
-                KeyboardShortcuts.Recorder("Previous Scene", name: .previousScriptScene)
-                KeyboardShortcuts.Recorder("Next Scene", name: .nextScriptScene)
-                KeyboardShortcuts.Recorder("Toggle Overlay", name: .togglePresenterOverlay)
-                KeyboardShortcuts.Recorder("Edit Current Scene", name: .editCurrentScene)
+                DisclosureGroup("Playback and scene shortcuts") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        KeyboardShortcuts.Recorder("Stop Reading", name: .stopReading)
+                        KeyboardShortcuts.Recorder("Pause / Resume", name: .pauseResumeReading)
+                        KeyboardShortcuts.Recorder("Replay Scene", name: .replayScriptScene)
+                        KeyboardShortcuts.Recorder("Previous Scene", name: .previousScriptScene)
+                        KeyboardShortcuts.Recorder("Next Scene", name: .nextScriptScene)
+                        KeyboardShortcuts.Recorder("Restart Script", name: .restartScript)
+                        KeyboardShortcuts.Recorder("Toggle Overlay", name: .togglePresenterOverlay)
+                        KeyboardShortcuts.Recorder("Edit Current Scene", name: .editCurrentScene)
+                    }
+                    .padding(.top, 6)
+                }
+                }
+                .padding(.top, 6)
             }
 
             Divider()
@@ -359,24 +352,27 @@ struct MenuBarView: View {
         triggerBefore: Binding<Bool>,
         triggerAfter: Binding<Bool>
     ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            KeyboardShortcuts.Recorder(title, name: name)
+        DisclosureGroup(title) {
+            VStack(alignment: .leading, spacing: 6) {
+                KeyboardShortcuts.Recorder("Shortcut", name: name)
 
-            Text("Speech Speed: \(speedMultiplier.wrappedValue, specifier: "%.2f")x")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                Text("Speech Speed: \(speedMultiplier.wrappedValue, specifier: "%.2f")x")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
-            Slider(
-                value: speedMultiplier,
-                in: SpeechRateMapper.minMultiplier...SpeechRateMapper.maxMultiplier,
-                step: 0.05
-            )
+                Slider(
+                    value: speedMultiplier,
+                    in: SpeechRateMapper.minMultiplier...SpeechRateMapper.maxMultiplier,
+                    step: 0.05
+                )
 
-            Toggle("Trigger external shortcut before reading", isOn: triggerBefore)
-                .font(.caption)
+                Toggle("Trigger external shortcut before reading", isOn: triggerBefore)
+                    .font(.caption)
 
-            Toggle("Trigger external shortcut after reading", isOn: triggerAfter)
-                .font(.caption)
+                Toggle("Trigger external shortcut after reading", isOn: triggerAfter)
+                    .font(.caption)
+            }
+            .padding(.top, 6)
         }
     }
 
