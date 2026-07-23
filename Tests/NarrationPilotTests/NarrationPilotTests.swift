@@ -98,4 +98,76 @@ final class NarrationPilotTests: XCTestCase {
         XCTAssertEqual(SpeechState.speaking.pauseResumeTitle, "Pause Reading")
         XCTAssertEqual(SpeechState.paused.pauseResumeTitle, "Resume Reading")
     }
+
+    func testFocuSeeStateDetectsRecordingFromPauseAction() {
+        let elements = [
+            FocuSeeAccessibilityElementSnapshot(
+                role: "AXButton",
+                labels: ["Pause"],
+                isEnabled: true
+            )
+        ]
+
+        XCTAssertEqual(
+            FocuSeeAccessibilityService.classify(isRunning: true, elements: elements),
+            .recording
+        )
+    }
+
+    func testFocuSeeStateDetectsPausedFromResumeAction() {
+        let elements = [
+            FocuSeeAccessibilityElementSnapshot(
+                role: "AXMenuItem",
+                labels: ["Resume"],
+                isEnabled: true
+            )
+        ]
+
+        XCTAssertEqual(
+            FocuSeeAccessibilityService.classify(isRunning: true, elements: elements),
+            .paused
+        )
+    }
+
+    func testFocuSeeStateTreatsDisabledPauseControlAsNotRecording() {
+        let elements = [
+            FocuSeeAccessibilityElementSnapshot(
+                role: "AXMenuItem",
+                labels: ["Pause"],
+                isEnabled: false
+            )
+        ]
+
+        XCTAssertEqual(
+            FocuSeeAccessibilityService.classify(isRunning: true, elements: elements),
+            .notRecording
+        )
+    }
+
+    func testFocuSeeStateFailsSafeWhenSignalsConflict() {
+        let elements = [
+            FocuSeeAccessibilityElementSnapshot(
+                role: "AXButton",
+                labels: ["Pause"],
+                isEnabled: true
+            ),
+            FocuSeeAccessibilityElementSnapshot(
+                role: "AXButton",
+                labels: ["Resume"],
+                isEnabled: true
+            )
+        ]
+
+        XCTAssertEqual(
+            FocuSeeAccessibilityService.classify(isRunning: true, elements: elements),
+            .unknown
+        )
+    }
+
+    func testFocuSeeStateDetectsClosedApplication() {
+        XCTAssertEqual(
+            FocuSeeAccessibilityService.classify(isRunning: false, elements: []),
+            .notRunning
+        )
+    }
 }

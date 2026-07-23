@@ -65,4 +65,8 @@ extension KeyboardShortcuts.Name {
         "editCurrentScene",
         default: KeyboardShortcuts.Shortcut(.e, modifiers: [.command, .option])
     )
+
+    static let ensureFocuSeeRecording = Self("ensureFocuSeeRecording")
+
+    static let ensureFocuSeePaused = Self("ensureFocuSeePaused")
 }

@@ -242,8 +242,8 @@ struct MenuBarView: View {
                     title: "Read Current Input 1",
                     name: .readClipboard,
                     speedMultiplier: $appModel.readShortcutOneSpeedMultiplier,
-                    triggerBefore: $appModel.readShortcutOneTriggersBefore,
-                    triggerAfter: $appModel.readShortcutOneTriggersAfter
+                    actionBefore: $appModel.readShortcutOneActionBefore,
+                    actionAfter: $appModel.readShortcutOneActionAfter
                 )
 
                 Divider()
@@ -252,8 +252,8 @@ struct MenuBarView: View {
                     title: "Read Current Input 2",
                     name: .readCurrentInputSecondary,
                     speedMultiplier: $appModel.readShortcutTwoSpeedMultiplier,
-                    triggerBefore: $appModel.readShortcutTwoTriggersBefore,
-                    triggerAfter: $appModel.readShortcutTwoTriggersAfter
+                    actionBefore: $appModel.readShortcutTwoActionBefore,
+                    actionAfter: $appModel.readShortcutTwoActionAfter
                 )
 
                 Divider()
@@ -262,8 +262,8 @@ struct MenuBarView: View {
                     title: "Read Clipboard Always 1",
                     name: .readClipboardAlways,
                     speedMultiplier: $appModel.readClipboardAlwaysSpeedMultiplier,
-                    triggerBefore: $appModel.readClipboardAlwaysTriggersBefore,
-                    triggerAfter: $appModel.readClipboardAlwaysTriggersAfter
+                    actionBefore: $appModel.readClipboardAlwaysActionBefore,
+                    actionAfter: $appModel.readClipboardAlwaysActionAfter
                 )
 
                 Divider()
@@ -272,8 +272,8 @@ struct MenuBarView: View {
                     title: "Read Clipboard Always 2",
                     name: .readClipboardAlwaysSecondary,
                     speedMultiplier: $appModel.readClipboardAlwaysTwoSpeedMultiplier,
-                    triggerBefore: $appModel.readClipboardAlwaysTwoTriggersBefore,
-                    triggerAfter: $appModel.readClipboardAlwaysTwoTriggersAfter
+                    actionBefore: $appModel.readClipboardAlwaysTwoActionBefore,
+                    actionAfter: $appModel.readClipboardAlwaysTwoActionAfter
                 )
 
                 Divider()
@@ -282,8 +282,8 @@ struct MenuBarView: View {
                     title: "Read Clipboard Always 3",
                     name: .readClipboardAlwaysTertiary,
                     speedMultiplier: $appModel.readClipboardAlwaysThreeSpeedMultiplier,
-                    triggerBefore: $appModel.readClipboardAlwaysThreeTriggersBefore,
-                    triggerAfter: $appModel.readClipboardAlwaysThreeTriggersAfter
+                    actionBefore: $appModel.readClipboardAlwaysThreeActionBefore,
+                    actionAfter: $appModel.readClipboardAlwaysThreeActionAfter
                 )
 
                 Text("Ignores typed-text mode and Script mode.")
@@ -295,6 +295,19 @@ struct MenuBarView: View {
                 DisclosureGroup("External trigger shortcut") {
                     VStack(alignment: .leading, spacing: 8) {
                         TriggerShortcutCaptureView()
+
+                        Text("Use FocuSee's existing Pause/Continue Recording shortcut. State-aware actions inspect FocuSee before sending it.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+
+                        KeyboardShortcuts.Recorder(
+                            "Ensure FocuSee Recording",
+                            name: .ensureFocuSeeRecording
+                        )
+                        KeyboardShortcuts.Recorder(
+                            "Ensure FocuSee Paused",
+                            name: .ensureFocuSeePaused
+                        )
 
                         Text(appModel.isShortcutTriggerAccessibilityTrusted ? "Accessibility permission granted." : "Accessibility permission required to trigger external shortcuts.")
                             .font(.caption2)
@@ -349,8 +362,8 @@ struct MenuBarView: View {
         title: String,
         name: KeyboardShortcuts.Name,
         speedMultiplier: Binding<Double>,
-        triggerBefore: Binding<Bool>,
-        triggerAfter: Binding<Bool>
+        actionBefore: Binding<ExternalTriggerAction>,
+        actionAfter: Binding<ExternalTriggerAction>
     ) -> some View {
         DisclosureGroup(title) {
             VStack(alignment: .leading, spacing: 6) {
@@ -366,14 +379,24 @@ struct MenuBarView: View {
                     step: 0.05
                 )
 
-                Toggle("Trigger external shortcut before reading", isOn: triggerBefore)
-                    .font(.caption)
-
-                Toggle("Trigger external shortcut after reading", isOn: triggerAfter)
-                    .font(.caption)
+                externalTriggerActionPicker("Before reading", selection: actionBefore)
+                externalTriggerActionPicker("After reading", selection: actionAfter)
             }
             .padding(.top, 6)
         }
+    }
+
+    private func externalTriggerActionPicker(
+        _ title: String,
+        selection: Binding<ExternalTriggerAction>
+    ) -> some View {
+        Picker(title, selection: selection) {
+            ForEach(ExternalTriggerAction.allCases) { action in
+                Text(action.title).tag(action)
+            }
+        }
+        .pickerStyle(.menu)
+        .font(.caption)
     }
 
     private func overlaySlider(

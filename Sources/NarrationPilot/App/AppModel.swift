@@ -14,16 +14,24 @@ final class AppModel: ObservableObject {
     @Published private(set) var recordingTriggerShortcut: TriggerShortcut?
     @Published var typedText: String = ""
 
-    @Published var readShortcutOneTriggersBefore: Bool {
+    @Published var readShortcutOneActionBefore: ExternalTriggerAction {
         didSet {
-            defaults.set(readShortcutOneTriggersBefore, forKey: Self.readShortcutOneTriggerBeforeKey)
+            persistExternalTriggerAction(
+                readShortcutOneActionBefore,
+                actionKey: Self.readShortcutOneActionBeforeKey,
+                legacyBoolKey: Self.readShortcutOneTriggerBeforeKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
 
-    @Published var readShortcutOneTriggersAfter: Bool {
+    @Published var readShortcutOneActionAfter: ExternalTriggerAction {
         didSet {
-            defaults.set(readShortcutOneTriggersAfter, forKey: Self.readShortcutOneTriggerAfterKey)
+            persistExternalTriggerAction(
+                readShortcutOneActionAfter,
+                actionKey: Self.readShortcutOneActionAfterKey,
+                legacyBoolKey: Self.readShortcutOneTriggerAfterKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
@@ -40,16 +48,24 @@ final class AppModel: ObservableObject {
         }
     }
 
-    @Published var readShortcutTwoTriggersBefore: Bool {
+    @Published var readShortcutTwoActionBefore: ExternalTriggerAction {
         didSet {
-            defaults.set(readShortcutTwoTriggersBefore, forKey: Self.readShortcutTwoTriggerBeforeKey)
+            persistExternalTriggerAction(
+                readShortcutTwoActionBefore,
+                actionKey: Self.readShortcutTwoActionBeforeKey,
+                legacyBoolKey: Self.readShortcutTwoTriggerBeforeKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
 
-    @Published var readShortcutTwoTriggersAfter: Bool {
+    @Published var readShortcutTwoActionAfter: ExternalTriggerAction {
         didSet {
-            defaults.set(readShortcutTwoTriggersAfter, forKey: Self.readShortcutTwoTriggerAfterKey)
+            persistExternalTriggerAction(
+                readShortcutTwoActionAfter,
+                actionKey: Self.readShortcutTwoActionAfterKey,
+                legacyBoolKey: Self.readShortcutTwoTriggerAfterKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
@@ -66,16 +82,24 @@ final class AppModel: ObservableObject {
         }
     }
 
-    @Published var readClipboardAlwaysTriggersBefore: Bool {
+    @Published var readClipboardAlwaysActionBefore: ExternalTriggerAction {
         didSet {
-            defaults.set(readClipboardAlwaysTriggersBefore, forKey: Self.readClipboardAlwaysTriggerBeforeKey)
+            persistExternalTriggerAction(
+                readClipboardAlwaysActionBefore,
+                actionKey: Self.readClipboardAlwaysActionBeforeKey,
+                legacyBoolKey: Self.readClipboardAlwaysTriggerBeforeKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
 
-    @Published var readClipboardAlwaysTriggersAfter: Bool {
+    @Published var readClipboardAlwaysActionAfter: ExternalTriggerAction {
         didSet {
-            defaults.set(readClipboardAlwaysTriggersAfter, forKey: Self.readClipboardAlwaysTriggerAfterKey)
+            persistExternalTriggerAction(
+                readClipboardAlwaysActionAfter,
+                actionKey: Self.readClipboardAlwaysActionAfterKey,
+                legacyBoolKey: Self.readClipboardAlwaysTriggerAfterKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
@@ -92,16 +116,24 @@ final class AppModel: ObservableObject {
         }
     }
 
-    @Published var readClipboardAlwaysTwoTriggersBefore: Bool {
+    @Published var readClipboardAlwaysTwoActionBefore: ExternalTriggerAction {
         didSet {
-            defaults.set(readClipboardAlwaysTwoTriggersBefore, forKey: Self.readClipboardAlwaysTwoTriggerBeforeKey)
+            persistExternalTriggerAction(
+                readClipboardAlwaysTwoActionBefore,
+                actionKey: Self.readClipboardAlwaysTwoActionBeforeKey,
+                legacyBoolKey: Self.readClipboardAlwaysTwoTriggerBeforeKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
 
-    @Published var readClipboardAlwaysTwoTriggersAfter: Bool {
+    @Published var readClipboardAlwaysTwoActionAfter: ExternalTriggerAction {
         didSet {
-            defaults.set(readClipboardAlwaysTwoTriggersAfter, forKey: Self.readClipboardAlwaysTwoTriggerAfterKey)
+            persistExternalTriggerAction(
+                readClipboardAlwaysTwoActionAfter,
+                actionKey: Self.readClipboardAlwaysTwoActionAfterKey,
+                legacyBoolKey: Self.readClipboardAlwaysTwoTriggerAfterKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
@@ -118,16 +150,24 @@ final class AppModel: ObservableObject {
         }
     }
 
-    @Published var readClipboardAlwaysThreeTriggersBefore: Bool {
+    @Published var readClipboardAlwaysThreeActionBefore: ExternalTriggerAction {
         didSet {
-            defaults.set(readClipboardAlwaysThreeTriggersBefore, forKey: Self.readClipboardAlwaysThreeTriggerBeforeKey)
+            persistExternalTriggerAction(
+                readClipboardAlwaysThreeActionBefore,
+                actionKey: Self.readClipboardAlwaysThreeActionBeforeKey,
+                legacyBoolKey: Self.readClipboardAlwaysThreeTriggerBeforeKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
 
-    @Published var readClipboardAlwaysThreeTriggersAfter: Bool {
+    @Published var readClipboardAlwaysThreeActionAfter: ExternalTriggerAction {
         didSet {
-            defaults.set(readClipboardAlwaysThreeTriggersAfter, forKey: Self.readClipboardAlwaysThreeTriggerAfterKey)
+            persistExternalTriggerAction(
+                readClipboardAlwaysThreeActionAfter,
+                actionKey: Self.readClipboardAlwaysThreeActionAfterKey,
+                legacyBoolKey: Self.readClipboardAlwaysThreeTriggerAfterKey
+            )
             refreshShortcutTriggerAccessibilityStatus()
         }
     }
@@ -434,18 +474,28 @@ final class AppModel: ObservableObject {
     private static let recordingShortcutValueKey = "clipboardReader.recordingShortcutTrigger.shortcut"
     private static let readShortcutOneTriggerBeforeKey = "clipboardReader.readShortcutOne.triggerBefore"
     private static let readShortcutOneTriggerAfterKey = "clipboardReader.readShortcutOne.triggerAfter"
+    private static let readShortcutOneActionBeforeKey = "clipboardReader.readShortcutOne.actionBefore"
+    private static let readShortcutOneActionAfterKey = "clipboardReader.readShortcutOne.actionAfter"
     private static let readShortcutOneSpeedKey = "clipboardReader.readShortcutOne.speedMultiplier"
     private static let readShortcutTwoTriggerBeforeKey = "clipboardReader.readShortcutTwo.triggerBefore"
     private static let readShortcutTwoTriggerAfterKey = "clipboardReader.readShortcutTwo.triggerAfter"
+    private static let readShortcutTwoActionBeforeKey = "clipboardReader.readShortcutTwo.actionBefore"
+    private static let readShortcutTwoActionAfterKey = "clipboardReader.readShortcutTwo.actionAfter"
     private static let readShortcutTwoSpeedKey = "clipboardReader.readShortcutTwo.speedMultiplier"
     private static let readClipboardAlwaysTriggerBeforeKey = "clipboardReader.readClipboardAlways.triggerBefore"
     private static let readClipboardAlwaysTriggerAfterKey = "clipboardReader.readClipboardAlways.triggerAfter"
+    private static let readClipboardAlwaysActionBeforeKey = "clipboardReader.readClipboardAlways.actionBefore"
+    private static let readClipboardAlwaysActionAfterKey = "clipboardReader.readClipboardAlways.actionAfter"
     private static let readClipboardAlwaysSpeedKey = "clipboardReader.readClipboardAlways.speedMultiplier"
     private static let readClipboardAlwaysTwoTriggerBeforeKey = "clipboardReader.readClipboardAlwaysTwo.triggerBefore"
     private static let readClipboardAlwaysTwoTriggerAfterKey = "clipboardReader.readClipboardAlwaysTwo.triggerAfter"
+    private static let readClipboardAlwaysTwoActionBeforeKey = "clipboardReader.readClipboardAlwaysTwo.actionBefore"
+    private static let readClipboardAlwaysTwoActionAfterKey = "clipboardReader.readClipboardAlwaysTwo.actionAfter"
     private static let readClipboardAlwaysTwoSpeedKey = "clipboardReader.readClipboardAlwaysTwo.speedMultiplier"
     private static let readClipboardAlwaysThreeTriggerBeforeKey = "clipboardReader.readClipboardAlwaysThree.triggerBefore"
     private static let readClipboardAlwaysThreeTriggerAfterKey = "clipboardReader.readClipboardAlwaysThree.triggerAfter"
+    private static let readClipboardAlwaysThreeActionBeforeKey = "clipboardReader.readClipboardAlwaysThree.actionBefore"
+    private static let readClipboardAlwaysThreeActionAfterKey = "clipboardReader.readClipboardAlwaysThree.actionAfter"
     private static let readClipboardAlwaysThreeSpeedKey = "clipboardReader.readClipboardAlwaysThree.speedMultiplier"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
@@ -491,6 +541,7 @@ final class AppModel: ObservableObject {
     private let defaults: UserDefaults
     private let clipboardService = ClipboardService()
     private let shortcutTriggerService = ShortcutTriggerService()
+    private let focuSeeAccessibilityService = FocuSeeAccessibilityService()
     private let ttsManager = TTSManager()
     private var cancellables = Set<AnyCancellable>()
     private var presenterOverlayController: PresenterOverlayController?
@@ -500,7 +551,7 @@ final class AppModel: ObservableObject {
     private var manualSceneOverride: [String]?
     private var manualSceneOverrideSource: String?
     private var shouldAdvanceScriptSceneAfterSpeech = false
-    private var shouldTriggerRecordingShortcutAfterSpeech = false
+    private var externalTriggerActionAfterSpeech: ExternalTriggerAction = .none
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -512,40 +563,77 @@ final class AppModel: ObservableObject {
         self.selectedVoiceIdentifier = defaults.string(forKey: Self.voiceKey)
         self.readsTypedTextInsteadOfClipboard = defaults.bool(forKey: Self.inputModeKey)
         self.scriptModeEnabled = defaults.bool(forKey: Self.scriptModeKey)
-        self.readShortcutOneTriggersBefore = Self.storedBool(
+        self.readShortcutOneActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
-            forKey: Self.readShortcutOneTriggerBeforeKey,
-            defaultValue: legacyTriggerBefore
+            actionKey: Self.readShortcutOneActionBeforeKey,
+            legacyBoolKey: Self.readShortcutOneTriggerBeforeKey,
+            legacyDefaultValue: legacyTriggerBefore
         )
-        self.readShortcutOneTriggersAfter = defaults.bool(forKey: Self.readShortcutOneTriggerAfterKey)
+        self.readShortcutOneActionAfter = Self.storedExternalTriggerAction(
+            in: defaults,
+            actionKey: Self.readShortcutOneActionAfterKey,
+            legacyBoolKey: Self.readShortcutOneTriggerAfterKey
+        )
         self.readShortcutOneSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readShortcutOneSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
-        self.readShortcutTwoTriggersBefore = defaults.bool(forKey: Self.readShortcutTwoTriggerBeforeKey)
-        self.readShortcutTwoTriggersAfter = defaults.bool(forKey: Self.readShortcutTwoTriggerAfterKey)
+        self.readShortcutTwoActionBefore = Self.storedExternalTriggerAction(
+            in: defaults,
+            actionKey: Self.readShortcutTwoActionBeforeKey,
+            legacyBoolKey: Self.readShortcutTwoTriggerBeforeKey
+        )
+        self.readShortcutTwoActionAfter = Self.storedExternalTriggerAction(
+            in: defaults,
+            actionKey: Self.readShortcutTwoActionAfterKey,
+            legacyBoolKey: Self.readShortcutTwoTriggerAfterKey
+        )
         self.readShortcutTwoSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readShortcutTwoSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
-        self.readClipboardAlwaysTriggersBefore = defaults.bool(forKey: Self.readClipboardAlwaysTriggerBeforeKey)
-        self.readClipboardAlwaysTriggersAfter = defaults.bool(forKey: Self.readClipboardAlwaysTriggerAfterKey)
+        self.readClipboardAlwaysActionBefore = Self.storedExternalTriggerAction(
+            in: defaults,
+            actionKey: Self.readClipboardAlwaysActionBeforeKey,
+            legacyBoolKey: Self.readClipboardAlwaysTriggerBeforeKey
+        )
+        self.readClipboardAlwaysActionAfter = Self.storedExternalTriggerAction(
+            in: defaults,
+            actionKey: Self.readClipboardAlwaysActionAfterKey,
+            legacyBoolKey: Self.readClipboardAlwaysTriggerAfterKey
+        )
         self.readClipboardAlwaysSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readClipboardAlwaysSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
-        self.readClipboardAlwaysTwoTriggersBefore = defaults.bool(forKey: Self.readClipboardAlwaysTwoTriggerBeforeKey)
-        self.readClipboardAlwaysTwoTriggersAfter = defaults.bool(forKey: Self.readClipboardAlwaysTwoTriggerAfterKey)
+        self.readClipboardAlwaysTwoActionBefore = Self.storedExternalTriggerAction(
+            in: defaults,
+            actionKey: Self.readClipboardAlwaysTwoActionBeforeKey,
+            legacyBoolKey: Self.readClipboardAlwaysTwoTriggerBeforeKey
+        )
+        self.readClipboardAlwaysTwoActionAfter = Self.storedExternalTriggerAction(
+            in: defaults,
+            actionKey: Self.readClipboardAlwaysTwoActionAfterKey,
+            legacyBoolKey: Self.readClipboardAlwaysTwoTriggerAfterKey
+        )
         self.readClipboardAlwaysTwoSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readClipboardAlwaysTwoSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
-        self.readClipboardAlwaysThreeTriggersBefore = defaults.bool(forKey: Self.readClipboardAlwaysThreeTriggerBeforeKey)
-        self.readClipboardAlwaysThreeTriggersAfter = defaults.bool(forKey: Self.readClipboardAlwaysThreeTriggerAfterKey)
+        self.readClipboardAlwaysThreeActionBefore = Self.storedExternalTriggerAction(
+            in: defaults,
+            actionKey: Self.readClipboardAlwaysThreeActionBeforeKey,
+            legacyBoolKey: Self.readClipboardAlwaysThreeTriggerBeforeKey
+        )
+        self.readClipboardAlwaysThreeActionAfter = Self.storedExternalTriggerAction(
+            in: defaults,
+            actionKey: Self.readClipboardAlwaysThreeActionAfterKey,
+            legacyBoolKey: Self.readClipboardAlwaysThreeTriggerAfterKey
+        )
         self.readClipboardAlwaysThreeSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readClipboardAlwaysThreeSpeedKey,
@@ -619,13 +707,17 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func readNow(triggerBefore: Bool = false, triggerAfter: Bool = false, speedMultiplier: Double? = nil) {
+    func readNow(
+        actionBefore: ExternalTriggerAction = .none,
+        actionAfter: ExternalTriggerAction = .none,
+        speedMultiplier: Double? = nil
+    ) {
         let resolvedSpeedMultiplier = speedMultiplier ?? self.speedMultiplier
 
         if scriptModeEnabled {
             readCurrentScriptSceneNow(
-                triggerBefore: triggerBefore,
-                triggerAfter: triggerAfter,
+                actionBefore: actionBefore,
+                actionAfter: actionAfter,
                 speedMultiplier: resolvedSpeedMultiplier
             )
             return
@@ -633,23 +725,27 @@ final class AppModel: ObservableObject {
 
         if readsTypedTextInsteadOfClipboard {
             readTypedTextNow(
-                triggerBefore: triggerBefore,
-                triggerAfter: triggerAfter,
+                actionBefore: actionBefore,
+                actionAfter: actionAfter,
                 speedMultiplier: resolvedSpeedMultiplier
             )
         } else {
             readClipboardNow(
-                triggerBefore: triggerBefore,
-                triggerAfter: triggerAfter,
+                actionBefore: actionBefore,
+                actionAfter: actionAfter,
                 speedMultiplier: resolvedSpeedMultiplier
             )
         }
     }
 
-    func readClipboardAlways(triggerBefore: Bool = false, triggerAfter: Bool = false, speedMultiplier: Double? = nil) {
+    func readClipboardAlways(
+        actionBefore: ExternalTriggerAction = .none,
+        actionAfter: ExternalTriggerAction = .none,
+        speedMultiplier: Double? = nil
+    ) {
         readClipboardNow(
-            triggerBefore: triggerBefore,
-            triggerAfter: triggerAfter,
+            actionBefore: actionBefore,
+            actionAfter: actionAfter,
             speedMultiplier: speedMultiplier ?? self.speedMultiplier
         )
     }
@@ -889,13 +985,17 @@ final class AppModel: ObservableObject {
         )
     }
 
-    private func readClipboardNow(triggerBefore: Bool, triggerAfter: Bool, speedMultiplier: Double) {
+    private func readClipboardNow(
+        actionBefore: ExternalTriggerAction,
+        actionAfter: ExternalTriggerAction,
+        speedMultiplier: Double
+    ) {
         guard let text = clipboardService.currentText() else {
             statusMessage = "Clipboard is empty."
             return
         }
 
-        prepareRecordingShortcutTriggers(triggerBefore: triggerBefore, triggerAfter: triggerAfter)
+        prepareExternalTriggerActions(actionBefore: actionBefore, actionAfter: actionAfter)
         ttsManager.speak(
             text: text,
             speedMultiplier: speedMultiplier,
@@ -904,14 +1004,18 @@ final class AppModel: ObservableObject {
         statusMessage = "Reading clipboard…"
     }
 
-    private func readTypedTextNow(triggerBefore: Bool, triggerAfter: Bool, speedMultiplier: Double) {
+    private func readTypedTextNow(
+        actionBefore: ExternalTriggerAction,
+        actionAfter: ExternalTriggerAction,
+        speedMultiplier: Double
+    ) {
         let text = clipboardService.normalize(typedText)
         guard !text.isEmpty else {
             statusMessage = "Text field is empty."
             return
         }
 
-        prepareRecordingShortcutTriggers(triggerBefore: triggerBefore, triggerAfter: triggerAfter)
+        prepareExternalTriggerActions(actionBefore: actionBefore, actionAfter: actionAfter)
         ttsManager.speak(
             text: text,
             speedMultiplier: speedMultiplier,
@@ -921,14 +1025,23 @@ final class AppModel: ObservableObject {
     }
 
     private func readCurrentScriptSceneNow() {
-        readCurrentScriptSceneNow(advancesAfterSpeech: true, triggerBefore: false, triggerAfter: false, speedMultiplier: speedMultiplier)
-    }
-
-    private func readCurrentScriptSceneNow(triggerBefore: Bool, triggerAfter: Bool, speedMultiplier: Double) {
         readCurrentScriptSceneNow(
             advancesAfterSpeech: true,
-            triggerBefore: triggerBefore,
-            triggerAfter: triggerAfter,
+            actionBefore: .none,
+            actionAfter: .none,
+            speedMultiplier: speedMultiplier
+        )
+    }
+
+    private func readCurrentScriptSceneNow(
+        actionBefore: ExternalTriggerAction,
+        actionAfter: ExternalTriggerAction,
+        speedMultiplier: Double
+    ) {
+        readCurrentScriptSceneNow(
+            advancesAfterSpeech: true,
+            actionBefore: actionBefore,
+            actionAfter: actionAfter,
             speedMultiplier: speedMultiplier
         )
     }
@@ -936,8 +1049,8 @@ final class AppModel: ObservableObject {
     private func readCurrentScriptSceneNow(
         advancesAfterSpeech: Bool,
         includesBracketedDirections: Bool = false,
-        triggerBefore: Bool = false,
-        triggerAfter: Bool = false,
+        actionBefore: ExternalTriggerAction = .none,
+        actionAfter: ExternalTriggerAction = .none,
         speedMultiplier: Double? = nil
     ) {
         refreshScriptScenes()
@@ -948,7 +1061,7 @@ final class AppModel: ObservableObject {
         }
 
         shouldAdvanceScriptSceneAfterSpeech = advancesAfterSpeech
-        prepareRecordingShortcutTriggers(triggerBefore: triggerBefore, triggerAfter: triggerAfter)
+        prepareExternalTriggerActions(actionBefore: actionBefore, actionAfter: actionAfter)
         ttsManager.speak(
             text: scene,
             speedMultiplier: speedMultiplier ?? self.speedMultiplier,
@@ -960,7 +1073,7 @@ final class AppModel: ObservableObject {
 
     func stopReading() {
         shouldAdvanceScriptSceneAfterSpeech = false
-        shouldTriggerRecordingShortcutAfterSpeech = false
+        externalTriggerActionAfterSpeech = .none
         ttsManager.stop()
     }
 
@@ -974,36 +1087,128 @@ final class AppModel: ObservableObject {
 
     private func stopSpeechForSceneNavigation() {
         shouldAdvanceScriptSceneAfterSpeech = false
-        shouldTriggerRecordingShortcutAfterSpeech = false
+        externalTriggerActionAfterSpeech = .none
         if speechState == .speaking || speechState == .paused || speechState == .stopping {
             ttsManager.stop()
         }
     }
 
-    private func prepareRecordingShortcutTriggers(triggerBefore: Bool, triggerAfter: Bool) {
-        shouldTriggerRecordingShortcutAfterSpeech = triggerAfter
+    private func prepareExternalTriggerActions(
+        actionBefore: ExternalTriggerAction,
+        actionAfter: ExternalTriggerAction
+    ) {
+        externalTriggerActionAfterSpeech = actionAfter
+        performExternalTriggerAction(actionBefore)
+    }
 
-        if triggerBefore {
-            triggerRecordingShortcutIfPossible()
+    func ensureFocuSeeRecording() {
+        performExternalTriggerAction(.ensureRecording, reportsSuccess: true)
+    }
+
+    func ensureFocuSeePaused() {
+        performExternalTriggerAction(.ensurePaused, reportsSuccess: true)
+    }
+
+    private func performExternalTriggerAction(
+        _ action: ExternalTriggerAction,
+        reportsSuccess: Bool = false
+    ) {
+        switch action {
+        case .none:
+            return
+        case .toggle:
+            _ = triggerRecordingShortcutIfPossible()
+        case .ensureRecording:
+            ensureFocuSeeState(.recording, reportsSuccess: reportsSuccess)
+        case .ensurePaused:
+            ensureFocuSeeState(.paused, reportsSuccess: reportsSuccess)
         }
     }
 
-    private func triggerRecordingShortcutIfPossible() {
-        guard let shortcut = recordingTriggerShortcut
-        else {
+    private func ensureFocuSeeState(
+        _ targetState: FocuSeeRecordingState,
+        reportsSuccess: Bool
+    ) {
+        refreshShortcutTriggerAccessibilityStatus()
+        guard isShortcutTriggerAccessibilityTrusted else {
+            statusMessage = "Accessibility permission is required to inspect FocuSee."
             return
+        }
+
+        let currentState = focuSeeAccessibilityService.recordingState()
+        if currentState == targetState {
+            if reportsSuccess {
+                statusMessage = targetState == .recording
+                    ? "FocuSee is already recording."
+                    : "FocuSee is already paused."
+            }
+            return
+        }
+
+        let oppositeState: FocuSeeRecordingState = targetState == .recording ? .paused : .recording
+        guard currentState == oppositeState else {
+            switch currentState {
+            case .notRunning:
+                statusMessage = "FocuSee is not open."
+            case .notRecording:
+                statusMessage = "FocuSee does not have an active recording."
+            case .unknown:
+                statusMessage = "Could not determine whether FocuSee is recording or paused."
+            case .recording, .paused:
+                statusMessage = "Could not safely change FocuSee's recording state."
+            }
+            return
+        }
+
+        guard triggerRecordingShortcutIfPossible() else {
+            return
+        }
+
+        if reportsSuccess {
+            statusMessage = targetState == .recording
+                ? "Resuming FocuSee recording…"
+                : "Pausing FocuSee recording…"
+        }
+        verifyFocuSeeStateAfterTrigger(targetState)
+    }
+
+    private func verifyFocuSeeStateAfterTrigger(_ expectedState: FocuSeeRecordingState) {
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard let self else {
+                return
+            }
+
+            let actualState = self.focuSeeAccessibilityService.recordingState()
+            guard actualState != expectedState else {
+                return
+            }
+
+            if actualState == .recording || actualState == .paused {
+                self.statusMessage = "FocuSee did not change to the requested recording state."
+            }
+        }
+    }
+
+    @discardableResult
+    private func triggerRecordingShortcutIfPossible() -> Bool {
+        guard let shortcut = recordingTriggerShortcut else {
+            statusMessage = "Set the external FocuSee toggle shortcut first."
+            return false
         }
 
         refreshShortcutTriggerAccessibilityStatus()
         guard isShortcutTriggerAccessibilityTrusted else {
             statusMessage = "Accessibility permission is required to trigger the recording shortcut."
-            return
+            return false
         }
 
         if !shortcutTriggerService.trigger(shortcut) {
             statusMessage = "Could not trigger the recording shortcut."
+            return false
         }
         refreshShortcutTriggerAccessibilityStatus()
+        return true
     }
 
     private static func storedRecordingTriggerShortcut(in defaults: UserDefaults) -> TriggerShortcut? {
@@ -1050,17 +1255,18 @@ final class AppModel: ObservableObject {
     }
 
     private func handleCompletedSpeech() {
-        triggerRecordingShortcutAfterCompletedSpeechIfNeeded()
         advanceScriptSceneAfterCompletedSpeech()
+        performExternalTriggerActionAfterCompletedSpeechIfNeeded()
     }
 
-    private func triggerRecordingShortcutAfterCompletedSpeechIfNeeded() {
-        guard shouldTriggerRecordingShortcutAfterSpeech else {
+    private func performExternalTriggerActionAfterCompletedSpeechIfNeeded() {
+        guard externalTriggerActionAfterSpeech != .none else {
             return
         }
 
-        shouldTriggerRecordingShortcutAfterSpeech = false
-        triggerRecordingShortcutIfPossible()
+        let action = externalTriggerActionAfterSpeech
+        externalTriggerActionAfterSpeech = .none
+        performExternalTriggerAction(action)
     }
 
     private func advanceScriptSceneAfterCompletedSpeech() {
@@ -1087,8 +1293,8 @@ final class AppModel: ObservableObject {
                 }
 
                 self.readNow(
-                    triggerBefore: self.readShortcutOneTriggersBefore,
-                    triggerAfter: self.readShortcutOneTriggersAfter,
+                    actionBefore: self.readShortcutOneActionBefore,
+                    actionAfter: self.readShortcutOneActionAfter,
                     speedMultiplier: self.readShortcutOneSpeedMultiplier
                 )
             }
@@ -1101,8 +1307,8 @@ final class AppModel: ObservableObject {
                 }
 
                 self.readNow(
-                    triggerBefore: self.readShortcutTwoTriggersBefore,
-                    triggerAfter: self.readShortcutTwoTriggersAfter,
+                    actionBefore: self.readShortcutTwoActionBefore,
+                    actionAfter: self.readShortcutTwoActionAfter,
                     speedMultiplier: self.readShortcutTwoSpeedMultiplier
                 )
             }
@@ -1115,8 +1321,8 @@ final class AppModel: ObservableObject {
                 }
 
                 self.readClipboardAlways(
-                    triggerBefore: self.readClipboardAlwaysTriggersBefore,
-                    triggerAfter: self.readClipboardAlwaysTriggersAfter,
+                    actionBefore: self.readClipboardAlwaysActionBefore,
+                    actionAfter: self.readClipboardAlwaysActionAfter,
                     speedMultiplier: self.readClipboardAlwaysSpeedMultiplier
                 )
             }
@@ -1129,8 +1335,8 @@ final class AppModel: ObservableObject {
                 }
 
                 self.readClipboardAlways(
-                    triggerBefore: self.readClipboardAlwaysTwoTriggersBefore,
-                    triggerAfter: self.readClipboardAlwaysTwoTriggersAfter,
+                    actionBefore: self.readClipboardAlwaysTwoActionBefore,
+                    actionAfter: self.readClipboardAlwaysTwoActionAfter,
                     speedMultiplier: self.readClipboardAlwaysTwoSpeedMultiplier
                 )
             }
@@ -1143,8 +1349,8 @@ final class AppModel: ObservableObject {
                 }
 
                 self.readClipboardAlways(
-                    triggerBefore: self.readClipboardAlwaysThreeTriggersBefore,
-                    triggerAfter: self.readClipboardAlwaysThreeTriggersAfter,
+                    actionBefore: self.readClipboardAlwaysThreeActionBefore,
+                    actionAfter: self.readClipboardAlwaysThreeActionAfter,
                     speedMultiplier: self.readClipboardAlwaysThreeSpeedMultiplier
                 )
             }
@@ -1198,6 +1404,45 @@ final class AppModel: ObservableObject {
             }
         }
 
+        KeyboardShortcuts.onKeyUp(for: .ensureFocuSeeRecording) { [weak self] in
+            Task { @MainActor in
+                self?.ensureFocuSeeRecording()
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .ensureFocuSeePaused) { [weak self] in
+            Task { @MainActor in
+                self?.ensureFocuSeePaused()
+            }
+        }
+
+    }
+
+    private func persistExternalTriggerAction(
+        _ action: ExternalTriggerAction,
+        actionKey: String,
+        legacyBoolKey: String
+    ) {
+        defaults.set(action.rawValue, forKey: actionKey)
+        defaults.set(action != .none, forKey: legacyBoolKey)
+    }
+
+    private static func storedExternalTriggerAction(
+        in defaults: UserDefaults,
+        actionKey: String,
+        legacyBoolKey: String,
+        legacyDefaultValue: Bool = false
+    ) -> ExternalTriggerAction {
+        if let rawValue = defaults.string(forKey: actionKey),
+           let action = ExternalTriggerAction(rawValue: rawValue) {
+            return action
+        }
+
+        return storedBool(
+            in: defaults,
+            forKey: legacyBoolKey,
+            defaultValue: legacyDefaultValue
+        ) ? .toggle : .none
     }
 
     private static func storedDouble(in defaults: UserDefaults, forKey key: String, defaultValue: Double) -> Double {

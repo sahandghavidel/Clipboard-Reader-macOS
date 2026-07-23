@@ -106,7 +106,9 @@ The overlay shows the previous, current, and next scenes. It supports custom siz
 
 ### Shortcuts and recording triggers
 
-Narration Pilot provides two shortcuts for reading the current input and three shortcuts that always read the clipboard. Every read shortcut can use a different speed and optionally send a configured recording shortcut before speech, after speech, or both.
+Narration Pilot provides two shortcuts for reading the current input and three shortcuts that always read the clipboard. Every read shortcut can use a different speed and choose an external action before and after speech: do nothing, toggle the configured shortcut, ensure FocuSee is recording, or ensure FocuSee is paused. Existing trigger settings migrate to the original toggle behavior.
+
+The FocuSee actions inspect its macOS Accessibility controls before sending its existing Pause/Continue Recording shortcut. Separate global shortcuts can also be assigned for **Ensure FocuSee Recording** and **Ensure FocuSee Paused**. If FocuSee is closed, stopped, or its state cannot be determined safely, Narration Pilot does not send the toggle.
 
 Sending external shortcuts requires macOS Accessibility permission. Narration Pilot requests that permission only when you ask it to.
 

@@ -49,9 +49,9 @@ cat > "$APP_PATH/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>25</string>
+  <string>26</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.25</string>
+  <string>1.26</string>
   <key>CFBundleExecutable</key>
   <string>NarrationPilot</string>
   <key>CFBundlePackageType</key>
