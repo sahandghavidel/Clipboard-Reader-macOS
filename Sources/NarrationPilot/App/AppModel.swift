@@ -14,6 +14,37 @@ final class AppModel: ObservableObject {
     @Published private(set) var recordingTriggerShortcut: TriggerShortcut?
     @Published var typedText: String = ""
 
+    @Published var readShortcutOneDelayBefore: Double {
+        didSet { persistTriggerDelay(readShortcutOneDelayBefore, key: Self.readShortcutOneDelayBeforeKey) }
+    }
+    @Published var readShortcutOneDelayAfter: Double {
+        didSet { persistTriggerDelay(readShortcutOneDelayAfter, key: Self.readShortcutOneDelayAfterKey) }
+    }
+    @Published var readShortcutTwoDelayBefore: Double {
+        didSet { persistTriggerDelay(readShortcutTwoDelayBefore, key: Self.readShortcutTwoDelayBeforeKey) }
+    }
+    @Published var readShortcutTwoDelayAfter: Double {
+        didSet { persistTriggerDelay(readShortcutTwoDelayAfter, key: Self.readShortcutTwoDelayAfterKey) }
+    }
+    @Published var readClipboardAlwaysDelayBefore: Double {
+        didSet { persistTriggerDelay(readClipboardAlwaysDelayBefore, key: Self.readClipboardAlwaysDelayBeforeKey) }
+    }
+    @Published var readClipboardAlwaysDelayAfter: Double {
+        didSet { persistTriggerDelay(readClipboardAlwaysDelayAfter, key: Self.readClipboardAlwaysDelayAfterKey) }
+    }
+    @Published var readClipboardAlwaysTwoDelayBefore: Double {
+        didSet { persistTriggerDelay(readClipboardAlwaysTwoDelayBefore, key: Self.readClipboardAlwaysTwoDelayBeforeKey) }
+    }
+    @Published var readClipboardAlwaysTwoDelayAfter: Double {
+        didSet { persistTriggerDelay(readClipboardAlwaysTwoDelayAfter, key: Self.readClipboardAlwaysTwoDelayAfterKey) }
+    }
+    @Published var readClipboardAlwaysThreeDelayBefore: Double {
+        didSet { persistTriggerDelay(readClipboardAlwaysThreeDelayBefore, key: Self.readClipboardAlwaysThreeDelayBeforeKey) }
+    }
+    @Published var readClipboardAlwaysThreeDelayAfter: Double {
+        didSet { persistTriggerDelay(readClipboardAlwaysThreeDelayAfter, key: Self.readClipboardAlwaysThreeDelayAfterKey) }
+    }
+
     @Published var readShortcutOneActionBefore: ExternalTriggerAction {
         didSet {
             persistExternalTriggerAction(
@@ -476,26 +507,36 @@ final class AppModel: ObservableObject {
     private static let readShortcutOneTriggerAfterKey = "clipboardReader.readShortcutOne.triggerAfter"
     private static let readShortcutOneActionBeforeKey = "clipboardReader.readShortcutOne.actionBefore"
     private static let readShortcutOneActionAfterKey = "clipboardReader.readShortcutOne.actionAfter"
+    private static let readShortcutOneDelayBeforeKey = "clipboardReader.readShortcutOne.delayBefore"
+    private static let readShortcutOneDelayAfterKey = "clipboardReader.readShortcutOne.delayAfter"
     private static let readShortcutOneSpeedKey = "clipboardReader.readShortcutOne.speedMultiplier"
     private static let readShortcutTwoTriggerBeforeKey = "clipboardReader.readShortcutTwo.triggerBefore"
     private static let readShortcutTwoTriggerAfterKey = "clipboardReader.readShortcutTwo.triggerAfter"
     private static let readShortcutTwoActionBeforeKey = "clipboardReader.readShortcutTwo.actionBefore"
     private static let readShortcutTwoActionAfterKey = "clipboardReader.readShortcutTwo.actionAfter"
+    private static let readShortcutTwoDelayBeforeKey = "clipboardReader.readShortcutTwo.delayBefore"
+    private static let readShortcutTwoDelayAfterKey = "clipboardReader.readShortcutTwo.delayAfter"
     private static let readShortcutTwoSpeedKey = "clipboardReader.readShortcutTwo.speedMultiplier"
     private static let readClipboardAlwaysTriggerBeforeKey = "clipboardReader.readClipboardAlways.triggerBefore"
     private static let readClipboardAlwaysTriggerAfterKey = "clipboardReader.readClipboardAlways.triggerAfter"
     private static let readClipboardAlwaysActionBeforeKey = "clipboardReader.readClipboardAlways.actionBefore"
     private static let readClipboardAlwaysActionAfterKey = "clipboardReader.readClipboardAlways.actionAfter"
+    private static let readClipboardAlwaysDelayBeforeKey = "clipboardReader.readClipboardAlways.delayBefore"
+    private static let readClipboardAlwaysDelayAfterKey = "clipboardReader.readClipboardAlways.delayAfter"
     private static let readClipboardAlwaysSpeedKey = "clipboardReader.readClipboardAlways.speedMultiplier"
     private static let readClipboardAlwaysTwoTriggerBeforeKey = "clipboardReader.readClipboardAlwaysTwo.triggerBefore"
     private static let readClipboardAlwaysTwoTriggerAfterKey = "clipboardReader.readClipboardAlwaysTwo.triggerAfter"
     private static let readClipboardAlwaysTwoActionBeforeKey = "clipboardReader.readClipboardAlwaysTwo.actionBefore"
     private static let readClipboardAlwaysTwoActionAfterKey = "clipboardReader.readClipboardAlwaysTwo.actionAfter"
+    private static let readClipboardAlwaysTwoDelayBeforeKey = "clipboardReader.readClipboardAlwaysTwo.delayBefore"
+    private static let readClipboardAlwaysTwoDelayAfterKey = "clipboardReader.readClipboardAlwaysTwo.delayAfter"
     private static let readClipboardAlwaysTwoSpeedKey = "clipboardReader.readClipboardAlwaysTwo.speedMultiplier"
     private static let readClipboardAlwaysThreeTriggerBeforeKey = "clipboardReader.readClipboardAlwaysThree.triggerBefore"
     private static let readClipboardAlwaysThreeTriggerAfterKey = "clipboardReader.readClipboardAlwaysThree.triggerAfter"
     private static let readClipboardAlwaysThreeActionBeforeKey = "clipboardReader.readClipboardAlwaysThree.actionBefore"
     private static let readClipboardAlwaysThreeActionAfterKey = "clipboardReader.readClipboardAlwaysThree.actionAfter"
+    private static let readClipboardAlwaysThreeDelayBeforeKey = "clipboardReader.readClipboardAlwaysThree.delayBefore"
+    private static let readClipboardAlwaysThreeDelayAfterKey = "clipboardReader.readClipboardAlwaysThree.delayAfter"
     private static let readClipboardAlwaysThreeSpeedKey = "clipboardReader.readClipboardAlwaysThree.speedMultiplier"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
@@ -537,6 +578,8 @@ final class AppModel: ObservableObject {
     static let maxPresenterOverlaySideFontSize = 32.0
     static let minPresenterOverlayTextOpacity = 0.1
     static let maxPresenterOverlayTextOpacity = 1.0
+    static let minTriggerDelay = 0.0
+    static let maxTriggerDelay = 2.0
 
     private let defaults: UserDefaults
     private let clipboardService = ClipboardService()
@@ -552,6 +595,9 @@ final class AppModel: ObservableObject {
     private var manualSceneOverrideSource: String?
     private var shouldAdvanceScriptSceneAfterSpeech = false
     private var externalTriggerActionAfterSpeech: ExternalTriggerAction = .none
+    private var externalTriggerDelayAfterSpeech = 0.0
+    private var activeReadSequenceID: UUID?
+    private var pendingReadTask: Task<Void, Never>?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -574,6 +620,8 @@ final class AppModel: ObservableObject {
             actionKey: Self.readShortcutOneActionAfterKey,
             legacyBoolKey: Self.readShortcutOneTriggerAfterKey
         )
+        self.readShortcutOneDelayBefore = Self.storedTriggerDelay(in: defaults, forKey: Self.readShortcutOneDelayBeforeKey)
+        self.readShortcutOneDelayAfter = Self.storedTriggerDelay(in: defaults, forKey: Self.readShortcutOneDelayAfterKey)
         self.readShortcutOneSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readShortcutOneSpeedKey,
@@ -589,6 +637,8 @@ final class AppModel: ObservableObject {
             actionKey: Self.readShortcutTwoActionAfterKey,
             legacyBoolKey: Self.readShortcutTwoTriggerAfterKey
         )
+        self.readShortcutTwoDelayBefore = Self.storedTriggerDelay(in: defaults, forKey: Self.readShortcutTwoDelayBeforeKey)
+        self.readShortcutTwoDelayAfter = Self.storedTriggerDelay(in: defaults, forKey: Self.readShortcutTwoDelayAfterKey)
         self.readShortcutTwoSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readShortcutTwoSpeedKey,
@@ -604,6 +654,8 @@ final class AppModel: ObservableObject {
             actionKey: Self.readClipboardAlwaysActionAfterKey,
             legacyBoolKey: Self.readClipboardAlwaysTriggerAfterKey
         )
+        self.readClipboardAlwaysDelayBefore = Self.storedTriggerDelay(in: defaults, forKey: Self.readClipboardAlwaysDelayBeforeKey)
+        self.readClipboardAlwaysDelayAfter = Self.storedTriggerDelay(in: defaults, forKey: Self.readClipboardAlwaysDelayAfterKey)
         self.readClipboardAlwaysSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readClipboardAlwaysSpeedKey,
@@ -619,6 +671,8 @@ final class AppModel: ObservableObject {
             actionKey: Self.readClipboardAlwaysTwoActionAfterKey,
             legacyBoolKey: Self.readClipboardAlwaysTwoTriggerAfterKey
         )
+        self.readClipboardAlwaysTwoDelayBefore = Self.storedTriggerDelay(in: defaults, forKey: Self.readClipboardAlwaysTwoDelayBeforeKey)
+        self.readClipboardAlwaysTwoDelayAfter = Self.storedTriggerDelay(in: defaults, forKey: Self.readClipboardAlwaysTwoDelayAfterKey)
         self.readClipboardAlwaysTwoSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readClipboardAlwaysTwoSpeedKey,
@@ -634,6 +688,8 @@ final class AppModel: ObservableObject {
             actionKey: Self.readClipboardAlwaysThreeActionAfterKey,
             legacyBoolKey: Self.readClipboardAlwaysThreeTriggerAfterKey
         )
+        self.readClipboardAlwaysThreeDelayBefore = Self.storedTriggerDelay(in: defaults, forKey: Self.readClipboardAlwaysThreeDelayBeforeKey)
+        self.readClipboardAlwaysThreeDelayAfter = Self.storedTriggerDelay(in: defaults, forKey: Self.readClipboardAlwaysThreeDelayAfterKey)
         self.readClipboardAlwaysThreeSpeedMultiplier = SpeechRateMapper.clampMultiplier(Self.storedDouble(
             in: defaults,
             forKey: Self.readClipboardAlwaysThreeSpeedKey,
@@ -710,6 +766,8 @@ final class AppModel: ObservableObject {
     func readNow(
         actionBefore: ExternalTriggerAction = .none,
         actionAfter: ExternalTriggerAction = .none,
+        delayBefore: Double = 0,
+        delayAfter: Double = 0,
         speedMultiplier: Double? = nil
     ) {
         let resolvedSpeedMultiplier = speedMultiplier ?? self.speedMultiplier
@@ -718,6 +776,8 @@ final class AppModel: ObservableObject {
             readCurrentScriptSceneNow(
                 actionBefore: actionBefore,
                 actionAfter: actionAfter,
+                delayBefore: delayBefore,
+                delayAfter: delayAfter,
                 speedMultiplier: resolvedSpeedMultiplier
             )
             return
@@ -727,12 +787,16 @@ final class AppModel: ObservableObject {
             readTypedTextNow(
                 actionBefore: actionBefore,
                 actionAfter: actionAfter,
+                delayBefore: delayBefore,
+                delayAfter: delayAfter,
                 speedMultiplier: resolvedSpeedMultiplier
             )
         } else {
             readClipboardNow(
                 actionBefore: actionBefore,
                 actionAfter: actionAfter,
+                delayBefore: delayBefore,
+                delayAfter: delayAfter,
                 speedMultiplier: resolvedSpeedMultiplier
             )
         }
@@ -741,11 +805,15 @@ final class AppModel: ObservableObject {
     func readClipboardAlways(
         actionBefore: ExternalTriggerAction = .none,
         actionAfter: ExternalTriggerAction = .none,
+        delayBefore: Double = 0,
+        delayAfter: Double = 0,
         speedMultiplier: Double? = nil
     ) {
         readClipboardNow(
             actionBefore: actionBefore,
             actionAfter: actionAfter,
+            delayBefore: delayBefore,
+            delayAfter: delayAfter,
             speedMultiplier: speedMultiplier ?? self.speedMultiplier
         )
     }
@@ -988,6 +1056,8 @@ final class AppModel: ObservableObject {
     private func readClipboardNow(
         actionBefore: ExternalTriggerAction,
         actionAfter: ExternalTriggerAction,
+        delayBefore: Double,
+        delayAfter: Double,
         speedMultiplier: Double
     ) {
         guard let text = clipboardService.currentText() else {
@@ -995,18 +1065,27 @@ final class AppModel: ObservableObject {
             return
         }
 
-        prepareExternalTriggerActions(actionBefore: actionBefore, actionAfter: actionAfter)
-        ttsManager.speak(
-            text: text,
-            speedMultiplier: speedMultiplier,
-            voiceIdentifier: selectedVoiceIdentifier
-        )
-        statusMessage = "Reading clipboard…"
+        beginReadSequence(
+            actionBefore: actionBefore,
+            actionAfter: actionAfter,
+            delayBefore: delayBefore,
+            delayAfter: delayAfter,
+            readingStatus: "Reading clipboard…"
+        ) { [weak self] in
+            guard let self else { return }
+            self.ttsManager.speak(
+                text: text,
+                speedMultiplier: speedMultiplier,
+                voiceIdentifier: self.selectedVoiceIdentifier
+            )
+        }
     }
 
     private func readTypedTextNow(
         actionBefore: ExternalTriggerAction,
         actionAfter: ExternalTriggerAction,
+        delayBefore: Double,
+        delayAfter: Double,
         speedMultiplier: Double
     ) {
         let text = clipboardService.normalize(typedText)
@@ -1015,13 +1094,20 @@ final class AppModel: ObservableObject {
             return
         }
 
-        prepareExternalTriggerActions(actionBefore: actionBefore, actionAfter: actionAfter)
-        ttsManager.speak(
-            text: text,
-            speedMultiplier: speedMultiplier,
-            voiceIdentifier: selectedVoiceIdentifier
-        )
-        statusMessage = "Reading typed text…"
+        beginReadSequence(
+            actionBefore: actionBefore,
+            actionAfter: actionAfter,
+            delayBefore: delayBefore,
+            delayAfter: delayAfter,
+            readingStatus: "Reading typed text…"
+        ) { [weak self] in
+            guard let self else { return }
+            self.ttsManager.speak(
+                text: text,
+                speedMultiplier: speedMultiplier,
+                voiceIdentifier: self.selectedVoiceIdentifier
+            )
+        }
     }
 
     private func readCurrentScriptSceneNow() {
@@ -1029,6 +1115,8 @@ final class AppModel: ObservableObject {
             advancesAfterSpeech: true,
             actionBefore: .none,
             actionAfter: .none,
+            delayBefore: 0,
+            delayAfter: 0,
             speedMultiplier: speedMultiplier
         )
     }
@@ -1036,12 +1124,16 @@ final class AppModel: ObservableObject {
     private func readCurrentScriptSceneNow(
         actionBefore: ExternalTriggerAction,
         actionAfter: ExternalTriggerAction,
+        delayBefore: Double,
+        delayAfter: Double,
         speedMultiplier: Double
     ) {
         readCurrentScriptSceneNow(
             advancesAfterSpeech: true,
             actionBefore: actionBefore,
             actionAfter: actionAfter,
+            delayBefore: delayBefore,
+            delayAfter: delayAfter,
             speedMultiplier: speedMultiplier
         )
     }
@@ -1051,6 +1143,8 @@ final class AppModel: ObservableObject {
         includesBracketedDirections: Bool = false,
         actionBefore: ExternalTriggerAction = .none,
         actionAfter: ExternalTriggerAction = .none,
+        delayBefore: Double = 0,
+        delayAfter: Double = 0,
         speedMultiplier: Double? = nil
     ) {
         refreshScriptScenes()
@@ -1061,20 +1155,33 @@ final class AppModel: ObservableObject {
         }
 
         shouldAdvanceScriptSceneAfterSpeech = advancesAfterSpeech
-        prepareExternalTriggerActions(actionBefore: actionBefore, actionAfter: actionAfter)
-        ttsManager.speak(
-            text: scene,
-            speedMultiplier: speedMultiplier ?? self.speedMultiplier,
-            voiceIdentifier: selectedVoiceIdentifier,
-            includesBracketedDirections: includesBracketedDirections
-        )
-        statusMessage = advancesAfterSpeech ? "Reading \(scriptSceneProgress)…" : "Replaying \(scriptSceneProgress)…"
+        let readingStatus = advancesAfterSpeech ? "Reading \(scriptSceneProgress)…" : "Replaying \(scriptSceneProgress)…"
+        let resolvedSpeedMultiplier = speedMultiplier ?? self.speedMultiplier
+        beginReadSequence(
+            actionBefore: actionBefore,
+            actionAfter: actionAfter,
+            delayBefore: delayBefore,
+            delayAfter: delayAfter,
+            readingStatus: readingStatus
+        ) { [weak self] in
+            guard let self else { return }
+            self.ttsManager.speak(
+                text: scene,
+                speedMultiplier: resolvedSpeedMultiplier,
+                voiceIdentifier: self.selectedVoiceIdentifier,
+                includesBracketedDirections: includesBracketedDirections
+            )
+        }
     }
 
     func stopReading() {
         shouldAdvanceScriptSceneAfterSpeech = false
-        externalTriggerActionAfterSpeech = .none
+        cancelPendingReadSequence()
+        let wasIdle = speechState == .idle
         ttsManager.stop()
+        if wasIdle {
+            statusMessage = SpeechState.idle.label
+        }
     }
 
     func togglePauseResume() {
@@ -1087,18 +1194,59 @@ final class AppModel: ObservableObject {
 
     private func stopSpeechForSceneNavigation() {
         shouldAdvanceScriptSceneAfterSpeech = false
-        externalTriggerActionAfterSpeech = .none
+        cancelPendingReadSequence()
         if speechState == .speaking || speechState == .paused || speechState == .stopping {
             ttsManager.stop()
         }
     }
 
-    private func prepareExternalTriggerActions(
+    private func beginReadSequence(
         actionBefore: ExternalTriggerAction,
-        actionAfter: ExternalTriggerAction
+        actionAfter: ExternalTriggerAction,
+        delayBefore: Double,
+        delayAfter: Double,
+        readingStatus: String,
+        speak: @escaping @MainActor () -> Void
     ) {
+        cancelPendingReadSequence()
+        if speechState == .speaking || speechState == .paused || speechState == .stopping {
+            ttsManager.stop()
+        }
+
+        let sequenceID = UUID()
+        activeReadSequenceID = sequenceID
         externalTriggerActionAfterSpeech = actionAfter
+        externalTriggerDelayAfterSpeech = actionAfter == .none ? 0 : Self.clampTriggerDelay(delayAfter)
         performExternalTriggerAction(actionBefore)
+
+        let resolvedDelayBefore = actionBefore == .none ? 0 : Self.clampTriggerDelay(delayBefore)
+        guard resolvedDelayBefore > 0 else {
+            statusMessage = readingStatus
+            speak()
+            return
+        }
+
+        statusMessage = "Starting speech in \(Self.formattedDelay(resolvedDelayBefore)) seconds…"
+        pendingReadTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(resolvedDelayBefore))
+            guard !Task.isCancelled,
+                  let self,
+                  self.activeReadSequenceID == sequenceID else {
+                return
+            }
+
+            self.pendingReadTask = nil
+            self.statusMessage = readingStatus
+            speak()
+        }
+    }
+
+    private func cancelPendingReadSequence() {
+        pendingReadTask?.cancel()
+        pendingReadTask = nil
+        activeReadSequenceID = nil
+        externalTriggerActionAfterSpeech = .none
+        externalTriggerDelayAfterSpeech = 0
     }
 
     func ensureFocuSeeRecording() {
@@ -1255,18 +1403,40 @@ final class AppModel: ObservableObject {
     }
 
     private func handleCompletedSpeech() {
-        advanceScriptSceneAfterCompletedSpeech()
         performExternalTriggerActionAfterCompletedSpeechIfNeeded()
     }
 
     private func performExternalTriggerActionAfterCompletedSpeechIfNeeded() {
-        guard externalTriggerActionAfterSpeech != .none else {
+        guard let sequenceID = activeReadSequenceID else {
             return
         }
 
         let action = externalTriggerActionAfterSpeech
+        let delay = externalTriggerDelayAfterSpeech
         externalTriggerActionAfterSpeech = .none
-        performExternalTriggerAction(action)
+        externalTriggerDelayAfterSpeech = 0
+
+        guard action != .none, delay > 0 else {
+            performExternalTriggerAction(action)
+            activeReadSequenceID = nil
+            advanceScriptSceneAfterCompletedSpeech()
+            return
+        }
+
+        statusMessage = "Finishing recording in \(Self.formattedDelay(delay)) seconds…"
+        pendingReadTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled,
+                  let self,
+                  self.activeReadSequenceID == sequenceID else {
+                return
+            }
+
+            self.pendingReadTask = nil
+            self.performExternalTriggerAction(action)
+            self.activeReadSequenceID = nil
+            self.advanceScriptSceneAfterCompletedSpeech()
+        }
     }
 
     private func advanceScriptSceneAfterCompletedSpeech() {
@@ -1295,6 +1465,8 @@ final class AppModel: ObservableObject {
                 self.readNow(
                     actionBefore: self.readShortcutOneActionBefore,
                     actionAfter: self.readShortcutOneActionAfter,
+                    delayBefore: self.readShortcutOneDelayBefore,
+                    delayAfter: self.readShortcutOneDelayAfter,
                     speedMultiplier: self.readShortcutOneSpeedMultiplier
                 )
             }
@@ -1309,6 +1481,8 @@ final class AppModel: ObservableObject {
                 self.readNow(
                     actionBefore: self.readShortcutTwoActionBefore,
                     actionAfter: self.readShortcutTwoActionAfter,
+                    delayBefore: self.readShortcutTwoDelayBefore,
+                    delayAfter: self.readShortcutTwoDelayAfter,
                     speedMultiplier: self.readShortcutTwoSpeedMultiplier
                 )
             }
@@ -1323,6 +1497,8 @@ final class AppModel: ObservableObject {
                 self.readClipboardAlways(
                     actionBefore: self.readClipboardAlwaysActionBefore,
                     actionAfter: self.readClipboardAlwaysActionAfter,
+                    delayBefore: self.readClipboardAlwaysDelayBefore,
+                    delayAfter: self.readClipboardAlwaysDelayAfter,
                     speedMultiplier: self.readClipboardAlwaysSpeedMultiplier
                 )
             }
@@ -1337,6 +1513,8 @@ final class AppModel: ObservableObject {
                 self.readClipboardAlways(
                     actionBefore: self.readClipboardAlwaysTwoActionBefore,
                     actionAfter: self.readClipboardAlwaysTwoActionAfter,
+                    delayBefore: self.readClipboardAlwaysTwoDelayBefore,
+                    delayAfter: self.readClipboardAlwaysTwoDelayAfter,
                     speedMultiplier: self.readClipboardAlwaysTwoSpeedMultiplier
                 )
             }
@@ -1351,6 +1529,8 @@ final class AppModel: ObservableObject {
                 self.readClipboardAlways(
                     actionBefore: self.readClipboardAlwaysThreeActionBefore,
                     actionAfter: self.readClipboardAlwaysThreeActionAfter,
+                    delayBefore: self.readClipboardAlwaysThreeDelayBefore,
+                    delayAfter: self.readClipboardAlwaysThreeDelayAfter,
                     speedMultiplier: self.readClipboardAlwaysThreeSpeedMultiplier
                 )
             }
@@ -1443,6 +1623,22 @@ final class AppModel: ObservableObject {
             forKey: legacyBoolKey,
             defaultValue: legacyDefaultValue
         ) ? .toggle : .none
+    }
+
+    private func persistTriggerDelay(_ delay: Double, key: String) {
+        defaults.set(Self.clampTriggerDelay(delay), forKey: key)
+    }
+
+    private static func storedTriggerDelay(in defaults: UserDefaults, forKey key: String) -> Double {
+        clampTriggerDelay(storedDouble(in: defaults, forKey: key, defaultValue: 0))
+    }
+
+    static func clampTriggerDelay(_ value: Double) -> Double {
+        clamp(value, min: minTriggerDelay, max: maxTriggerDelay)
+    }
+
+    private static func formattedDelay(_ value: Double) -> String {
+        String(format: "%.1f", value)
     }
 
     private static func storedDouble(in defaults: UserDefaults, forKey key: String, defaultValue: Double) -> Double {

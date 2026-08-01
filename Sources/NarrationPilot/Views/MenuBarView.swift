@@ -243,7 +243,9 @@ struct MenuBarView: View {
                     name: .readClipboard,
                     speedMultiplier: $appModel.readShortcutOneSpeedMultiplier,
                     actionBefore: $appModel.readShortcutOneActionBefore,
-                    actionAfter: $appModel.readShortcutOneActionAfter
+                    actionAfter: $appModel.readShortcutOneActionAfter,
+                    delayBefore: $appModel.readShortcutOneDelayBefore,
+                    delayAfter: $appModel.readShortcutOneDelayAfter
                 )
 
                 Divider()
@@ -253,7 +255,9 @@ struct MenuBarView: View {
                     name: .readCurrentInputSecondary,
                     speedMultiplier: $appModel.readShortcutTwoSpeedMultiplier,
                     actionBefore: $appModel.readShortcutTwoActionBefore,
-                    actionAfter: $appModel.readShortcutTwoActionAfter
+                    actionAfter: $appModel.readShortcutTwoActionAfter,
+                    delayBefore: $appModel.readShortcutTwoDelayBefore,
+                    delayAfter: $appModel.readShortcutTwoDelayAfter
                 )
 
                 Divider()
@@ -263,7 +267,9 @@ struct MenuBarView: View {
                     name: .readClipboardAlways,
                     speedMultiplier: $appModel.readClipboardAlwaysSpeedMultiplier,
                     actionBefore: $appModel.readClipboardAlwaysActionBefore,
-                    actionAfter: $appModel.readClipboardAlwaysActionAfter
+                    actionAfter: $appModel.readClipboardAlwaysActionAfter,
+                    delayBefore: $appModel.readClipboardAlwaysDelayBefore,
+                    delayAfter: $appModel.readClipboardAlwaysDelayAfter
                 )
 
                 Divider()
@@ -273,7 +279,9 @@ struct MenuBarView: View {
                     name: .readClipboardAlwaysSecondary,
                     speedMultiplier: $appModel.readClipboardAlwaysTwoSpeedMultiplier,
                     actionBefore: $appModel.readClipboardAlwaysTwoActionBefore,
-                    actionAfter: $appModel.readClipboardAlwaysTwoActionAfter
+                    actionAfter: $appModel.readClipboardAlwaysTwoActionAfter,
+                    delayBefore: $appModel.readClipboardAlwaysTwoDelayBefore,
+                    delayAfter: $appModel.readClipboardAlwaysTwoDelayAfter
                 )
 
                 Divider()
@@ -283,7 +291,9 @@ struct MenuBarView: View {
                     name: .readClipboardAlwaysTertiary,
                     speedMultiplier: $appModel.readClipboardAlwaysThreeSpeedMultiplier,
                     actionBefore: $appModel.readClipboardAlwaysThreeActionBefore,
-                    actionAfter: $appModel.readClipboardAlwaysThreeActionAfter
+                    actionAfter: $appModel.readClipboardAlwaysThreeActionAfter,
+                    delayBefore: $appModel.readClipboardAlwaysThreeDelayBefore,
+                    delayAfter: $appModel.readClipboardAlwaysThreeDelayAfter
                 )
 
                 Text("Ignores typed-text mode and Script mode.")
@@ -363,7 +373,9 @@ struct MenuBarView: View {
         name: KeyboardShortcuts.Name,
         speedMultiplier: Binding<Double>,
         actionBefore: Binding<ExternalTriggerAction>,
-        actionAfter: Binding<ExternalTriggerAction>
+        actionAfter: Binding<ExternalTriggerAction>,
+        delayBefore: Binding<Double>,
+        delayAfter: Binding<Double>
     ) -> some View {
         DisclosureGroup(title) {
             VStack(alignment: .leading, spacing: 6) {
@@ -380,7 +392,12 @@ struct MenuBarView: View {
                 )
 
                 externalTriggerActionPicker("Before reading", selection: actionBefore)
+                triggerDelayStepper("Delay before speech", value: delayBefore)
+                    .disabled(actionBefore.wrappedValue == .none)
+
                 externalTriggerActionPicker("After reading", selection: actionAfter)
+                triggerDelayStepper("Delay after speech", value: delayAfter)
+                    .disabled(actionAfter.wrappedValue == .none)
             }
             .padding(.top, 6)
         }
@@ -396,6 +413,16 @@ struct MenuBarView: View {
             }
         }
         .pickerStyle(.menu)
+        .font(.caption)
+    }
+
+    private func triggerDelayStepper(_ title: String, value: Binding<Double>) -> some View {
+        Stepper(
+            "\(title): \(value.wrappedValue, specifier: "%.1f") seconds",
+            value: value,
+            in: AppModel.minTriggerDelay...AppModel.maxTriggerDelay,
+            step: 0.1
+        )
         .font(.caption)
     }
 

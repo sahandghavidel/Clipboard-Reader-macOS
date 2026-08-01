@@ -19,6 +19,12 @@ final class NarrationPilotTests: XCTestCase {
         XCTAssertLessThanOrEqual(fast, 1.0)
     }
 
+    func testTriggerDelayClampsToSupportedRange() {
+        XCTAssertEqual(AppModel.clampTriggerDelay(-0.5), 0)
+        XCTAssertEqual(AppModel.clampTriggerDelay(1.0), 1.0)
+        XCTAssertEqual(AppModel.clampTriggerDelay(2.5), 2.0)
+    }
+
     func testClipboardNormalization() {
         let service = ClipboardService()
         XCTAssertEqual(service.normalize("   hello world\n"), "hello world")
