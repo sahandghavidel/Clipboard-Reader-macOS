@@ -29,7 +29,7 @@ Traditional text-to-speech tools read a whole document. Narration Pilot treats a
 | **Presenter overlay** | Previous, current, and next scene context with adjustable placement, size, opacity, typography, and colors |
 | **Recording-friendly UI** | Presenter overlay and Scene Manager can be hidden from standard macOS screen capture |
 | **Global shortcuts** | Two current-input shortcuts and three always-read-clipboard shortcuts, each with its own speech speed |
-| **Recording automation** | Optionally send an external shortcut before narration, after narration, or both, with independent 0–2 second delays |
+| **Recording automation** | Verified FocuSee actions, independent 0–10 second delays, and optional start, stop, and failure cue sounds |
 | **Speech controls** | macOS voices, adjustable rate, pause, resume, stop, and replay |
 | **Input choices** | Read the clipboard, entered text, or a scene-based script |
 | **Privacy** | Local-first operation with no analytics, accounts, advertising, or project-owned cloud storage |
@@ -106,9 +106,11 @@ The overlay shows the previous, current, and next scenes. It supports custom siz
 
 ### Shortcuts and recording triggers
 
-Narration Pilot provides two shortcuts for reading the current input and three shortcuts that always read the clipboard. Every read shortcut can use a different speed and choose an external action before and after speech: do nothing, toggle the configured shortcut, ensure FocuSee is recording, or ensure FocuSee is paused. Each action can use an independent 0–2 second delay so recording can settle before speech begins and continue briefly after speech ends. Existing trigger settings migrate to the original toggle behavior.
+Narration Pilot provides two shortcuts for reading the current input and three shortcuts that always read the clipboard. Every read shortcut can use a different speed and choose an external action before and after speech: do nothing, toggle the configured shortcut, ensure FocuSee is recording, or ensure FocuSee is paused. Each action can use an independent 0–10 second delay so recording can settle before speech begins and continue briefly after speech ends. Existing trigger settings migrate to the original toggle behavior.
 
 The FocuSee actions inspect its macOS Accessibility controls before sending its existing Pause/Continue Recording shortcut. Separate global shortcuts can also be assigned for **Ensure FocuSee Recording** and **Ensure FocuSee Paused**. If FocuSee is closed, stopped, or its state cannot be determined safely, Narration Pilot does not send the toggle.
+
+Optional recording cue sounds can play before FocuSee starts and after FocuSee is verified as paused. Start and stop cue timing is adjustable, and a separately selectable failure sound plays if a verified action fails. Narration is cancelled when FocuSee cannot be confirmed as recording.
 
 Sending external shortcuts requires macOS Accessibility permission. Narration Pilot requests that permission only when you ask it to.
 

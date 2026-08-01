@@ -22,7 +22,22 @@ final class NarrationPilotTests: XCTestCase {
     func testTriggerDelayClampsToSupportedRange() {
         XCTAssertEqual(AppModel.clampTriggerDelay(-0.5), 0)
         XCTAssertEqual(AppModel.clampTriggerDelay(1.0), 1.0)
-        XCTAssertEqual(AppModel.clampTriggerDelay(2.5), 2.0)
+        XCTAssertEqual(AppModel.clampTriggerDelay(2.5), 2.5)
+        XCTAssertEqual(AppModel.clampTriggerDelay(12.0), 10.0)
+    }
+
+    func testRecordingCueDelaysClampToSupportedRanges() {
+        XCTAssertEqual(AppModel.clampRecordingStartCueDelay(0), 0.1)
+        XCTAssertEqual(AppModel.clampRecordingStartCueDelay(2), 1.0)
+        XCTAssertEqual(AppModel.clampRecordingStopCueDelay(-1), 0)
+        XCTAssertEqual(AppModel.clampRecordingStopCueDelay(2), 1.0)
+    }
+
+    func testFailureCueCanReuseSelectedStopSound() {
+        XCTAssertEqual(
+            RecordingFailureCueSound.sameAsStop.resolvedSound(stopSound: .glass),
+            .glass
+        )
     }
 
     func testClipboardNormalization() {

@@ -332,6 +332,74 @@ struct MenuBarView: View {
                                 appModel.requestShortcutTriggerAccessibilityPermission()
                             }
                         }
+
+                        Divider()
+
+                        Toggle("Enable recording cue sounds", isOn: $appModel.recordingCueSoundsEnabled)
+
+                        HStack {
+                            Picker("Start sound", selection: $appModel.recordingStartCueSound) {
+                                ForEach(RecordingCueSound.allCases) { sound in
+                                    Text(sound.title).tag(sound)
+                                }
+                            }
+                            .pickerStyle(.menu)
+
+                            Button("Test") {
+                                appModel.previewRecordingCueSound(appModel.recordingStartCueSound)
+                            }
+                        }
+                        .disabled(!appModel.recordingCueSoundsEnabled)
+
+                        Stepper(
+                            "Sound before recording: \(appModel.recordingStartCueDelay, specifier: "%.1f") seconds",
+                            value: $appModel.recordingStartCueDelay,
+                            in: AppModel.minRecordingStartCueDelay...AppModel.maxRecordingStartCueDelay,
+                            step: 0.1
+                        )
+                        .font(.caption)
+                        .disabled(!appModel.recordingCueSoundsEnabled || appModel.recordingStartCueSound == .none)
+
+                        HStack {
+                            Picker("Stop sound", selection: $appModel.recordingStopCueSound) {
+                                ForEach(RecordingCueSound.allCases) { sound in
+                                    Text(sound.title).tag(sound)
+                                }
+                            }
+                            .pickerStyle(.menu)
+
+                            Button("Test") {
+                                appModel.previewRecordingCueSound(appModel.recordingStopCueSound)
+                            }
+                        }
+                        .disabled(!appModel.recordingCueSoundsEnabled)
+
+                        Stepper(
+                            "Sound after recording pauses: \(appModel.recordingStopCueDelay, specifier: "%.1f") seconds",
+                            value: $appModel.recordingStopCueDelay,
+                            in: AppModel.minRecordingStopCueDelay...AppModel.maxRecordingStopCueDelay,
+                            step: 0.1
+                        )
+                        .font(.caption)
+                        .disabled(!appModel.recordingCueSoundsEnabled || appModel.recordingStopCueSound == .none)
+
+                        HStack {
+                            Picker("Failure sound", selection: $appModel.recordingFailureCueSound) {
+                                ForEach(RecordingFailureCueSound.allCases) { sound in
+                                    Text(sound.title).tag(sound)
+                                }
+                            }
+                            .pickerStyle(.menu)
+
+                            Button("Test") {
+                                appModel.previewRecordingFailureCueSound()
+                            }
+                        }
+                        .disabled(!appModel.recordingCueSoundsEnabled)
+
+                        Text("Cue sounds run only with verified Ensure FocuSee Recording/Paused actions. Narration is cancelled if recording fails to start.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.top, 6)
                 }

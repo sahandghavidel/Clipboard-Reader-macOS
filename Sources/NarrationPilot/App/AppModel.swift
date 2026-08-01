@@ -14,6 +14,25 @@ final class AppModel: ObservableObject {
     @Published private(set) var recordingTriggerShortcut: TriggerShortcut?
     @Published var typedText: String = ""
 
+    @Published var recordingCueSoundsEnabled: Bool {
+        didSet { defaults.set(recordingCueSoundsEnabled, forKey: Self.recordingCueSoundsEnabledKey) }
+    }
+    @Published var recordingStartCueSound: RecordingCueSound {
+        didSet { defaults.set(recordingStartCueSound.rawValue, forKey: Self.recordingStartCueSoundKey) }
+    }
+    @Published var recordingStopCueSound: RecordingCueSound {
+        didSet { defaults.set(recordingStopCueSound.rawValue, forKey: Self.recordingStopCueSoundKey) }
+    }
+    @Published var recordingFailureCueSound: RecordingFailureCueSound {
+        didSet { defaults.set(recordingFailureCueSound.rawValue, forKey: Self.recordingFailureCueSoundKey) }
+    }
+    @Published var recordingStartCueDelay: Double {
+        didSet { defaults.set(Self.clampRecordingStartCueDelay(recordingStartCueDelay), forKey: Self.recordingStartCueDelayKey) }
+    }
+    @Published var recordingStopCueDelay: Double {
+        didSet { defaults.set(Self.clampRecordingStopCueDelay(recordingStopCueDelay), forKey: Self.recordingStopCueDelayKey) }
+    }
+
     @Published var readShortcutOneDelayBefore: Double {
         didSet { persistTriggerDelay(readShortcutOneDelayBefore, key: Self.readShortcutOneDelayBeforeKey) }
     }
@@ -503,6 +522,12 @@ final class AppModel: ObservableObject {
     private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
     private static let legacyRecordingShortcutTriggerKey = "clipboardReader.recordingShortcutTrigger.enabled"
     private static let recordingShortcutValueKey = "clipboardReader.recordingShortcutTrigger.shortcut"
+    private static let recordingCueSoundsEnabledKey = "clipboardReader.recordingCueSounds.enabled"
+    private static let recordingStartCueSoundKey = "clipboardReader.recordingCueSounds.startSound"
+    private static let recordingStopCueSoundKey = "clipboardReader.recordingCueSounds.stopSound"
+    private static let recordingFailureCueSoundKey = "clipboardReader.recordingCueSounds.failureSound"
+    private static let recordingStartCueDelayKey = "clipboardReader.recordingCueSounds.startDelay"
+    private static let recordingStopCueDelayKey = "clipboardReader.recordingCueSounds.stopDelay"
     private static let readShortcutOneTriggerBeforeKey = "clipboardReader.readShortcutOne.triggerBefore"
     private static let readShortcutOneTriggerAfterKey = "clipboardReader.readShortcutOne.triggerAfter"
     private static let readShortcutOneActionBeforeKey = "clipboardReader.readShortcutOne.actionBefore"
@@ -579,7 +604,11 @@ final class AppModel: ObservableObject {
     static let minPresenterOverlayTextOpacity = 0.1
     static let maxPresenterOverlayTextOpacity = 1.0
     static let minTriggerDelay = 0.0
-    static let maxTriggerDelay = 2.0
+    static let maxTriggerDelay = 10.0
+    static let minRecordingStartCueDelay = 0.1
+    static let maxRecordingStartCueDelay = 1.0
+    static let minRecordingStopCueDelay = 0.0
+    static let maxRecordingStopCueDelay = 1.0
 
     private let defaults: UserDefaults
     private let clipboardService = ClipboardService()
@@ -609,6 +638,26 @@ final class AppModel: ObservableObject {
         self.selectedVoiceIdentifier = defaults.string(forKey: Self.voiceKey)
         self.readsTypedTextInsteadOfClipboard = defaults.bool(forKey: Self.inputModeKey)
         self.scriptModeEnabled = defaults.bool(forKey: Self.scriptModeKey)
+        self.recordingCueSoundsEnabled = defaults.bool(forKey: Self.recordingCueSoundsEnabledKey)
+        self.recordingStartCueSound = RecordingCueSound(
+            rawValue: defaults.string(forKey: Self.recordingStartCueSoundKey) ?? RecordingCueSound.pop.rawValue
+        ) ?? .pop
+        self.recordingStopCueSound = RecordingCueSound(
+            rawValue: defaults.string(forKey: Self.recordingStopCueSoundKey) ?? RecordingCueSound.glass.rawValue
+        ) ?? .glass
+        self.recordingFailureCueSound = RecordingFailureCueSound(
+            rawValue: defaults.string(forKey: Self.recordingFailureCueSoundKey) ?? RecordingFailureCueSound.sameAsStop.rawValue
+        ) ?? .sameAsStop
+        self.recordingStartCueDelay = Self.clampRecordingStartCueDelay(Self.storedDouble(
+            in: defaults,
+            forKey: Self.recordingStartCueDelayKey,
+            defaultValue: 0.3
+        ))
+        self.recordingStopCueDelay = Self.clampRecordingStopCueDelay(Self.storedDouble(
+            in: defaults,
+            forKey: Self.recordingStopCueDelayKey,
+            defaultValue: 0.1
+        ))
         self.readShortcutOneActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
             actionKey: Self.readShortcutOneActionBeforeKey,
@@ -1192,6 +1241,14 @@ final class AppModel: ObservableObject {
         selectedVoiceIdentifier = identifier.isEmpty ? nil : identifier
     }
 
+    func previewRecordingCueSound(_ sound: RecordingCueSound) {
+        sound.play()
+    }
+
+    func previewRecordingFailureCueSound() {
+        playRecordingFailureCue()
+    }
+
     private func stopSpeechForSceneNavigation() {
         shouldAdvanceScriptSceneAfterSpeech = false
         cancelPendingReadSequence()
@@ -1217,21 +1274,41 @@ final class AppModel: ObservableObject {
         activeReadSequenceID = sequenceID
         externalTriggerActionAfterSpeech = actionAfter
         externalTriggerDelayAfterSpeech = actionAfter == .none ? 0 : Self.clampTriggerDelay(delayAfter)
-        performExternalTriggerAction(actionBefore)
-
         let resolvedDelayBefore = actionBefore == .none ? 0 : Self.clampTriggerDelay(delayBefore)
-        guard resolvedDelayBefore > 0 else {
-            statusMessage = readingStatus
-            speak()
-            return
-        }
-
-        statusMessage = "Starting speech in \(Self.formattedDelay(resolvedDelayBefore)) seconds…"
         pendingReadTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(resolvedDelayBefore))
             guard !Task.isCancelled,
                   let self,
                   self.activeReadSequenceID == sequenceID else {
+                return
+            }
+
+            if actionBefore == .ensureRecording, self.recordingCueSoundsEnabled {
+                self.recordingStartCueSound.play()
+                if self.recordingStartCueSound != .none {
+                    try? await Task.sleep(for: .seconds(self.recordingStartCueDelay))
+                }
+            }
+
+            guard !Task.isCancelled, self.activeReadSequenceID == sequenceID else {
+                return
+            }
+
+            let actionSucceeded = await self.performExternalTriggerAction(actionBefore)
+            guard actionSucceeded else {
+                if actionBefore == .ensureRecording {
+                    self.playRecordingFailureCue()
+                    self.statusMessage = "Recording did not start. Narration cancelled."
+                }
+                self.cancelPendingReadSequence()
+                return
+            }
+
+            if resolvedDelayBefore > 0 {
+                self.statusMessage = "Starting speech in \(Self.formattedDelay(resolvedDelayBefore)) seconds…"
+                try? await Task.sleep(for: .seconds(resolvedDelayBefore))
+            }
+
+            guard !Task.isCancelled, self.activeReadSequenceID == sequenceID else {
                 return
             }
 
@@ -1249,38 +1326,52 @@ final class AppModel: ObservableObject {
         externalTriggerDelayAfterSpeech = 0
     }
 
+    private func playRecordingFailureCue() {
+        guard recordingCueSoundsEnabled else {
+            return
+        }
+
+        recordingFailureCueSound
+            .resolvedSound(stopSound: recordingStopCueSound)
+            .play()
+    }
+
     func ensureFocuSeeRecording() {
-        performExternalTriggerAction(.ensureRecording, reportsSuccess: true)
+        Task { @MainActor [weak self] in
+            _ = await self?.performExternalTriggerAction(.ensureRecording, reportsSuccess: true)
+        }
     }
 
     func ensureFocuSeePaused() {
-        performExternalTriggerAction(.ensurePaused, reportsSuccess: true)
+        Task { @MainActor [weak self] in
+            _ = await self?.performExternalTriggerAction(.ensurePaused, reportsSuccess: true)
+        }
     }
 
     private func performExternalTriggerAction(
         _ action: ExternalTriggerAction,
         reportsSuccess: Bool = false
-    ) {
+    ) async -> Bool {
         switch action {
         case .none:
-            return
+            return true
         case .toggle:
-            _ = triggerRecordingShortcutIfPossible()
+            return triggerRecordingShortcutIfPossible()
         case .ensureRecording:
-            ensureFocuSeeState(.recording, reportsSuccess: reportsSuccess)
+            return await ensureFocuSeeState(.recording, reportsSuccess: reportsSuccess)
         case .ensurePaused:
-            ensureFocuSeeState(.paused, reportsSuccess: reportsSuccess)
+            return await ensureFocuSeeState(.paused, reportsSuccess: reportsSuccess)
         }
     }
 
     private func ensureFocuSeeState(
         _ targetState: FocuSeeRecordingState,
         reportsSuccess: Bool
-    ) {
+    ) async -> Bool {
         refreshShortcutTriggerAccessibilityStatus()
         guard isShortcutTriggerAccessibilityTrusted else {
             statusMessage = "Accessibility permission is required to inspect FocuSee."
-            return
+            return false
         }
 
         let currentState = focuSeeAccessibilityService.recordingState()
@@ -1290,7 +1381,7 @@ final class AppModel: ObservableObject {
                     ? "FocuSee is already recording."
                     : "FocuSee is already paused."
             }
-            return
+            return true
         }
 
         let oppositeState: FocuSeeRecordingState = targetState == .recording ? .paused : .recording
@@ -1305,11 +1396,11 @@ final class AppModel: ObservableObject {
             case .recording, .paused:
                 statusMessage = "Could not safely change FocuSee's recording state."
             }
-            return
+            return false
         }
 
         guard triggerRecordingShortcutIfPossible() else {
-            return
+            return false
         }
 
         if reportsSuccess {
@@ -1317,25 +1408,23 @@ final class AppModel: ObservableObject {
                 ? "Resuming FocuSee recording…"
                 : "Pausing FocuSee recording…"
         }
-        verifyFocuSeeStateAfterTrigger(targetState)
-    }
-
-    private func verifyFocuSeeStateAfterTrigger(_ expectedState: FocuSeeRecordingState) {
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .milliseconds(500))
-            guard let self else {
-                return
-            }
-
-            let actualState = self.focuSeeAccessibilityService.recordingState()
-            guard actualState != expectedState else {
-                return
-            }
-
-            if actualState == .recording || actualState == .paused {
-                self.statusMessage = "FocuSee did not change to the requested recording state."
-            }
+        try? await Task.sleep(for: .milliseconds(500))
+        guard !Task.isCancelled else {
+            return false
         }
+
+        let actualState = focuSeeAccessibilityService.recordingState()
+        guard actualState == targetState else {
+            statusMessage = "FocuSee did not change to the requested recording state."
+            return false
+        }
+
+        if reportsSuccess {
+            statusMessage = targetState == .recording
+                ? "FocuSee is recording."
+                : "FocuSee is paused."
+        }
+        return true
     }
 
     @discardableResult
@@ -1416,26 +1505,40 @@ final class AppModel: ObservableObject {
         externalTriggerActionAfterSpeech = .none
         externalTriggerDelayAfterSpeech = 0
 
-        guard action != .none, delay > 0 else {
-            performExternalTriggerAction(action)
-            activeReadSequenceID = nil
-            advanceScriptSceneAfterCompletedSpeech()
-            return
-        }
-
-        statusMessage = "Finishing recording in \(Self.formattedDelay(delay)) seconds…"
         pendingReadTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(delay))
+            if action != .none, delay > 0 {
+                self?.statusMessage = "Finishing recording in \(Self.formattedDelay(delay)) seconds…"
+                try? await Task.sleep(for: .seconds(delay))
+            }
+
             guard !Task.isCancelled,
                   let self,
                   self.activeReadSequenceID == sequenceID else {
                 return
             }
 
+            let actionSucceeded = await self.performExternalTriggerAction(action)
+            guard !Task.isCancelled, self.activeReadSequenceID == sequenceID else {
+                return
+            }
+
+            if actionSucceeded, action == .ensurePaused, self.recordingCueSoundsEnabled {
+                if self.recordingStopCueDelay > 0 {
+                    try? await Task.sleep(for: .seconds(self.recordingStopCueDelay))
+                }
+                guard !Task.isCancelled, self.activeReadSequenceID == sequenceID else {
+                    return
+                }
+                self.recordingStopCueSound.play()
+            } else if !actionSucceeded, action != .none {
+                self.playRecordingFailureCue()
+            }
+
             self.pendingReadTask = nil
-            self.performExternalTriggerAction(action)
             self.activeReadSequenceID = nil
-            self.advanceScriptSceneAfterCompletedSpeech()
+            if actionSucceeded {
+                self.advanceScriptSceneAfterCompletedSpeech()
+            }
         }
     }
 
@@ -1635,6 +1738,14 @@ final class AppModel: ObservableObject {
 
     static func clampTriggerDelay(_ value: Double) -> Double {
         clamp(value, min: minTriggerDelay, max: maxTriggerDelay)
+    }
+
+    static func clampRecordingStartCueDelay(_ value: Double) -> Double {
+        clamp(value, min: minRecordingStartCueDelay, max: maxRecordingStartCueDelay)
+    }
+
+    static func clampRecordingStopCueDelay(_ value: Double) -> Double {
+        clamp(value, min: minRecordingStopCueDelay, max: maxRecordingStopCueDelay)
     }
 
     private static func formattedDelay(_ value: Double) -> String {
