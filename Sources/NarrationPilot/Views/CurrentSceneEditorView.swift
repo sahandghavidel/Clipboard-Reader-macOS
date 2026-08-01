@@ -44,29 +44,37 @@ struct CurrentSceneEditorView: View {
             Text("Scenes")
                 .font(.headline)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(scenes.indices, id: \.self) { index in
-                        Button {
-                            selectScene(index)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Scene \(index + 1)")
-                                    .font(.caption.bold())
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(scenes.indices, id: \.self) { index in
+                            Button {
+                                selectScene(index)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Scene \(index + 1)")
+                                        .font(.caption.bold())
 
-                                Text(preview(for: scenes[index]))
-                                    .font(.caption2)
-                                    .lineLimit(3)
-                                    .foregroundStyle(.secondary)
+                                    Text(preview(for: scenes[index]))
+                                        .font(.caption2)
+                                        .lineLimit(3)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 7)
+                                        .fill(index == selectedIndex ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.08))
+                                )
                             }
-                            .padding(8)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                RoundedRectangle(cornerRadius: 7)
-                                    .fill(index == selectedIndex ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.08))
-                            )
+                            .buttonStyle(.plain)
+                            .id(index)
                         }
-                        .buttonStyle(.plain)
+                    }
+                }
+                .onAppear {
+                    DispatchQueue.main.async {
+                        proxy.scrollTo(selectedIndex, anchor: .top)
                     }
                 }
             }
