@@ -81,6 +81,18 @@ final class NarrationPilotTests: XCTestCase {
         ]))
     }
 
+    func testUserActivityIdlePeriodClampsToSafeRange() {
+        XCTAssertEqual(UserActivityIdlePolicy.clampedIdlePeriod(0), 0.5)
+        XCTAssertEqual(UserActivityIdlePolicy.clampedIdlePeriod(1), 1)
+        XCTAssertEqual(UserActivityIdlePolicy.clampedIdlePeriod(8), 3)
+    }
+
+    func testUserActivityMaximumWaitClampsToSafeRange() {
+        XCTAssertEqual(UserActivityIdlePolicy.clampedMaximumWait(0), 3)
+        XCTAssertEqual(UserActivityIdlePolicy.clampedMaximumWait(10), 10)
+        XCTAssertEqual(UserActivityIdlePolicy.clampedMaximumWait(90), 30)
+    }
+
     func testFailureCueCanReuseSelectedStopSound() {
         XCTAssertEqual(
             RecordingFailureCueSound.sameAsStop.resolvedSound(stopSound: .glass),

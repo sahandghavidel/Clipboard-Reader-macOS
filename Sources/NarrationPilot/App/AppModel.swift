@@ -79,6 +79,41 @@ final class AppModel: ObservableObject {
     @Published var readClipboardAlwaysThreeWaitsForNeonSpotlight: Bool {
         didSet { defaults.set(readClipboardAlwaysThreeWaitsForNeonSpotlight, forKey: Self.readClipboardAlwaysThreeWaitsForNeonSpotlightKey) }
     }
+    @Published var readShortcutOneWaitsForUserInactivity: Bool {
+        didSet { defaults.set(readShortcutOneWaitsForUserInactivity, forKey: Self.readShortcutOneWaitsForUserInactivityKey) }
+    }
+    @Published var readShortcutTwoWaitsForUserInactivity: Bool {
+        didSet { defaults.set(readShortcutTwoWaitsForUserInactivity, forKey: Self.readShortcutTwoWaitsForUserInactivityKey) }
+    }
+    @Published var readClipboardAlwaysWaitsForUserInactivity: Bool {
+        didSet { defaults.set(readClipboardAlwaysWaitsForUserInactivity, forKey: Self.readClipboardAlwaysWaitsForUserInactivityKey) }
+    }
+    @Published var readClipboardAlwaysTwoWaitsForUserInactivity: Bool {
+        didSet { defaults.set(readClipboardAlwaysTwoWaitsForUserInactivity, forKey: Self.readClipboardAlwaysTwoWaitsForUserInactivityKey) }
+    }
+    @Published var readClipboardAlwaysThreeWaitsForUserInactivity: Bool {
+        didSet { defaults.set(readClipboardAlwaysThreeWaitsForUserInactivity, forKey: Self.readClipboardAlwaysThreeWaitsForUserInactivityKey) }
+    }
+    @Published var userActivityIdlePeriod: Double {
+        didSet {
+            let clamped = UserActivityIdlePolicy.clampedIdlePeriod(userActivityIdlePeriod)
+            if clamped != userActivityIdlePeriod {
+                userActivityIdlePeriod = clamped
+                return
+            }
+            defaults.set(clamped, forKey: Self.userActivityIdlePeriodKey)
+        }
+    }
+    @Published var userActivityMaximumWait: Double {
+        didSet {
+            let clamped = UserActivityIdlePolicy.clampedMaximumWait(userActivityMaximumWait)
+            if clamped != userActivityMaximumWait {
+                userActivityMaximumWait = clamped
+                return
+            }
+            defaults.set(clamped, forKey: Self.userActivityMaximumWaitKey)
+        }
+    }
 
     @Published var readShortcutOneActionBefore: ExternalTriggerAction {
         didSet {
@@ -552,6 +587,7 @@ final class AppModel: ObservableObject {
     private static let readShortcutOneDelayAfterKey = "clipboardReader.readShortcutOne.delayAfter"
     private static let readShortcutOneSpeedKey = "clipboardReader.readShortcutOne.speedMultiplier"
     private static let readShortcutOneWaitsForNeonSpotlightKey = "clipboardReader.readShortcutOne.waitsForNeonSpotlight"
+    private static let readShortcutOneWaitsForUserInactivityKey = "clipboardReader.readShortcutOne.waitsForUserInactivity"
     private static let readShortcutTwoTriggerBeforeKey = "clipboardReader.readShortcutTwo.triggerBefore"
     private static let readShortcutTwoTriggerAfterKey = "clipboardReader.readShortcutTwo.triggerAfter"
     private static let readShortcutTwoActionBeforeKey = "clipboardReader.readShortcutTwo.actionBefore"
@@ -560,6 +596,7 @@ final class AppModel: ObservableObject {
     private static let readShortcutTwoDelayAfterKey = "clipboardReader.readShortcutTwo.delayAfter"
     private static let readShortcutTwoSpeedKey = "clipboardReader.readShortcutTwo.speedMultiplier"
     private static let readShortcutTwoWaitsForNeonSpotlightKey = "clipboardReader.readShortcutTwo.waitsForNeonSpotlight"
+    private static let readShortcutTwoWaitsForUserInactivityKey = "clipboardReader.readShortcutTwo.waitsForUserInactivity"
     private static let readClipboardAlwaysTriggerBeforeKey = "clipboardReader.readClipboardAlways.triggerBefore"
     private static let readClipboardAlwaysTriggerAfterKey = "clipboardReader.readClipboardAlways.triggerAfter"
     private static let readClipboardAlwaysActionBeforeKey = "clipboardReader.readClipboardAlways.actionBefore"
@@ -568,6 +605,7 @@ final class AppModel: ObservableObject {
     private static let readClipboardAlwaysDelayAfterKey = "clipboardReader.readClipboardAlways.delayAfter"
     private static let readClipboardAlwaysSpeedKey = "clipboardReader.readClipboardAlways.speedMultiplier"
     private static let readClipboardAlwaysWaitsForNeonSpotlightKey = "clipboardReader.readClipboardAlways.waitsForNeonSpotlight"
+    private static let readClipboardAlwaysWaitsForUserInactivityKey = "clipboardReader.readClipboardAlways.waitsForUserInactivity"
     private static let readClipboardAlwaysTwoTriggerBeforeKey = "clipboardReader.readClipboardAlwaysTwo.triggerBefore"
     private static let readClipboardAlwaysTwoTriggerAfterKey = "clipboardReader.readClipboardAlwaysTwo.triggerAfter"
     private static let readClipboardAlwaysTwoActionBeforeKey = "clipboardReader.readClipboardAlwaysTwo.actionBefore"
@@ -576,6 +614,7 @@ final class AppModel: ObservableObject {
     private static let readClipboardAlwaysTwoDelayAfterKey = "clipboardReader.readClipboardAlwaysTwo.delayAfter"
     private static let readClipboardAlwaysTwoSpeedKey = "clipboardReader.readClipboardAlwaysTwo.speedMultiplier"
     private static let readClipboardAlwaysTwoWaitsForNeonSpotlightKey = "clipboardReader.readClipboardAlwaysTwo.waitsForNeonSpotlight"
+    private static let readClipboardAlwaysTwoWaitsForUserInactivityKey = "clipboardReader.readClipboardAlwaysTwo.waitsForUserInactivity"
     private static let readClipboardAlwaysThreeTriggerBeforeKey = "clipboardReader.readClipboardAlwaysThree.triggerBefore"
     private static let readClipboardAlwaysThreeTriggerAfterKey = "clipboardReader.readClipboardAlwaysThree.triggerAfter"
     private static let readClipboardAlwaysThreeActionBeforeKey = "clipboardReader.readClipboardAlwaysThree.actionBefore"
@@ -584,6 +623,9 @@ final class AppModel: ObservableObject {
     private static let readClipboardAlwaysThreeDelayAfterKey = "clipboardReader.readClipboardAlwaysThree.delayAfter"
     private static let readClipboardAlwaysThreeSpeedKey = "clipboardReader.readClipboardAlwaysThree.speedMultiplier"
     private static let readClipboardAlwaysThreeWaitsForNeonSpotlightKey = "clipboardReader.readClipboardAlwaysThree.waitsForNeonSpotlight"
+    private static let readClipboardAlwaysThreeWaitsForUserInactivityKey = "clipboardReader.readClipboardAlwaysThree.waitsForUserInactivity"
+    private static let userActivityIdlePeriodKey = "clipboardReader.userActivity.idlePeriod"
+    private static let userActivityMaximumWaitKey = "clipboardReader.userActivity.maximumWait"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
     private static let presenterOverlayHideWhileSpeakingKey = "clipboardReader.hidePresenterOverlayWhileSpeaking"
@@ -636,6 +678,7 @@ final class AppModel: ObservableObject {
     private let shortcutTriggerService = ShortcutTriggerService()
     private let focuSeeAccessibilityService = FocuSeeAccessibilityService()
     private let neonSpotlightStatusService = NeonSpotlightStatusService()
+    private let userActivityIdleService = UserActivityIdleService()
     private let ttsManager = TTSManager()
     private var cancellables = Set<AnyCancellable>()
     private var presenterOverlayController: PresenterOverlayController?
@@ -648,6 +691,7 @@ final class AppModel: ObservableObject {
     private var externalTriggerActionAfterSpeech: ExternalTriggerAction = .none
     private var externalTriggerDelayAfterSpeech = 0.0
     private var waitsForNeonSpotlightAfterSpeech = false
+    private var waitsForUserInactivityAfterSpeech = false
     private var activeReadSequenceID: UUID?
     private var pendingReadTask: Task<Void, Never>?
 
@@ -700,6 +744,7 @@ final class AppModel: ObservableObject {
             defaultValue: initialSpeedMultiplier
         ))
         self.readShortcutOneWaitsForNeonSpotlight = defaults.bool(forKey: Self.readShortcutOneWaitsForNeonSpotlightKey)
+        self.readShortcutOneWaitsForUserInactivity = defaults.bool(forKey: Self.readShortcutOneWaitsForUserInactivityKey)
         self.readShortcutTwoActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
             actionKey: Self.readShortcutTwoActionBeforeKey,
@@ -718,6 +763,7 @@ final class AppModel: ObservableObject {
             defaultValue: initialSpeedMultiplier
         ))
         self.readShortcutTwoWaitsForNeonSpotlight = defaults.bool(forKey: Self.readShortcutTwoWaitsForNeonSpotlightKey)
+        self.readShortcutTwoWaitsForUserInactivity = defaults.bool(forKey: Self.readShortcutTwoWaitsForUserInactivityKey)
         self.readClipboardAlwaysActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
             actionKey: Self.readClipboardAlwaysActionBeforeKey,
@@ -736,6 +782,7 @@ final class AppModel: ObservableObject {
             defaultValue: initialSpeedMultiplier
         ))
         self.readClipboardAlwaysWaitsForNeonSpotlight = defaults.bool(forKey: Self.readClipboardAlwaysWaitsForNeonSpotlightKey)
+        self.readClipboardAlwaysWaitsForUserInactivity = defaults.bool(forKey: Self.readClipboardAlwaysWaitsForUserInactivityKey)
         self.readClipboardAlwaysTwoActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
             actionKey: Self.readClipboardAlwaysTwoActionBeforeKey,
@@ -754,6 +801,7 @@ final class AppModel: ObservableObject {
             defaultValue: initialSpeedMultiplier
         ))
         self.readClipboardAlwaysTwoWaitsForNeonSpotlight = defaults.bool(forKey: Self.readClipboardAlwaysTwoWaitsForNeonSpotlightKey)
+        self.readClipboardAlwaysTwoWaitsForUserInactivity = defaults.bool(forKey: Self.readClipboardAlwaysTwoWaitsForUserInactivityKey)
         self.readClipboardAlwaysThreeActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
             actionKey: Self.readClipboardAlwaysThreeActionBeforeKey,
@@ -772,6 +820,17 @@ final class AppModel: ObservableObject {
             defaultValue: initialSpeedMultiplier
         ))
         self.readClipboardAlwaysThreeWaitsForNeonSpotlight = defaults.bool(forKey: Self.readClipboardAlwaysThreeWaitsForNeonSpotlightKey)
+        self.readClipboardAlwaysThreeWaitsForUserInactivity = defaults.bool(forKey: Self.readClipboardAlwaysThreeWaitsForUserInactivityKey)
+        self.userActivityIdlePeriod = UserActivityIdlePolicy.clampedIdlePeriod(Self.storedDouble(
+            in: defaults,
+            forKey: Self.userActivityIdlePeriodKey,
+            defaultValue: UserActivityIdlePolicy.defaultIdlePeriod
+        ))
+        self.userActivityMaximumWait = UserActivityIdlePolicy.clampedMaximumWait(Self.storedDouble(
+            in: defaults,
+            forKey: Self.userActivityMaximumWaitKey,
+            defaultValue: UserActivityIdlePolicy.defaultMaximumWait
+        ))
         self.recordingTriggerShortcut = Self.storedRecordingTriggerShortcut(in: defaults)
         self.isShortcutTriggerAccessibilityTrusted = ShortcutTriggerService.isAccessibilityTrusted
         self.showPresenterOverlay = defaults.bool(forKey: Self.presenterOverlayKey)
@@ -846,6 +905,7 @@ final class AppModel: ObservableObject {
         delayBefore: Double = 0,
         delayAfter: Double = 0,
         waitsForNeonSpotlight: Bool = false,
+        waitsForUserInactivity: Bool = false,
         speedMultiplier: Double? = nil
     ) {
         let resolvedSpeedMultiplier = speedMultiplier ?? self.speedMultiplier
@@ -857,6 +917,7 @@ final class AppModel: ObservableObject {
                 delayBefore: delayBefore,
                 delayAfter: delayAfter,
                 waitsForNeonSpotlight: waitsForNeonSpotlight,
+                waitsForUserInactivity: waitsForUserInactivity,
                 speedMultiplier: resolvedSpeedMultiplier
             )
             return
@@ -869,6 +930,7 @@ final class AppModel: ObservableObject {
                 delayBefore: delayBefore,
                 delayAfter: delayAfter,
                 waitsForNeonSpotlight: waitsForNeonSpotlight,
+                waitsForUserInactivity: waitsForUserInactivity,
                 speedMultiplier: resolvedSpeedMultiplier
             )
         } else {
@@ -878,6 +940,7 @@ final class AppModel: ObservableObject {
                 delayBefore: delayBefore,
                 delayAfter: delayAfter,
                 waitsForNeonSpotlight: waitsForNeonSpotlight,
+                waitsForUserInactivity: waitsForUserInactivity,
                 speedMultiplier: resolvedSpeedMultiplier
             )
         }
@@ -889,6 +952,7 @@ final class AppModel: ObservableObject {
         delayBefore: Double = 0,
         delayAfter: Double = 0,
         waitsForNeonSpotlight: Bool = false,
+        waitsForUserInactivity: Bool = false,
         speedMultiplier: Double? = nil
     ) {
         readClipboardNow(
@@ -897,6 +961,7 @@ final class AppModel: ObservableObject {
             delayBefore: delayBefore,
             delayAfter: delayAfter,
             waitsForNeonSpotlight: waitsForNeonSpotlight,
+            waitsForUserInactivity: waitsForUserInactivity,
             speedMultiplier: speedMultiplier ?? self.speedMultiplier
         )
     }
@@ -1142,6 +1207,7 @@ final class AppModel: ObservableObject {
         delayBefore: Double,
         delayAfter: Double,
         waitsForNeonSpotlight: Bool,
+        waitsForUserInactivity: Bool,
         speedMultiplier: Double
     ) {
         guard let text = clipboardService.currentText() else {
@@ -1155,6 +1221,7 @@ final class AppModel: ObservableObject {
             delayBefore: delayBefore,
             delayAfter: delayAfter,
             waitsForNeonSpotlight: waitsForNeonSpotlight,
+            waitsForUserInactivity: waitsForUserInactivity,
             readingStatus: "Reading clipboard…"
         ) { [weak self] in
             guard let self else { return }
@@ -1172,6 +1239,7 @@ final class AppModel: ObservableObject {
         delayBefore: Double,
         delayAfter: Double,
         waitsForNeonSpotlight: Bool,
+        waitsForUserInactivity: Bool,
         speedMultiplier: Double
     ) {
         let text = clipboardService.normalize(typedText)
@@ -1186,6 +1254,7 @@ final class AppModel: ObservableObject {
             delayBefore: delayBefore,
             delayAfter: delayAfter,
             waitsForNeonSpotlight: waitsForNeonSpotlight,
+            waitsForUserInactivity: waitsForUserInactivity,
             readingStatus: "Reading typed text…"
         ) { [weak self] in
             guard let self else { return }
@@ -1205,6 +1274,7 @@ final class AppModel: ObservableObject {
             delayBefore: 0,
             delayAfter: 0,
             waitsForNeonSpotlight: false,
+            waitsForUserInactivity: false,
             speedMultiplier: speedMultiplier
         )
     }
@@ -1215,6 +1285,7 @@ final class AppModel: ObservableObject {
         delayBefore: Double,
         delayAfter: Double,
         waitsForNeonSpotlight: Bool,
+        waitsForUserInactivity: Bool,
         speedMultiplier: Double
     ) {
         readCurrentScriptSceneNow(
@@ -1224,6 +1295,7 @@ final class AppModel: ObservableObject {
             delayBefore: delayBefore,
             delayAfter: delayAfter,
             waitsForNeonSpotlight: waitsForNeonSpotlight,
+            waitsForUserInactivity: waitsForUserInactivity,
             speedMultiplier: speedMultiplier
         )
     }
@@ -1236,6 +1308,7 @@ final class AppModel: ObservableObject {
         delayBefore: Double = 0,
         delayAfter: Double = 0,
         waitsForNeonSpotlight: Bool = false,
+        waitsForUserInactivity: Bool = false,
         speedMultiplier: Double? = nil
     ) {
         refreshScriptScenes()
@@ -1254,6 +1327,7 @@ final class AppModel: ObservableObject {
             delayBefore: delayBefore,
             delayAfter: delayAfter,
             waitsForNeonSpotlight: waitsForNeonSpotlight,
+            waitsForUserInactivity: waitsForUserInactivity,
             readingStatus: readingStatus
         ) { [weak self] in
             guard let self else { return }
@@ -1306,6 +1380,7 @@ final class AppModel: ObservableObject {
         delayBefore: Double,
         delayAfter: Double,
         waitsForNeonSpotlight: Bool,
+        waitsForUserInactivity: Bool,
         readingStatus: String,
         speak: @escaping @MainActor () -> Void
     ) {
@@ -1320,6 +1395,8 @@ final class AppModel: ObservableObject {
         externalTriggerDelayAfterSpeech = actionAfter == .none ? 0 : Self.clampTriggerDelay(delayAfter)
         waitsForNeonSpotlightAfterSpeech = actionAfter == .ensurePaused
             && waitsForNeonSpotlight
+        waitsForUserInactivityAfterSpeech = actionAfter == .ensurePaused
+            && waitsForUserInactivity
         let resolvedDelayBefore = actionBefore == .none ? 0 : Self.clampTriggerDelay(delayBefore)
         pendingReadTask = Task { @MainActor [weak self] in
             guard !Task.isCancelled,
@@ -1371,6 +1448,7 @@ final class AppModel: ObservableObject {
         externalTriggerActionAfterSpeech = .none
         externalTriggerDelayAfterSpeech = 0
         waitsForNeonSpotlightAfterSpeech = false
+        waitsForUserInactivityAfterSpeech = false
     }
 
     private func playRecordingFailureCue() {
@@ -1550,9 +1628,11 @@ final class AppModel: ObservableObject {
         let action = externalTriggerActionAfterSpeech
         let delay = externalTriggerDelayAfterSpeech
         let waitsForNeonSpotlight = waitsForNeonSpotlightAfterSpeech
+        let waitsForUserInactivity = waitsForUserInactivityAfterSpeech
         externalTriggerActionAfterSpeech = .none
         externalTriggerDelayAfterSpeech = 0
         waitsForNeonSpotlightAfterSpeech = false
+        waitsForUserInactivityAfterSpeech = false
 
         pendingReadTask = Task { @MainActor [weak self] in
             if action != .none, delay > 0 {
@@ -1585,6 +1665,28 @@ final class AppModel: ObservableObject {
                     self.statusMessage = "Neon Spotlight did not respond. Pausing recording…"
                 case .animationTimedOut:
                     self.statusMessage = "Neon Spotlight wait timed out. Pausing recording…"
+                case .cancelled:
+                    return
+                }
+            }
+
+            if action == .ensurePaused, waitsForUserInactivity {
+                self.statusMessage = "Waiting for mouse and keyboard to become idle…"
+                let idleResult = await self.userActivityIdleService.waitUntilIdle(
+                    idlePeriod: self.userActivityIdlePeriod,
+                    maximumWait: self.userActivityMaximumWait
+                )
+                guard !Task.isCancelled,
+                      self.activeReadSequenceID == sequenceID else {
+                    return
+                }
+                switch idleResult {
+                case .idle:
+                    self.statusMessage = "Mouse and keyboard are idle. Pausing recording…"
+                case .timedOut:
+                    self.statusMessage = "Activity wait timed out. Pausing recording…"
+                case .monitoringUnavailable:
+                    self.statusMessage = "Could not monitor input activity. Pausing recording…"
                 case .cancelled:
                     return
                 }
@@ -1644,6 +1746,7 @@ final class AppModel: ObservableObject {
                     delayBefore: self.readShortcutOneDelayBefore,
                     delayAfter: self.readShortcutOneDelayAfter,
                     waitsForNeonSpotlight: self.readShortcutOneWaitsForNeonSpotlight,
+                    waitsForUserInactivity: self.readShortcutOneWaitsForUserInactivity,
                     speedMultiplier: self.readShortcutOneSpeedMultiplier
                 )
             }
@@ -1661,6 +1764,7 @@ final class AppModel: ObservableObject {
                     delayBefore: self.readShortcutTwoDelayBefore,
                     delayAfter: self.readShortcutTwoDelayAfter,
                     waitsForNeonSpotlight: self.readShortcutTwoWaitsForNeonSpotlight,
+                    waitsForUserInactivity: self.readShortcutTwoWaitsForUserInactivity,
                     speedMultiplier: self.readShortcutTwoSpeedMultiplier
                 )
             }
@@ -1678,6 +1782,7 @@ final class AppModel: ObservableObject {
                     delayBefore: self.readClipboardAlwaysDelayBefore,
                     delayAfter: self.readClipboardAlwaysDelayAfter,
                     waitsForNeonSpotlight: self.readClipboardAlwaysWaitsForNeonSpotlight,
+                    waitsForUserInactivity: self.readClipboardAlwaysWaitsForUserInactivity,
                     speedMultiplier: self.readClipboardAlwaysSpeedMultiplier
                 )
             }
@@ -1695,6 +1800,7 @@ final class AppModel: ObservableObject {
                     delayBefore: self.readClipboardAlwaysTwoDelayBefore,
                     delayAfter: self.readClipboardAlwaysTwoDelayAfter,
                     waitsForNeonSpotlight: self.readClipboardAlwaysTwoWaitsForNeonSpotlight,
+                    waitsForUserInactivity: self.readClipboardAlwaysTwoWaitsForUserInactivity,
                     speedMultiplier: self.readClipboardAlwaysTwoSpeedMultiplier
                 )
             }
@@ -1712,6 +1818,7 @@ final class AppModel: ObservableObject {
                     delayBefore: self.readClipboardAlwaysThreeDelayBefore,
                     delayAfter: self.readClipboardAlwaysThreeDelayAfter,
                     waitsForNeonSpotlight: self.readClipboardAlwaysThreeWaitsForNeonSpotlight,
+                    waitsForUserInactivity: self.readClipboardAlwaysThreeWaitsForUserInactivity,
                     speedMultiplier: self.readClipboardAlwaysThreeSpeedMultiplier
                 )
             }

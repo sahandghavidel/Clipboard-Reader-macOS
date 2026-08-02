@@ -119,6 +119,14 @@ only after every visible highlight and fade-out completes. The option defaults
 off. If Neon Spotlight is closed, does not respond, quits, or remains busy for
 more than 10 seconds, Narration Pilot safely continues with the verified pause.
 
+Each shortcut can also optionally wait until mouse and keyboard activity has
+stopped. The monitor starts only after speech, the configured delay, and any
+Neon Spotlight wait. It observes mouse movement, clicks, scrolling, and key-down
+activity without storing keys or text. Pointer movement below four points is
+ignored to avoid sensor jitter. The quiet period defaults to one second and the
+maximum wait defaults to 10 seconds; both are configurable in External Trigger
+Shortcut settings and bounded to safe ranges.
+
 The FocuSee actions inspect its macOS Accessibility controls before sending its existing Pause/Continue Recording shortcut. Separate global shortcuts can also be assigned for **Ensure FocuSee Recording** and **Ensure FocuSee Paused**. If FocuSee is closed, stopped, or its state cannot be determined safely, Narration Pilot does not send the toggle.
 
 Optional recording cue sounds can play before FocuSee starts and after FocuSee is verified as paused. Start and stop cue timing is adjustable, and a separately selectable failure sound plays if a verified action fails. Narration is cancelled when FocuSee cannot be confirmed as recording.

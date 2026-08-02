@@ -246,7 +246,8 @@ struct MenuBarView: View {
                     actionAfter: $appModel.readShortcutOneActionAfter,
                     delayBefore: $appModel.readShortcutOneDelayBefore,
                     delayAfter: $appModel.readShortcutOneDelayAfter,
-                    waitsForNeonSpotlight: $appModel.readShortcutOneWaitsForNeonSpotlight
+                    waitsForNeonSpotlight: $appModel.readShortcutOneWaitsForNeonSpotlight,
+                    waitsForUserInactivity: $appModel.readShortcutOneWaitsForUserInactivity
                 )
 
                 Divider()
@@ -259,7 +260,8 @@ struct MenuBarView: View {
                     actionAfter: $appModel.readShortcutTwoActionAfter,
                     delayBefore: $appModel.readShortcutTwoDelayBefore,
                     delayAfter: $appModel.readShortcutTwoDelayAfter,
-                    waitsForNeonSpotlight: $appModel.readShortcutTwoWaitsForNeonSpotlight
+                    waitsForNeonSpotlight: $appModel.readShortcutTwoWaitsForNeonSpotlight,
+                    waitsForUserInactivity: $appModel.readShortcutTwoWaitsForUserInactivity
                 )
 
                 Divider()
@@ -272,7 +274,8 @@ struct MenuBarView: View {
                     actionAfter: $appModel.readClipboardAlwaysActionAfter,
                     delayBefore: $appModel.readClipboardAlwaysDelayBefore,
                     delayAfter: $appModel.readClipboardAlwaysDelayAfter,
-                    waitsForNeonSpotlight: $appModel.readClipboardAlwaysWaitsForNeonSpotlight
+                    waitsForNeonSpotlight: $appModel.readClipboardAlwaysWaitsForNeonSpotlight,
+                    waitsForUserInactivity: $appModel.readClipboardAlwaysWaitsForUserInactivity
                 )
 
                 Divider()
@@ -285,7 +288,8 @@ struct MenuBarView: View {
                     actionAfter: $appModel.readClipboardAlwaysTwoActionAfter,
                     delayBefore: $appModel.readClipboardAlwaysTwoDelayBefore,
                     delayAfter: $appModel.readClipboardAlwaysTwoDelayAfter,
-                    waitsForNeonSpotlight: $appModel.readClipboardAlwaysTwoWaitsForNeonSpotlight
+                    waitsForNeonSpotlight: $appModel.readClipboardAlwaysTwoWaitsForNeonSpotlight,
+                    waitsForUserInactivity: $appModel.readClipboardAlwaysTwoWaitsForUserInactivity
                 )
 
                 Divider()
@@ -298,7 +302,8 @@ struct MenuBarView: View {
                     actionAfter: $appModel.readClipboardAlwaysThreeActionAfter,
                     delayBefore: $appModel.readClipboardAlwaysThreeDelayBefore,
                     delayAfter: $appModel.readClipboardAlwaysThreeDelayAfter,
-                    waitsForNeonSpotlight: $appModel.readClipboardAlwaysThreeWaitsForNeonSpotlight
+                    waitsForNeonSpotlight: $appModel.readClipboardAlwaysThreeWaitsForNeonSpotlight,
+                    waitsForUserInactivity: $appModel.readClipboardAlwaysThreeWaitsForUserInactivity
                 )
 
                 Text("Ignores typed-text mode and Script mode.")
@@ -337,6 +342,26 @@ struct MenuBarView: View {
                                 appModel.requestShortcutTriggerAccessibilityPermission()
                             }
                         }
+
+                        Stepper(
+                            "Input idle period: \(appModel.userActivityIdlePeriod, specifier: "%.1f") seconds",
+                            value: $appModel.userActivityIdlePeriod,
+                            in: UserActivityIdlePolicy.minimumIdlePeriod...UserActivityIdlePolicy.maximumIdlePeriod,
+                            step: 0.1
+                        )
+                        .font(.caption)
+
+                        Stepper(
+                            "Maximum input wait: \(appModel.userActivityMaximumWait, specifier: "%.0f") seconds",
+                            value: $appModel.userActivityMaximumWait,
+                            in: UserActivityIdlePolicy.minimumMaximumWait...UserActivityIdlePolicy.maximumMaximumWait,
+                            step: 1
+                        )
+                        .font(.caption)
+
+                        Text("Input monitoring observes only activity categories; it does not store keys or typed text.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
 
                         Divider()
 
@@ -450,7 +475,8 @@ struct MenuBarView: View {
         actionAfter: Binding<ExternalTriggerAction>,
         delayBefore: Binding<Double>,
         delayAfter: Binding<Double>,
-        waitsForNeonSpotlight: Binding<Bool>
+        waitsForNeonSpotlight: Binding<Bool>,
+        waitsForUserInactivity: Binding<Bool>
     ) -> some View {
         DisclosureGroup(title) {
             VStack(alignment: .leading, spacing: 6) {
@@ -487,6 +513,13 @@ struct MenuBarView: View {
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
+
+                Toggle(
+                    "Wait until mouse and keyboard are idle",
+                    isOn: waitsForUserInactivity
+                )
+                .font(.caption)
+                .disabled(actionAfter.wrappedValue != .ensurePaused)
             }
             .padding(.top, 6)
         }
