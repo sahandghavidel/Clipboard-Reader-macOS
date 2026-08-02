@@ -33,6 +33,54 @@ final class NarrationPilotTests: XCTestCase {
         XCTAssertEqual(AppModel.clampRecordingStopCueDelay(2), 1.0)
     }
 
+    func testNeonSpotlightBusySnapshotParses() {
+        let snapshot = NeonSpotlightAnimationSnapshot(userInfo: [
+            NeonSpotlightStatusProtocol.Key.protocolVersion: 1,
+            NeonSpotlightStatusProtocol.Key.sessionIdentifier: "session-1",
+            NeonSpotlightStatusProtocol.Key.state: "busy",
+            NeonSpotlightStatusProtocol.Key.activeAnimationCount: 2,
+            NeonSpotlightStatusProtocol.Key.requestIdentifier: "request-1",
+            NeonSpotlightStatusProtocol.Key.reason: "requested",
+        ])
+
+        XCTAssertEqual(snapshot?.state, .busy)
+        XCTAssertEqual(snapshot?.activeAnimationCount, 2)
+        XCTAssertEqual(snapshot?.requestIdentifier, "request-1")
+    }
+
+    func testNeonSpotlightIdleSnapshotParses() {
+        let snapshot = NeonSpotlightAnimationSnapshot(userInfo: [
+            NeonSpotlightStatusProtocol.Key.protocolVersion: 1,
+            NeonSpotlightStatusProtocol.Key.sessionIdentifier: "session-1",
+            NeonSpotlightStatusProtocol.Key.state: "idle",
+            NeonSpotlightStatusProtocol.Key.activeAnimationCount: 0,
+            NeonSpotlightStatusProtocol.Key.reason: "activityChanged",
+        ])
+
+        XCTAssertEqual(snapshot?.state, .idle)
+        XCTAssertEqual(snapshot?.reason, .activityChanged)
+    }
+
+    func testNeonSpotlightSnapshotRejectsUnknownProtocolVersion() {
+        XCTAssertNil(NeonSpotlightAnimationSnapshot(userInfo: [
+            NeonSpotlightStatusProtocol.Key.protocolVersion: 2,
+            NeonSpotlightStatusProtocol.Key.sessionIdentifier: "session-1",
+            NeonSpotlightStatusProtocol.Key.state: "idle",
+            NeonSpotlightStatusProtocol.Key.activeAnimationCount: 0,
+            NeonSpotlightStatusProtocol.Key.reason: "requested",
+        ]))
+    }
+
+    func testNeonSpotlightSnapshotRejectsInconsistentStateAndCount() {
+        XCTAssertNil(NeonSpotlightAnimationSnapshot(userInfo: [
+            NeonSpotlightStatusProtocol.Key.protocolVersion: 1,
+            NeonSpotlightStatusProtocol.Key.sessionIdentifier: "session-1",
+            NeonSpotlightStatusProtocol.Key.state: "idle",
+            NeonSpotlightStatusProtocol.Key.activeAnimationCount: 1,
+            NeonSpotlightStatusProtocol.Key.reason: "requested",
+        ]))
+    }
+
     func testFailureCueCanReuseSelectedStopSound() {
         XCTAssertEqual(
             RecordingFailureCueSound.sameAsStop.resolvedSound(stopSound: .glass),

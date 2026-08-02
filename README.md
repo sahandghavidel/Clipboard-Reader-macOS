@@ -29,7 +29,7 @@ Traditional text-to-speech tools read a whole document. Narration Pilot treats a
 | **Presenter overlay** | Previous, current, and next scene context with adjustable placement, size, opacity, typography, and colors |
 | **Recording-friendly UI** | Presenter overlay and Scene Manager can be hidden from standard macOS screen capture |
 | **Global shortcuts** | Two current-input shortcuts and three always-read-clipboard shortcuts, each with its own speech speed |
-| **Recording automation** | Verified FocuSee actions, independent 0–10 second delays, and optional start, stop, and failure cue sounds |
+| **Recording automation** | Verified FocuSee actions, independent delays, optional cue sounds, and Neon Spotlight fade-out waiting |
 | **Speech controls** | macOS voices, adjustable rate, pause, resume, stop, and replay |
 | **Input choices** | Read the clipboard, entered text, or a scene-based script |
 | **Privacy** | Local-first operation with no analytics, accounts, advertising, or project-owned cloud storage |
@@ -74,8 +74,12 @@ Run the newest debug build:
 Run an optimized release build without installing an app bundle:
 
 ```bash
-./scripts/dev-release-run.sh
+./scripts/build-app.sh release
 ```
+
+The signed test bundle is created at
+`.build/app/release/Narration Pilot.app`. Use `dev-release-run.sh` only when you
+want to run the raw SwiftPM executable instead of an application bundle.
 
 ## Install the macOS app locally
 
@@ -107,6 +111,13 @@ The overlay shows the previous, current, and next scenes. It supports custom siz
 ### Shortcuts and recording triggers
 
 Narration Pilot provides two shortcuts for reading the current input and three shortcuts that always read the clipboard. Every read shortcut can use a different speed and choose an external action before and after speech: do nothing, toggle the configured shortcut, ensure FocuSee is recording, or ensure FocuSee is paused. Each action can use an independent 0–10 second delay so recording can settle before speech begins and continue briefly after speech ends. Existing trigger settings migrate to the original toggle behavior.
+
+When **Ensure FocuSee is paused** is selected after reading, that shortcut can
+optionally wait for Neon Spotlight. Narration Pilot checks Neon Spotlight's
+local animation status after the normal post-speech delay and pauses FocuSee
+only after every visible highlight and fade-out completes. The option defaults
+off. If Neon Spotlight is closed, does not respond, quits, or remains busy for
+more than 10 seconds, Narration Pilot safely continues with the verified pause.
 
 The FocuSee actions inspect its macOS Accessibility controls before sending its existing Pause/Continue Recording shortcut. Separate global shortcuts can also be assigned for **Ensure FocuSee Recording** and **Ensure FocuSee Paused**. If FocuSee is closed, stopped, or its state cannot be determined safely, Narration Pilot does not send the toggle.
 

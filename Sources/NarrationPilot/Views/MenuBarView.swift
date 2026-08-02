@@ -245,7 +245,8 @@ struct MenuBarView: View {
                     actionBefore: $appModel.readShortcutOneActionBefore,
                     actionAfter: $appModel.readShortcutOneActionAfter,
                     delayBefore: $appModel.readShortcutOneDelayBefore,
-                    delayAfter: $appModel.readShortcutOneDelayAfter
+                    delayAfter: $appModel.readShortcutOneDelayAfter,
+                    waitsForNeonSpotlight: $appModel.readShortcutOneWaitsForNeonSpotlight
                 )
 
                 Divider()
@@ -257,7 +258,8 @@ struct MenuBarView: View {
                     actionBefore: $appModel.readShortcutTwoActionBefore,
                     actionAfter: $appModel.readShortcutTwoActionAfter,
                     delayBefore: $appModel.readShortcutTwoDelayBefore,
-                    delayAfter: $appModel.readShortcutTwoDelayAfter
+                    delayAfter: $appModel.readShortcutTwoDelayAfter,
+                    waitsForNeonSpotlight: $appModel.readShortcutTwoWaitsForNeonSpotlight
                 )
 
                 Divider()
@@ -269,7 +271,8 @@ struct MenuBarView: View {
                     actionBefore: $appModel.readClipboardAlwaysActionBefore,
                     actionAfter: $appModel.readClipboardAlwaysActionAfter,
                     delayBefore: $appModel.readClipboardAlwaysDelayBefore,
-                    delayAfter: $appModel.readClipboardAlwaysDelayAfter
+                    delayAfter: $appModel.readClipboardAlwaysDelayAfter,
+                    waitsForNeonSpotlight: $appModel.readClipboardAlwaysWaitsForNeonSpotlight
                 )
 
                 Divider()
@@ -281,7 +284,8 @@ struct MenuBarView: View {
                     actionBefore: $appModel.readClipboardAlwaysTwoActionBefore,
                     actionAfter: $appModel.readClipboardAlwaysTwoActionAfter,
                     delayBefore: $appModel.readClipboardAlwaysTwoDelayBefore,
-                    delayAfter: $appModel.readClipboardAlwaysTwoDelayAfter
+                    delayAfter: $appModel.readClipboardAlwaysTwoDelayAfter,
+                    waitsForNeonSpotlight: $appModel.readClipboardAlwaysTwoWaitsForNeonSpotlight
                 )
 
                 Divider()
@@ -293,7 +297,8 @@ struct MenuBarView: View {
                     actionBefore: $appModel.readClipboardAlwaysThreeActionBefore,
                     actionAfter: $appModel.readClipboardAlwaysThreeActionAfter,
                     delayBefore: $appModel.readClipboardAlwaysThreeDelayBefore,
-                    delayAfter: $appModel.readClipboardAlwaysThreeDelayAfter
+                    delayAfter: $appModel.readClipboardAlwaysThreeDelayAfter,
+                    waitsForNeonSpotlight: $appModel.readClipboardAlwaysThreeWaitsForNeonSpotlight
                 )
 
                 Text("Ignores typed-text mode and Script mode.")
@@ -444,7 +449,8 @@ struct MenuBarView: View {
         actionBefore: Binding<ExternalTriggerAction>,
         actionAfter: Binding<ExternalTriggerAction>,
         delayBefore: Binding<Double>,
-        delayAfter: Binding<Double>
+        delayAfter: Binding<Double>,
+        waitsForNeonSpotlight: Binding<Bool>
     ) -> some View {
         DisclosureGroup(title) {
             VStack(alignment: .leading, spacing: 6) {
@@ -467,6 +473,20 @@ struct MenuBarView: View {
                 externalTriggerActionPicker("After reading", selection: actionAfter)
                 triggerDelayStepper("Delay after speech", value: delayAfter)
                     .disabled(actionAfter.wrappedValue == .none)
+
+                Toggle(
+                    "Wait for Neon Spotlight before pausing FocuSee",
+                    isOn: waitsForNeonSpotlight
+                )
+                .font(.caption)
+                .disabled(actionAfter.wrappedValue != .ensurePaused)
+
+                if waitsForNeonSpotlight.wrappedValue,
+                   actionAfter.wrappedValue == .ensurePaused {
+                    Text("Waits for every visible highlight and fade-out, with a 10-second safety timeout.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
             .padding(.top, 6)
         }

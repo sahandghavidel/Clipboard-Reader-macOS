@@ -64,6 +64,22 @@ final class AppModel: ObservableObject {
         didSet { persistTriggerDelay(readClipboardAlwaysThreeDelayAfter, key: Self.readClipboardAlwaysThreeDelayAfterKey) }
     }
 
+    @Published var readShortcutOneWaitsForNeonSpotlight: Bool {
+        didSet { defaults.set(readShortcutOneWaitsForNeonSpotlight, forKey: Self.readShortcutOneWaitsForNeonSpotlightKey) }
+    }
+    @Published var readShortcutTwoWaitsForNeonSpotlight: Bool {
+        didSet { defaults.set(readShortcutTwoWaitsForNeonSpotlight, forKey: Self.readShortcutTwoWaitsForNeonSpotlightKey) }
+    }
+    @Published var readClipboardAlwaysWaitsForNeonSpotlight: Bool {
+        didSet { defaults.set(readClipboardAlwaysWaitsForNeonSpotlight, forKey: Self.readClipboardAlwaysWaitsForNeonSpotlightKey) }
+    }
+    @Published var readClipboardAlwaysTwoWaitsForNeonSpotlight: Bool {
+        didSet { defaults.set(readClipboardAlwaysTwoWaitsForNeonSpotlight, forKey: Self.readClipboardAlwaysTwoWaitsForNeonSpotlightKey) }
+    }
+    @Published var readClipboardAlwaysThreeWaitsForNeonSpotlight: Bool {
+        didSet { defaults.set(readClipboardAlwaysThreeWaitsForNeonSpotlight, forKey: Self.readClipboardAlwaysThreeWaitsForNeonSpotlightKey) }
+    }
+
     @Published var readShortcutOneActionBefore: ExternalTriggerAction {
         didSet {
             persistExternalTriggerAction(
@@ -535,6 +551,7 @@ final class AppModel: ObservableObject {
     private static let readShortcutOneDelayBeforeKey = "clipboardReader.readShortcutOne.delayBefore"
     private static let readShortcutOneDelayAfterKey = "clipboardReader.readShortcutOne.delayAfter"
     private static let readShortcutOneSpeedKey = "clipboardReader.readShortcutOne.speedMultiplier"
+    private static let readShortcutOneWaitsForNeonSpotlightKey = "clipboardReader.readShortcutOne.waitsForNeonSpotlight"
     private static let readShortcutTwoTriggerBeforeKey = "clipboardReader.readShortcutTwo.triggerBefore"
     private static let readShortcutTwoTriggerAfterKey = "clipboardReader.readShortcutTwo.triggerAfter"
     private static let readShortcutTwoActionBeforeKey = "clipboardReader.readShortcutTwo.actionBefore"
@@ -542,6 +559,7 @@ final class AppModel: ObservableObject {
     private static let readShortcutTwoDelayBeforeKey = "clipboardReader.readShortcutTwo.delayBefore"
     private static let readShortcutTwoDelayAfterKey = "clipboardReader.readShortcutTwo.delayAfter"
     private static let readShortcutTwoSpeedKey = "clipboardReader.readShortcutTwo.speedMultiplier"
+    private static let readShortcutTwoWaitsForNeonSpotlightKey = "clipboardReader.readShortcutTwo.waitsForNeonSpotlight"
     private static let readClipboardAlwaysTriggerBeforeKey = "clipboardReader.readClipboardAlways.triggerBefore"
     private static let readClipboardAlwaysTriggerAfterKey = "clipboardReader.readClipboardAlways.triggerAfter"
     private static let readClipboardAlwaysActionBeforeKey = "clipboardReader.readClipboardAlways.actionBefore"
@@ -549,6 +567,7 @@ final class AppModel: ObservableObject {
     private static let readClipboardAlwaysDelayBeforeKey = "clipboardReader.readClipboardAlways.delayBefore"
     private static let readClipboardAlwaysDelayAfterKey = "clipboardReader.readClipboardAlways.delayAfter"
     private static let readClipboardAlwaysSpeedKey = "clipboardReader.readClipboardAlways.speedMultiplier"
+    private static let readClipboardAlwaysWaitsForNeonSpotlightKey = "clipboardReader.readClipboardAlways.waitsForNeonSpotlight"
     private static let readClipboardAlwaysTwoTriggerBeforeKey = "clipboardReader.readClipboardAlwaysTwo.triggerBefore"
     private static let readClipboardAlwaysTwoTriggerAfterKey = "clipboardReader.readClipboardAlwaysTwo.triggerAfter"
     private static let readClipboardAlwaysTwoActionBeforeKey = "clipboardReader.readClipboardAlwaysTwo.actionBefore"
@@ -556,6 +575,7 @@ final class AppModel: ObservableObject {
     private static let readClipboardAlwaysTwoDelayBeforeKey = "clipboardReader.readClipboardAlwaysTwo.delayBefore"
     private static let readClipboardAlwaysTwoDelayAfterKey = "clipboardReader.readClipboardAlwaysTwo.delayAfter"
     private static let readClipboardAlwaysTwoSpeedKey = "clipboardReader.readClipboardAlwaysTwo.speedMultiplier"
+    private static let readClipboardAlwaysTwoWaitsForNeonSpotlightKey = "clipboardReader.readClipboardAlwaysTwo.waitsForNeonSpotlight"
     private static let readClipboardAlwaysThreeTriggerBeforeKey = "clipboardReader.readClipboardAlwaysThree.triggerBefore"
     private static let readClipboardAlwaysThreeTriggerAfterKey = "clipboardReader.readClipboardAlwaysThree.triggerAfter"
     private static let readClipboardAlwaysThreeActionBeforeKey = "clipboardReader.readClipboardAlwaysThree.actionBefore"
@@ -563,6 +583,7 @@ final class AppModel: ObservableObject {
     private static let readClipboardAlwaysThreeDelayBeforeKey = "clipboardReader.readClipboardAlwaysThree.delayBefore"
     private static let readClipboardAlwaysThreeDelayAfterKey = "clipboardReader.readClipboardAlwaysThree.delayAfter"
     private static let readClipboardAlwaysThreeSpeedKey = "clipboardReader.readClipboardAlwaysThree.speedMultiplier"
+    private static let readClipboardAlwaysThreeWaitsForNeonSpotlightKey = "clipboardReader.readClipboardAlwaysThree.waitsForNeonSpotlight"
     private static let presenterOverlayKey = "clipboardReader.showPresenterOverlay"
     private static let presenterOverlayCaptureKey = "clipboardReader.hidePresenterOverlayFromCapture"
     private static let presenterOverlayHideWhileSpeakingKey = "clipboardReader.hidePresenterOverlayWhileSpeaking"
@@ -614,6 +635,7 @@ final class AppModel: ObservableObject {
     private let clipboardService = ClipboardService()
     private let shortcutTriggerService = ShortcutTriggerService()
     private let focuSeeAccessibilityService = FocuSeeAccessibilityService()
+    private let neonSpotlightStatusService = NeonSpotlightStatusService()
     private let ttsManager = TTSManager()
     private var cancellables = Set<AnyCancellable>()
     private var presenterOverlayController: PresenterOverlayController?
@@ -625,6 +647,7 @@ final class AppModel: ObservableObject {
     private var shouldAdvanceScriptSceneAfterSpeech = false
     private var externalTriggerActionAfterSpeech: ExternalTriggerAction = .none
     private var externalTriggerDelayAfterSpeech = 0.0
+    private var waitsForNeonSpotlightAfterSpeech = false
     private var activeReadSequenceID: UUID?
     private var pendingReadTask: Task<Void, Never>?
 
@@ -676,6 +699,7 @@ final class AppModel: ObservableObject {
             forKey: Self.readShortcutOneSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
+        self.readShortcutOneWaitsForNeonSpotlight = defaults.bool(forKey: Self.readShortcutOneWaitsForNeonSpotlightKey)
         self.readShortcutTwoActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
             actionKey: Self.readShortcutTwoActionBeforeKey,
@@ -693,6 +717,7 @@ final class AppModel: ObservableObject {
             forKey: Self.readShortcutTwoSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
+        self.readShortcutTwoWaitsForNeonSpotlight = defaults.bool(forKey: Self.readShortcutTwoWaitsForNeonSpotlightKey)
         self.readClipboardAlwaysActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
             actionKey: Self.readClipboardAlwaysActionBeforeKey,
@@ -710,6 +735,7 @@ final class AppModel: ObservableObject {
             forKey: Self.readClipboardAlwaysSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
+        self.readClipboardAlwaysWaitsForNeonSpotlight = defaults.bool(forKey: Self.readClipboardAlwaysWaitsForNeonSpotlightKey)
         self.readClipboardAlwaysTwoActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
             actionKey: Self.readClipboardAlwaysTwoActionBeforeKey,
@@ -727,6 +753,7 @@ final class AppModel: ObservableObject {
             forKey: Self.readClipboardAlwaysTwoSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
+        self.readClipboardAlwaysTwoWaitsForNeonSpotlight = defaults.bool(forKey: Self.readClipboardAlwaysTwoWaitsForNeonSpotlightKey)
         self.readClipboardAlwaysThreeActionBefore = Self.storedExternalTriggerAction(
             in: defaults,
             actionKey: Self.readClipboardAlwaysThreeActionBeforeKey,
@@ -744,6 +771,7 @@ final class AppModel: ObservableObject {
             forKey: Self.readClipboardAlwaysThreeSpeedKey,
             defaultValue: initialSpeedMultiplier
         ))
+        self.readClipboardAlwaysThreeWaitsForNeonSpotlight = defaults.bool(forKey: Self.readClipboardAlwaysThreeWaitsForNeonSpotlightKey)
         self.recordingTriggerShortcut = Self.storedRecordingTriggerShortcut(in: defaults)
         self.isShortcutTriggerAccessibilityTrusted = ShortcutTriggerService.isAccessibilityTrusted
         self.showPresenterOverlay = defaults.bool(forKey: Self.presenterOverlayKey)
@@ -817,6 +845,7 @@ final class AppModel: ObservableObject {
         actionAfter: ExternalTriggerAction = .none,
         delayBefore: Double = 0,
         delayAfter: Double = 0,
+        waitsForNeonSpotlight: Bool = false,
         speedMultiplier: Double? = nil
     ) {
         let resolvedSpeedMultiplier = speedMultiplier ?? self.speedMultiplier
@@ -827,6 +856,7 @@ final class AppModel: ObservableObject {
                 actionAfter: actionAfter,
                 delayBefore: delayBefore,
                 delayAfter: delayAfter,
+                waitsForNeonSpotlight: waitsForNeonSpotlight,
                 speedMultiplier: resolvedSpeedMultiplier
             )
             return
@@ -838,6 +868,7 @@ final class AppModel: ObservableObject {
                 actionAfter: actionAfter,
                 delayBefore: delayBefore,
                 delayAfter: delayAfter,
+                waitsForNeonSpotlight: waitsForNeonSpotlight,
                 speedMultiplier: resolvedSpeedMultiplier
             )
         } else {
@@ -846,6 +877,7 @@ final class AppModel: ObservableObject {
                 actionAfter: actionAfter,
                 delayBefore: delayBefore,
                 delayAfter: delayAfter,
+                waitsForNeonSpotlight: waitsForNeonSpotlight,
                 speedMultiplier: resolvedSpeedMultiplier
             )
         }
@@ -856,6 +888,7 @@ final class AppModel: ObservableObject {
         actionAfter: ExternalTriggerAction = .none,
         delayBefore: Double = 0,
         delayAfter: Double = 0,
+        waitsForNeonSpotlight: Bool = false,
         speedMultiplier: Double? = nil
     ) {
         readClipboardNow(
@@ -863,6 +896,7 @@ final class AppModel: ObservableObject {
             actionAfter: actionAfter,
             delayBefore: delayBefore,
             delayAfter: delayAfter,
+            waitsForNeonSpotlight: waitsForNeonSpotlight,
             speedMultiplier: speedMultiplier ?? self.speedMultiplier
         )
     }
@@ -1107,6 +1141,7 @@ final class AppModel: ObservableObject {
         actionAfter: ExternalTriggerAction,
         delayBefore: Double,
         delayAfter: Double,
+        waitsForNeonSpotlight: Bool,
         speedMultiplier: Double
     ) {
         guard let text = clipboardService.currentText() else {
@@ -1119,6 +1154,7 @@ final class AppModel: ObservableObject {
             actionAfter: actionAfter,
             delayBefore: delayBefore,
             delayAfter: delayAfter,
+            waitsForNeonSpotlight: waitsForNeonSpotlight,
             readingStatus: "Reading clipboard…"
         ) { [weak self] in
             guard let self else { return }
@@ -1135,6 +1171,7 @@ final class AppModel: ObservableObject {
         actionAfter: ExternalTriggerAction,
         delayBefore: Double,
         delayAfter: Double,
+        waitsForNeonSpotlight: Bool,
         speedMultiplier: Double
     ) {
         let text = clipboardService.normalize(typedText)
@@ -1148,6 +1185,7 @@ final class AppModel: ObservableObject {
             actionAfter: actionAfter,
             delayBefore: delayBefore,
             delayAfter: delayAfter,
+            waitsForNeonSpotlight: waitsForNeonSpotlight,
             readingStatus: "Reading typed text…"
         ) { [weak self] in
             guard let self else { return }
@@ -1166,6 +1204,7 @@ final class AppModel: ObservableObject {
             actionAfter: .none,
             delayBefore: 0,
             delayAfter: 0,
+            waitsForNeonSpotlight: false,
             speedMultiplier: speedMultiplier
         )
     }
@@ -1175,6 +1214,7 @@ final class AppModel: ObservableObject {
         actionAfter: ExternalTriggerAction,
         delayBefore: Double,
         delayAfter: Double,
+        waitsForNeonSpotlight: Bool,
         speedMultiplier: Double
     ) {
         readCurrentScriptSceneNow(
@@ -1183,6 +1223,7 @@ final class AppModel: ObservableObject {
             actionAfter: actionAfter,
             delayBefore: delayBefore,
             delayAfter: delayAfter,
+            waitsForNeonSpotlight: waitsForNeonSpotlight,
             speedMultiplier: speedMultiplier
         )
     }
@@ -1194,6 +1235,7 @@ final class AppModel: ObservableObject {
         actionAfter: ExternalTriggerAction = .none,
         delayBefore: Double = 0,
         delayAfter: Double = 0,
+        waitsForNeonSpotlight: Bool = false,
         speedMultiplier: Double? = nil
     ) {
         refreshScriptScenes()
@@ -1211,6 +1253,7 @@ final class AppModel: ObservableObject {
             actionAfter: actionAfter,
             delayBefore: delayBefore,
             delayAfter: delayAfter,
+            waitsForNeonSpotlight: waitsForNeonSpotlight,
             readingStatus: readingStatus
         ) { [weak self] in
             guard let self else { return }
@@ -1262,6 +1305,7 @@ final class AppModel: ObservableObject {
         actionAfter: ExternalTriggerAction,
         delayBefore: Double,
         delayAfter: Double,
+        waitsForNeonSpotlight: Bool,
         readingStatus: String,
         speak: @escaping @MainActor () -> Void
     ) {
@@ -1274,6 +1318,8 @@ final class AppModel: ObservableObject {
         activeReadSequenceID = sequenceID
         externalTriggerActionAfterSpeech = actionAfter
         externalTriggerDelayAfterSpeech = actionAfter == .none ? 0 : Self.clampTriggerDelay(delayAfter)
+        waitsForNeonSpotlightAfterSpeech = actionAfter == .ensurePaused
+            && waitsForNeonSpotlight
         let resolvedDelayBefore = actionBefore == .none ? 0 : Self.clampTriggerDelay(delayBefore)
         pendingReadTask = Task { @MainActor [weak self] in
             guard !Task.isCancelled,
@@ -1324,6 +1370,7 @@ final class AppModel: ObservableObject {
         activeReadSequenceID = nil
         externalTriggerActionAfterSpeech = .none
         externalTriggerDelayAfterSpeech = 0
+        waitsForNeonSpotlightAfterSpeech = false
     }
 
     private func playRecordingFailureCue() {
@@ -1502,8 +1549,10 @@ final class AppModel: ObservableObject {
 
         let action = externalTriggerActionAfterSpeech
         let delay = externalTriggerDelayAfterSpeech
+        let waitsForNeonSpotlight = waitsForNeonSpotlightAfterSpeech
         externalTriggerActionAfterSpeech = .none
         externalTriggerDelayAfterSpeech = 0
+        waitsForNeonSpotlightAfterSpeech = false
 
         pendingReadTask = Task { @MainActor [weak self] in
             if action != .none, delay > 0 {
@@ -1515,6 +1564,30 @@ final class AppModel: ObservableObject {
                   let self,
                   self.activeReadSequenceID == sequenceID else {
                 return
+            }
+
+            if action == .ensurePaused, waitsForNeonSpotlight {
+                self.statusMessage = "Waiting for Neon Spotlight animation…"
+                let waitResult = await self.neonSpotlightStatusService
+                    .waitUntilIdle()
+                guard !Task.isCancelled,
+                      self.activeReadSequenceID == sequenceID else {
+                    return
+                }
+                switch waitResult {
+                case .alreadyIdle, .notRunning:
+                    break
+                case .completed:
+                    self.statusMessage = "Neon Spotlight animation completed. Pausing recording…"
+                case .appTerminated:
+                    self.statusMessage = "Neon Spotlight closed. Pausing recording…"
+                case .responseTimedOut:
+                    self.statusMessage = "Neon Spotlight did not respond. Pausing recording…"
+                case .animationTimedOut:
+                    self.statusMessage = "Neon Spotlight wait timed out. Pausing recording…"
+                case .cancelled:
+                    return
+                }
             }
 
             let actionSucceeded = await self.performExternalTriggerAction(action)
@@ -1570,6 +1643,7 @@ final class AppModel: ObservableObject {
                     actionAfter: self.readShortcutOneActionAfter,
                     delayBefore: self.readShortcutOneDelayBefore,
                     delayAfter: self.readShortcutOneDelayAfter,
+                    waitsForNeonSpotlight: self.readShortcutOneWaitsForNeonSpotlight,
                     speedMultiplier: self.readShortcutOneSpeedMultiplier
                 )
             }
@@ -1586,6 +1660,7 @@ final class AppModel: ObservableObject {
                     actionAfter: self.readShortcutTwoActionAfter,
                     delayBefore: self.readShortcutTwoDelayBefore,
                     delayAfter: self.readShortcutTwoDelayAfter,
+                    waitsForNeonSpotlight: self.readShortcutTwoWaitsForNeonSpotlight,
                     speedMultiplier: self.readShortcutTwoSpeedMultiplier
                 )
             }
@@ -1602,6 +1677,7 @@ final class AppModel: ObservableObject {
                     actionAfter: self.readClipboardAlwaysActionAfter,
                     delayBefore: self.readClipboardAlwaysDelayBefore,
                     delayAfter: self.readClipboardAlwaysDelayAfter,
+                    waitsForNeonSpotlight: self.readClipboardAlwaysWaitsForNeonSpotlight,
                     speedMultiplier: self.readClipboardAlwaysSpeedMultiplier
                 )
             }
@@ -1618,6 +1694,7 @@ final class AppModel: ObservableObject {
                     actionAfter: self.readClipboardAlwaysTwoActionAfter,
                     delayBefore: self.readClipboardAlwaysTwoDelayBefore,
                     delayAfter: self.readClipboardAlwaysTwoDelayAfter,
+                    waitsForNeonSpotlight: self.readClipboardAlwaysTwoWaitsForNeonSpotlight,
                     speedMultiplier: self.readClipboardAlwaysTwoSpeedMultiplier
                 )
             }
@@ -1634,6 +1711,7 @@ final class AppModel: ObservableObject {
                     actionAfter: self.readClipboardAlwaysThreeActionAfter,
                     delayBefore: self.readClipboardAlwaysThreeDelayBefore,
                     delayAfter: self.readClipboardAlwaysThreeDelayAfter,
+                    waitsForNeonSpotlight: self.readClipboardAlwaysThreeWaitsForNeonSpotlight,
                     speedMultiplier: self.readClipboardAlwaysThreeSpeedMultiplier
                 )
             }
