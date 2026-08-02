@@ -112,6 +112,8 @@ The FocuSee actions inspect its macOS Accessibility controls before sending its 
 
 Optional recording cue sounds can play before FocuSee starts and after FocuSee is verified as paused. Start and stop cue timing is adjustable, and a separately selectable failure sound plays if a verified action fails. Narration is cancelled when FocuSee cannot be confirmed as recording.
 
+The **Fix Latest FocuSee Zooms to 3 Seconds** project tool updates only generated zooms shorter than three seconds in the newest saved FocuSee project. Apply the default FocuSee preset and save the project first; Narration Pilot preserves the other project settings and creates a configuration backup before changing zoom tracks.
+
 Sending external shortcuts requires macOS Accessibility permission. Narration Pilot requests that permission only when you ask it to.
 
 ## VS Code development

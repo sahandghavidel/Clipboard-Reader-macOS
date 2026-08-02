@@ -400,6 +400,7 @@ struct MenuBarView: View {
                         Text("Cue sounds run only with verified Ensure FocuSee Recording/Paused actions. Narration is cancelled if recording fails to start.")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
+
                     }
                     .padding(.top, 6)
                 }
