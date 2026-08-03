@@ -117,15 +117,18 @@ struct JSONSceneManagerView: View {
                     detailSection("Display Title", text: scene.displayTitle)
                     onScreenSection(scene.onScreen)
                     detailSection("Narration", text: scene.narration)
-                    if let code = scene.code, !code.isEmpty {
+                    if let code = scene.code {
                         codeSection(code)
+                    }
+                    if !scene.links.isEmpty {
+                        linksSection(scene.links)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             HStack {
-                Text("JSON scenes are read-only. Edit the source file and reload it to make changes.")
+                Text("JSON scenes are read-only. Saved source-file changes reload automatically.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -188,27 +191,43 @@ struct JSONSceneManagerView: View {
         }
     }
 
-    private func codeSection(_ code: String) -> some View {
+    private func codeSection(_ code: NarrationCode) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("CODE")
+                Text("CODE → \(code.targetFile) · \(code.language.uppercased()) · \(code.action.rawValue.capitalized)")
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(code, forType: .string)
+                    NSPasteboard.general.setString(code.text, forType: .string)
                 } label: {
                     Label("Copy Code", systemImage: "doc.on.doc")
                 }
             }
 
-            Text(code)
+            Text(code.text)
                 .font(.system(.body, design: .monospaced))
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(10)
                 .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+        }
+    }
+
+    private func linksSection(_ links: [NarrationLink]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("LINKS")
+                .font(.caption.bold())
+                .foregroundStyle(.secondary)
+
+            ForEach(links) { link in
+                if let url = URL(string: link.url) {
+                    Link(destination: url) {
+                        Label(link.label, systemImage: "arrow.up.right.square")
+                    }
+                }
+            }
         }
     }
 

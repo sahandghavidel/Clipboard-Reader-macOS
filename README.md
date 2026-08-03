@@ -106,7 +106,7 @@ Use **Previous**, **Replay**, **Next**, and **Restart** to navigate. Open **Edit
 
 ### Chapter JSON mode
 
-Turn on **Script mode**, select **Chapter JSON**, and import a version 2 chapter file. JSON scenes preserve their explicit boundaries and keep the internal title, optional recordable `displayTitle`, `onScreen` action/result, narration, and code separate. Speech reads only the `narration` field. URLs are clickable and code can be copied with its formatting preserved. The JSON Scene Manager is read-only; edit the source JSON and choose **Reload** to apply changes.
+Turn on **Script mode**, select **Chapter JSON**, and import a version 3 chapter file. JSON scenes preserve their explicit boundaries and keep the internal title, recordable `displayTitle`, `onScreen` action/result, narration, structured code, and labeled links separate. Speech reads only the `narration` field. Links open in the default browser, and code can be copied with its formatting, target filename, language, and edit action preserved. The JSON Scene Manager is read-only; save the source JSON and Narration Pilot reloads it automatically while preserving the current scene. Changes detected during speech are applied when speech finishes. Version 2 chapters remain readable and are migrated in memory.
 
 Narration Pilot can also receive a JSON file directly:
 

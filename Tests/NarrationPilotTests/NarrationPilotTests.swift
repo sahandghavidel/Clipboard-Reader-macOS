@@ -117,7 +117,7 @@ final class NarrationPilotTests: XCTestCase {
     func testNarrationChapterLoaderPreservesExplicitScenes() throws {
         let data = Data(#"""
         {
-          "schemaVersion": 2,
+          "schemaVersion": 3,
           "projectSlug": "test-project",
           "chapterNumber": 1,
           "chapterTitle": "Test Chapter",
@@ -130,7 +130,8 @@ final class NarrationPilotTests: XCTestCase {
               "displayTitle": "First Scene",
               "onScreen": {"action":"Show the page","result":"The page is visible."},
               "narration": "First sentence. Second sentence stays in this scene.",
-              "code": null
+              "code": null,
+              "links": []
             },
             {
               "id": "scene-02",
@@ -139,7 +140,8 @@ final class NarrationPilotTests: XCTestCase {
               "displayTitle": "Second Scene",
               "onScreen": {"action":"Show the next view","result":"The next view is visible."},
               "narration": "Another scene.",
-              "code": null
+              "code": null,
+              "links": []
             }
           ]
         }
@@ -151,7 +153,81 @@ final class NarrationPilotTests: XCTestCase {
         XCTAssertEqual(chapter.scenes[0].narration, "First sentence. Second sentence stays in this scene.")
     }
 
+    func testNarrationChapterLoaderMigratesVersionTwoInMemory() throws {
+        let data = Data(#"""
+        {
+          "schemaVersion": 2,
+          "projectSlug": "legacy-project",
+          "chapterNumber": 1,
+          "chapterTitle": "Legacy Chapter",
+          "status": "draft",
+          "scenes": [{
+            "id": "scene-01",
+            "sceneNumber": 1,
+            "title": "Legacy scene",
+            "displayTitle": "Legacy Scene",
+            "onScreen": {"action":"Add the code","result":"The code is visible."},
+            "narration": "I am going to add this code.",
+            "code": "const legacy = true;"
+          }]
+        }
+        """#.utf8)
+
+        let chapter = try NarrationChapterLoader.decode(data)
+
+        XCTAssertEqual(chapter.schemaVersion, 3)
+        XCTAssertEqual(chapter.scenes[0].code?.text, "const legacy = true;")
+        XCTAssertEqual(chapter.scenes[0].code?.targetFile, "Unspecified")
+        XCTAssertEqual(chapter.scenes[0].links, [])
+    }
+
     func testNarrationChapterLoaderRejectsUnsupportedSchema() {
+        let data = Data(#"""
+        {
+          "schemaVersion": 4,
+          "projectSlug": "test-project",
+          "chapterNumber": 1,
+          "chapterTitle": "Test Chapter",
+          "status": "approved",
+          "scenes": [{
+            "id": "scene-01",
+            "sceneNumber": 1,
+            "title": "Scene",
+            "displayTitle": "Scene",
+            "onScreen": {"action":"Show it","result":"It is visible."},
+            "narration": "Narration.",
+            "code": null,
+            "links": []
+          }]
+        }
+        """#.utf8)
+
+        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
+            XCTAssertEqual(error as? NarrationChapterError, .unsupportedSchemaVersion(4))
+        }
+    }
+
+    func testNarrationChapterLoaderRejectsDuplicateSceneIDs() {
+        let data = Data(#"""
+        {
+          "schemaVersion": 3,
+          "projectSlug": "test-project",
+          "chapterNumber": 1,
+          "chapterTitle": "Test Chapter",
+          "status": "approved",
+          "scenes": [
+            {"id":"same","sceneNumber":1,"title":"One","displayTitle":"One","onScreen":{"action":"Show one","result":"One is visible."},"narration":"One.","code":null,"links":[]},
+            {"id":"same","sceneNumber":2,"title":"Two","displayTitle":"Two","onScreen":{"action":"Show two","result":"Two is visible."},"narration":"Two.","code":null,"links":[]}
+          ]
+        }
+        """#.utf8)
+
+        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
+            XCTAssertEqual(error as? NarrationChapterError, .duplicateSceneID("same"))
+        }
+    }
+
+    func testNarrationChapterLoaderRejectsEmptyNarration() {
         let data = Data(#"""
         {
           "schemaVersion": 3,
@@ -165,53 +241,9 @@ final class NarrationPilotTests: XCTestCase {
             "title": "Scene",
             "displayTitle": "Scene",
             "onScreen": {"action":"Show it","result":"It is visible."},
-            "narration": "Narration.",
-            "code": null
-          }]
-        }
-        """#.utf8)
-
-        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
-            XCTAssertEqual(error as? NarrationChapterError, .unsupportedSchemaVersion(3))
-        }
-    }
-
-    func testNarrationChapterLoaderRejectsDuplicateSceneIDs() {
-        let data = Data(#"""
-        {
-          "schemaVersion": 2,
-          "projectSlug": "test-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Test Chapter",
-          "status": "approved",
-          "scenes": [
-            {"id":"same","sceneNumber":1,"title":"One","displayTitle":"One","onScreen":{"action":"Show one","result":"One is visible."},"narration":"One.","code":null},
-            {"id":"same","sceneNumber":2,"title":"Two","displayTitle":"Two","onScreen":{"action":"Show two","result":"Two is visible."},"narration":"Two.","code":null}
-          ]
-        }
-        """#.utf8)
-
-        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
-            XCTAssertEqual(error as? NarrationChapterError, .duplicateSceneID("same"))
-        }
-    }
-
-    func testNarrationChapterLoaderRejectsEmptyNarration() {
-        let data = Data(#"""
-        {
-          "schemaVersion": 2,
-          "projectSlug": "test-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Test Chapter",
-          "status": "approved",
-          "scenes": [{
-            "id": "scene-01",
-            "sceneNumber": 1,
-            "title": "Scene",
-            "displayTitle": "Scene",
-            "onScreen": {"action":"Show it","result":"It is visible."},
             "narration": "   ",
-            "code": null
+            "code": null,
+            "links": []
           }]
         }
         """#.utf8)

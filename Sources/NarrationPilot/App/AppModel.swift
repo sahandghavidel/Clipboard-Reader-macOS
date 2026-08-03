@@ -738,6 +738,7 @@ final class AppModel: ObservableObject {
     private let focuSeeAccessibilityService = FocuSeeAccessibilityService()
     private let neonSpotlightStatusService = NeonSpotlightStatusService()
     private let userActivityIdleService = UserActivityIdleService()
+    private let chapterFileWatcher = ChapterFileWatcher()
     private let ttsManager = TTSManager()
     private var cancellables = Set<AnyCancellable>()
     private var presenterOverlayController: PresenterOverlayController?
@@ -753,6 +754,7 @@ final class AppModel: ObservableObject {
     private var waitsForUserInactivityAfterSpeech = false
     private var activeReadSequenceID: UUID?
     private var pendingReadTask: Task<Void, Never>?
+    private var pendingChapterReloadURL: URL?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -1060,6 +1062,8 @@ final class AppModel: ObservableObject {
 
     func clearChapterJSON() {
         stopSpeechForSceneNavigation()
+        chapterFileWatcher.stop()
+        pendingChapterReloadURL = nil
         loadedChapter = nil
         loadedChapterURL = nil
         currentSceneIndex = 0
@@ -1084,6 +1088,7 @@ final class AppModel: ObservableObject {
         do {
             let chapter = try NarrationChapterLoader.load(from: url)
             stopSpeechForSceneNavigation()
+            pendingChapterReloadURL = nil
             loadedChapter = chapter
             loadedChapterURL = url.standardizedFileURL
             scriptInputFormat = .json
@@ -1094,6 +1099,7 @@ final class AppModel: ObservableObject {
             statusMessage = "Loaded Chapter \(chapter.chapterNumber): \(chapter.chapterTitle)"
             presenterOverlayController?.updateLayout()
             refreshPresenterOverlayVisibility()
+            startWatchingChapterFile(at: url.standardizedFileURL)
         } catch {
             let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             statusMessage = message
@@ -1103,6 +1109,52 @@ final class AppModel: ObservableObject {
             alert.alertStyle = .critical
             alert.runModal()
         }
+    }
+
+    private func startWatchingChapterFile(at url: URL) {
+        chapterFileWatcher.start(url: url) { [weak self] changedURL in
+            self?.handleChapterFileChange(changedURL)
+        }
+    }
+
+    private func handleChapterFileChange(_ url: URL) {
+        if speechState == .speaking || speechState == .paused || speechState == .stopping {
+            pendingChapterReloadURL = url
+            statusMessage = "Chapter changed on disk. Reloading after speech finishes…"
+            return
+        }
+
+        reloadChapterFromDisk(url)
+    }
+
+    private func reloadChapterFromDisk(_ url: URL) {
+        let previousSceneID = currentNarrationScene?.id
+
+        do {
+            let chapter = try NarrationChapterLoader.load(from: url)
+            loadedChapter = chapter
+            loadedChapterURL = url.standardizedFileURL
+            refreshScriptScenes()
+
+            if let previousSceneID,
+               let preservedIndex = chapter.scenes.firstIndex(where: { $0.id == previousSceneID }) {
+                currentSceneIndex = preservedIndex
+            } else {
+                currentSceneIndex = 0
+            }
+
+            statusMessage = "Chapter updated from disk. \(scriptSceneProgress)"
+            presenterOverlayController?.updateLayout()
+        } catch {
+            let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            statusMessage = "Chapter update rejected: \(message)"
+        }
+    }
+
+    private func applyPendingChapterReloadIfNeeded() {
+        guard let url = pendingChapterReloadURL else { return }
+        pendingChapterReloadURL = nil
+        reloadChapterFromDisk(url)
     }
 
     func openCurrentSceneEditor() {
@@ -1734,6 +1786,9 @@ final class AppModel: ObservableObject {
                 self?.speechState = state
                 if state != .speaking {
                     self?.statusMessage = state.label
+                }
+                if state == .idle {
+                    self?.applyPendingChapterReloadIfNeeded()
                 }
                 self?.refreshPresenterOverlayVisibility()
             }
