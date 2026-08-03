@@ -49,15 +49,39 @@ cat > "$APP_PATH/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key>
   <string>local.clipboardreadermac</string>
   <key>CFBundleVersion</key>
-  <string>26</string>
+  <string>27</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.26</string>
+  <string>1.27</string>
   <key>CFBundleExecutable</key>
   <string>NarrationPilot</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>LSUIElement</key>
   <true/>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>local.clipboardreadermac.chapter-import</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>narrationpilot</string>
+      </array>
+    </dict>
+  </array>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Narration Pilot Chapter JSON</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>public.json</string>
+      </array>
+    </dict>
+  </array>
 </dict>
 </plist>
 PLIST

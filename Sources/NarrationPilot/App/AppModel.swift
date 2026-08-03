@@ -3,9 +3,12 @@ import Combine
 import Foundation
 import KeyboardShortcuts
 import SwiftUI
+import UniformTypeIdentifiers
 
 @MainActor
 final class AppModel: ObservableObject {
+    static let shared = AppModel()
+
     @Published private(set) var speechState: SpeechState = .idle
     @Published var statusMessage: String = SpeechState.idle.label
     @Published private(set) var outputVoiceDescription: String = "System Default"
@@ -13,6 +16,20 @@ final class AppModel: ObservableObject {
     @Published private(set) var isShortcutTriggerAccessibilityTrusted: Bool
     @Published private(set) var recordingTriggerShortcut: TriggerShortcut?
     @Published var typedText: String = ""
+    @Published var scriptInputFormat: ScriptInputFormat {
+        didSet {
+            defaults.set(scriptInputFormat.rawValue, forKey: Self.scriptInputFormatKey)
+            if scriptInputFormat == .json {
+                readsTypedTextInsteadOfClipboard = true
+                scriptModeEnabled = true
+            }
+            currentSceneIndex = 0
+            refreshScriptScenes()
+            presenterOverlayController?.updateLayout()
+        }
+    }
+    @Published private(set) var loadedChapter: NarrationChapter?
+    @Published private(set) var loadedChapterURL: URL?
 
     @Published var recordingCueSoundsEnabled: Bool {
         didSet { defaults.set(recordingCueSoundsEnabled, forKey: Self.recordingCueSoundsEnabledKey) }
@@ -515,6 +532,26 @@ final class AppModel: ObservableObject {
         return scriptScenes[currentSceneIndex]
     }
 
+    var currentNarrationScene: NarrationScene? {
+        guard scriptInputFormat == .json,
+              let loadedChapter,
+              loadedChapter.scenes.indices.contains(currentSceneIndex) else {
+            return nil
+        }
+        return loadedChapter.scenes[currentSceneIndex]
+    }
+
+    var currentSceneTitle: String? {
+        currentNarrationScene?.title
+    }
+
+    var currentSceneOnScreenSummary: String? {
+        guard let directions = currentNarrationScene?.onScreen, !directions.isEmpty else {
+            return nil
+        }
+        return directions.joined(separator: " • ")
+    }
+
     var allSceneTexts: [String] {
         scriptScenes
     }
@@ -532,6 +569,13 @@ final class AppModel: ObservableObject {
         return scriptScenes[previousIndex]
     }
 
+    var previousSceneDisplayText: String? {
+        guard scriptInputFormat == .json else { return previousSceneText }
+        let previousIndex = currentSceneIndex - 1
+        guard let loadedChapter, loadedChapter.scenes.indices.contains(previousIndex) else { return nil }
+        return loadedChapter.scenes[previousIndex].title
+    }
+
     var nextSceneText: String? {
         let nextIndex = currentSceneIndex + 1
         guard scriptScenes.indices.contains(nextIndex) else {
@@ -539,6 +583,18 @@ final class AppModel: ObservableObject {
         }
 
         return scriptScenes[nextIndex]
+    }
+
+    var nextSceneDisplayText: String? {
+        guard scriptInputFormat == .json else { return nextSceneText }
+        let nextIndex = currentSceneIndex + 1
+        guard let loadedChapter, loadedChapter.scenes.indices.contains(nextIndex) else { return nil }
+        return loadedChapter.scenes[nextIndex].title
+    }
+
+    var loadedChapterDescription: String? {
+        guard let loadedChapter else { return nil }
+        return "Chapter \(loadedChapter.chapterNumber): \(loadedChapter.chapterTitle)"
     }
 
     var scriptSceneProgress: String {
@@ -571,6 +627,7 @@ final class AppModel: ObservableObject {
     private static let voiceKey = "clipboardReader.voiceIdentifier"
     private static let inputModeKey = "clipboardReader.readsTypedTextInsteadOfClipboard"
     private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
+    private static let scriptInputFormatKey = "clipboardReader.scriptInputFormat"
     private static let legacyRecordingShortcutTriggerKey = "clipboardReader.recordingShortcutTrigger.enabled"
     private static let recordingShortcutValueKey = "clipboardReader.recordingShortcutTrigger.shortcut"
     private static let recordingCueSoundsEnabledKey = "clipboardReader.recordingCueSounds.enabled"
@@ -705,6 +762,11 @@ final class AppModel: ObservableObject {
         self.selectedVoiceIdentifier = defaults.string(forKey: Self.voiceKey)
         self.readsTypedTextInsteadOfClipboard = defaults.bool(forKey: Self.inputModeKey)
         self.scriptModeEnabled = defaults.bool(forKey: Self.scriptModeKey)
+        self.scriptInputFormat = ScriptInputFormat(
+            rawValue: defaults.string(forKey: Self.scriptInputFormatKey) ?? "text"
+        ) ?? .text
+        self.loadedChapter = nil
+        self.loadedChapterURL = nil
         self.recordingCueSoundsEnabled = defaults.bool(forKey: Self.recordingCueSoundsEnabledKey)
         self.recordingStartCueSound = RecordingCueSound(
             rawValue: defaults.string(forKey: Self.recordingStartCueSoundKey) ?? RecordingCueSound.pop.rawValue
@@ -973,6 +1035,74 @@ final class AppModel: ObservableObject {
         refreshScriptScenes()
     }
 
+    func chooseChapterJSON() {
+        let panel = NSOpenPanel()
+        panel.title = "Import Chapter JSON"
+        panel.prompt = "Import"
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.json]
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        importChapterJSON(from: url, confirmsReplacement: true)
+    }
+
+    func reloadChapterJSON() {
+        guard let loadedChapterURL else {
+            statusMessage = "No chapter JSON is loaded."
+            return
+        }
+        importChapterJSON(from: loadedChapterURL, confirmsReplacement: false)
+    }
+
+    func clearChapterJSON() {
+        stopSpeechForSceneNavigation()
+        loadedChapter = nil
+        loadedChapterURL = nil
+        currentSceneIndex = 0
+        refreshScriptScenes()
+        statusMessage = "Chapter JSON cleared."
+        presenterOverlayController?.updateLayout()
+    }
+
+    func importChapterJSON(from url: URL, confirmsReplacement: Bool) {
+        if confirmsReplacement,
+           let loadedChapterURL,
+           loadedChapterURL.standardizedFileURL != url.standardizedFileURL {
+            let alert = NSAlert()
+            alert.messageText = "Replace the loaded chapter?"
+            alert.informativeText = "Importing this file will replace the current JSON chapter. Your text script will remain unchanged."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Replace")
+            alert.addButton(withTitle: "Cancel")
+            guard alert.runModal() == .alertFirstButtonReturn else { return }
+        }
+
+        do {
+            let chapter = try NarrationChapterLoader.load(from: url)
+            stopSpeechForSceneNavigation()
+            loadedChapter = chapter
+            loadedChapterURL = url.standardizedFileURL
+            scriptInputFormat = .json
+            scriptModeEnabled = true
+            readsTypedTextInsteadOfClipboard = true
+            currentSceneIndex = 0
+            refreshScriptScenes()
+            statusMessage = "Loaded Chapter \(chapter.chapterNumber): \(chapter.chapterTitle)"
+            presenterOverlayController?.updateLayout()
+            refreshPresenterOverlayVisibility()
+        } catch {
+            let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            statusMessage = message
+            let alert = NSAlert()
+            alert.messageText = "Could Not Import Chapter JSON"
+            alert.informativeText = message
+            alert.alertStyle = .critical
+            alert.runModal()
+        }
+    }
+
     func openCurrentSceneEditor() {
         if !scriptModeEnabled {
             scriptModeEnabled = true
@@ -1059,6 +1189,20 @@ final class AppModel: ObservableObject {
     }
 
     func refreshScriptScenes() {
+        if scriptInputFormat == .json {
+            manualSceneOverride = nil
+            manualSceneOverrideSource = nil
+            scriptScenes = loadedChapter?.scenes.map { scene in
+                scene.narration.trimmingCharacters(in: .whitespacesAndNewlines)
+            } ?? []
+            if scriptScenes.isEmpty {
+                currentSceneIndex = 0
+            } else {
+                currentSceneIndex = min(currentSceneIndex, scriptScenes.count - 1)
+            }
+            return
+        }
+
         let normalizedText = ScriptSceneSplitter.normalized(typedText)
         if let manualSceneOverride,
            manualSceneOverrideSource == normalizedText {
@@ -1197,7 +1341,7 @@ final class AppModel: ObservableObject {
 
         readCurrentScriptSceneNow(
             advancesAfterSpeech: false,
-            includesBracketedDirections: true
+            includesBracketedDirections: scriptInputFormat == .text
         )
     }
 

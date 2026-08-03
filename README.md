@@ -23,7 +23,7 @@ Traditional text-to-speech tools read a whole document. Narration Pilot treats a
 
 | Area | What Narration Pilot provides |
 | --- | --- |
-| **Scene playback** | Automatic sentence splitting, one-scene-at-a-time narration, previous, replay, next, and restart controls |
+| **Scene playback** | Text scripts with automatic sentence splitting or structured chapter JSON with explicit scenes |
 | **Scene Manager** | Select, edit, split, merge, and delete scenes while preserving manual scene boundaries |
 | **Production directions** | Normal playback skips text inside square brackets; Replay Scene includes it |
 | **Presenter overlay** | Previous, current, and next scene context with adjustable placement, size, opacity, typography, and colors |
@@ -103,6 +103,23 @@ This installs `Narration Pilot.app` in `~/Applications` and launches it. Upgrade
 ### Scene workflow
 
 Use **Previous**, **Replay**, **Next**, and **Restart** to navigate. Open **Edit Current Scene** to select, edit, split, merge, or delete scenes. Manual boundaries remain in place until the raw script is changed directly.
+
+### Chapter JSON mode
+
+Turn on **Script mode**, select **Chapter JSON**, and import a version 1 chapter file. JSON scenes preserve their explicit boundaries and keep `onScreen`, `narration`, `code`, and `expectedResult` separate. Speech reads only the `narration` field. The JSON Scene Manager is read-only; edit the source JSON and choose **Reload** to apply changes.
+
+Narration Pilot can also receive a JSON file directly:
+
+```bash
+./scripts/open-chapter-json.sh /path/to/chapter.json
+```
+
+Validate a chapter without launching the app:
+
+```bash
+swiftc Sources/NarrationPilot/Models/NarrationChapter.swift scripts/validate-chapter-json.swift -o /tmp/validate-chapter-json
+/tmp/validate-chapter-json /path/to/chapter.json
+```
 
 ### Presenter overlay
 

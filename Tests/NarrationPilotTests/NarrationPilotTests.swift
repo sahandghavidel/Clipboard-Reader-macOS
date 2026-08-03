@@ -114,6 +114,117 @@ final class NarrationPilotTests: XCTestCase {
         XCTAssertEqual(ScriptSceneSplitter.scenes(from: "\n\n  "), [])
     }
 
+    func testNarrationChapterLoaderPreservesExplicitScenes() throws {
+        let data = Data(#"""
+        {
+          "schemaVersion": 1,
+          "projectSlug": "test-project",
+          "chapterNumber": 1,
+          "chapterTitle": "Test Chapter",
+          "status": "approved",
+          "scenes": [
+            {
+              "id": "scene-01",
+              "sceneNumber": 1,
+              "title": "First scene",
+              "onScreen": ["Show the page"],
+              "narration": "First sentence. Second sentence stays in this scene.",
+              "code": null,
+              "expectedResult": "The page is visible.",
+              "estimatedSeconds": 8
+            },
+            {
+              "id": "scene-02",
+              "sceneNumber": 2,
+              "title": "Second scene",
+              "onScreen": [],
+              "narration": "Another scene.",
+              "code": null,
+              "expectedResult": null,
+              "estimatedSeconds": null
+            }
+          ]
+        }
+        """#.utf8)
+
+        let chapter = try NarrationChapterLoader.decode(data)
+
+        XCTAssertEqual(chapter.scenes.count, 2)
+        XCTAssertEqual(chapter.scenes[0].narration, "First sentence. Second sentence stays in this scene.")
+    }
+
+    func testNarrationChapterLoaderRejectsUnsupportedSchema() {
+        let data = Data(#"""
+        {
+          "schemaVersion": 2,
+          "projectSlug": "test-project",
+          "chapterNumber": 1,
+          "chapterTitle": "Test Chapter",
+          "status": "approved",
+          "scenes": [{
+            "id": "scene-01",
+            "sceneNumber": 1,
+            "title": "Scene",
+            "onScreen": [],
+            "narration": "Narration.",
+            "code": null,
+            "expectedResult": null,
+            "estimatedSeconds": null
+          }]
+        }
+        """#.utf8)
+
+        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
+            XCTAssertEqual(error as? NarrationChapterError, .unsupportedSchemaVersion(2))
+        }
+    }
+
+    func testNarrationChapterLoaderRejectsDuplicateSceneIDs() {
+        let data = Data(#"""
+        {
+          "schemaVersion": 1,
+          "projectSlug": "test-project",
+          "chapterNumber": 1,
+          "chapterTitle": "Test Chapter",
+          "status": "approved",
+          "scenes": [
+            {"id":"same","sceneNumber":1,"title":"One","onScreen":[],"narration":"One.","code":null,"expectedResult":null,"estimatedSeconds":null},
+            {"id":"same","sceneNumber":2,"title":"Two","onScreen":[],"narration":"Two.","code":null,"expectedResult":null,"estimatedSeconds":null}
+          ]
+        }
+        """#.utf8)
+
+        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
+            XCTAssertEqual(error as? NarrationChapterError, .duplicateSceneID("same"))
+        }
+    }
+
+    func testNarrationChapterLoaderRejectsEmptyNarration() {
+        let data = Data(#"""
+        {
+          "schemaVersion": 1,
+          "projectSlug": "test-project",
+          "chapterNumber": 1,
+          "chapterTitle": "Test Chapter",
+          "status": "approved",
+          "scenes": [{
+            "id": "scene-01",
+            "sceneNumber": 1,
+            "title": "Scene",
+            "onScreen": [],
+            "narration": "   ",
+            "code": null,
+            "expectedResult": null,
+            "estimatedSeconds": null
+          }]
+        }
+        """#.utf8)
+
+        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
+            XCTAssertEqual(error as? NarrationChapterError, .emptyNarration(1))
+        }
+    }
+
     func testSpokenTextSanitizerRemovesBracketedDirections() {
         let text = "[On screen: Show the editor.] Yesterday, I wanted to add an image overlay."
 

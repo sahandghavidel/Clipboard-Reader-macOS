@@ -19,6 +19,26 @@
       "target": "NarrationPilot",
       "configuration": "release",
       "preLaunchTask": "swift: Build Release NarrationPilot"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:narration-pilot}",
+      "name": "Debug NarrationPilot",
+      "target": "NarrationPilot",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug NarrationPilot"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:narration-pilot}",
+      "name": "Release NarrationPilot",
+      "target": "NarrationPilot",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release NarrationPilot"
     }
   ]
 }

@@ -33,30 +33,71 @@ struct MenuBarView: View {
 
                     Toggle("Script mode", isOn: $appModel.scriptModeEnabled)
 
+                    if appModel.scriptModeEnabled {
+                        Picker("Script format", selection: $appModel.scriptInputFormat) {
+                            ForEach(ScriptInputFormat.allCases) { format in
+                                Text(format.label).tag(format)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+
                     Text(appModel.inputModeStatus)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
 
-                    TextEditor(text: $appModel.typedText)
-                        .font(.body)
-                        .frame(height: 110)
-                        .onChange(of: appModel.typedText) {
-                            appModel.refreshScriptScenes()
+                    if appModel.scriptModeEnabled, appModel.scriptInputFormat == .json {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(appModel.loadedChapterDescription ?? "No chapter JSON loaded")
+                                .font(.subheadline.bold())
+                            if let url = appModel.loadedChapterURL {
+                                Text(url.lastPathComponent)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            HStack(spacing: 8) {
+                                Button("Import Chapter JSON") {
+                                    appModel.chooseChapterJSON()
+                                }
+                                Button("Reload") {
+                                    appModel.reloadChapterJSON()
+                                }
+                                .disabled(appModel.loadedChapterURL == nil)
+                                Button("Clear Chapter") {
+                                    appModel.clearChapterJSON()
+                                }
+                                .disabled(appModel.loadedChapter == nil)
+                            }
                         }
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.secondary.opacity(0.25))
-                        )
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+                    } else {
+                        TextEditor(text: $appModel.typedText)
+                            .font(.body)
+                            .frame(height: 110)
+                            .onChange(of: appModel.typedText) {
+                                appModel.refreshScriptScenes()
+                            }
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(Color.secondary.opacity(0.25))
+                            )
+                    }
 
                     HStack(spacing: 8) {
                         Button(appModel.readButtonTitle) {
                             appModel.readNow()
                         }
 
-                        Button("Clear") {
-                            appModel.clearTypedText()
+                        if !(appModel.scriptModeEnabled && appModel.scriptInputFormat == .json) {
+                            Button("Clear") {
+                                appModel.clearTypedText()
+                            }
+                            .disabled(appModel.typedText.isEmpty)
                         }
-                        .disabled(appModel.typedText.isEmpty)
                     }
                 }
                 .padding(.top, 6)
@@ -67,7 +108,19 @@ struct MenuBarView: View {
                     Text(appModel.scriptSceneProgress)
                         .font(.subheadline.bold())
 
-                    Text(appModel.currentSceneText ?? "Paste a script to create scenes.")
+                    if let title = appModel.currentSceneTitle {
+                        Text(title)
+                            .font(.caption.bold())
+                    }
+
+                    if let onScreen = appModel.currentSceneOnScreenSummary {
+                        Text("On screen: \(onScreen)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+
+                    Text(appModel.currentSceneText ?? (appModel.scriptInputFormat == .json ? "Import a chapter JSON to create scenes." : "Paste a script to create scenes."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(3)

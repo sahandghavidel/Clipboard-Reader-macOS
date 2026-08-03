@@ -5,7 +5,7 @@ struct PresenterOverlayView: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
-            sceneColumn(title: "Previous", text: appModel.previousSceneText, isCurrent: false)
+            sceneColumn(title: "Previous", text: appModel.previousSceneDisplayText, isCurrent: false)
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
@@ -20,7 +20,7 @@ struct PresenterOverlayView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "pencil")
-                            Text("Edit Scene")
+                            Text(appModel.scriptInputFormat == .json ? "View Scene" : "Edit Scene")
                         }
                     }
                     .buttonStyle(.plain)
@@ -36,8 +36,21 @@ struct PresenterOverlayView: View {
                                     .stroke(appModel.presenterOverlayCurrentTextColor.opacity(0.35))
                             )
                     )
-                    .help("Edit current scene")
+                    .help(appModel.scriptInputFormat == .json ? "View current JSON scene" : "Edit current scene")
                     .disabled(appModel.currentSceneText == nil)
+                }
+
+                if let title = appModel.currentSceneTitle {
+                    Text(title)
+                        .font(.caption.bold())
+                        .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(appModel.presenterOverlaySecondaryTextOpacity))
+                }
+
+                if let onScreen = appModel.currentSceneOnScreenSummary {
+                    Text("On screen: \(onScreen)")
+                        .font(.system(size: CGFloat(appModel.presenterOverlaySideFontSize), weight: .medium))
+                        .foregroundStyle(appModel.presenterOverlaySecondaryTextColor.opacity(appModel.presenterOverlaySecondaryTextOpacity))
+                        .lineLimit(2)
                 }
 
                 Text(appModel.currentSceneText ?? "Paste a script and turn on Script mode.")
@@ -50,7 +63,7 @@ struct PresenterOverlayView: View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 4)
 
-            sceneColumn(title: "Next", text: appModel.nextSceneText, isCurrent: false)
+            sceneColumn(title: "Next", text: appModel.nextSceneDisplayText, isCurrent: false)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 14)
