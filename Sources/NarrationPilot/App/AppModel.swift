@@ -545,11 +545,13 @@ final class AppModel: ObservableObject {
         currentNarrationScene?.title
     }
 
+    var currentSceneDisplayTitle: String? {
+        currentNarrationScene?.displayTitle
+    }
+
     var currentSceneOnScreenSummary: String? {
-        guard let directions = currentNarrationScene?.onScreen, !directions.isEmpty else {
-            return nil
-        }
-        return directions.joined(separator: " • ")
+        guard let onScreen = currentNarrationScene?.onScreen else { return nil }
+        return "\(onScreen.action) Result: \(onScreen.result)"
     }
 
     var allSceneTexts: [String] {

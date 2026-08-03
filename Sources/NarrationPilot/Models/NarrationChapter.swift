@@ -27,15 +27,19 @@ struct NarrationScene: Codable, Equatable, Identifiable {
     let id: String
     let sceneNumber: Int
     let title: String
-    let onScreen: [String]
+    let displayTitle: String
+    let onScreen: NarrationOnScreen
     let narration: String
     let code: String?
-    let expectedResult: String?
-    let estimatedSeconds: Double?
+}
+
+struct NarrationOnScreen: Codable, Equatable {
+    let action: String
+    let result: String
 }
 
 enum NarrationChapterLoader {
-    static let supportedSchemaVersion = 1
+    static let supportedSchemaVersion = 2
 
     static func load(from url: URL) throws -> NarrationChapter {
         try decode(Data(contentsOf: url))
@@ -89,8 +93,14 @@ enum NarrationChapterLoader {
             guard !scene.narration.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw NarrationChapterError.emptyNarration(scene.sceneNumber)
             }
-            if let estimatedSeconds = scene.estimatedSeconds, estimatedSeconds <= 0 {
-                throw NarrationChapterError.invalidEstimatedSeconds(scene.sceneNumber)
+            guard !scene.displayTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw NarrationChapterError.missingDisplayTitle(scene.sceneNumber)
+            }
+            guard !scene.onScreen.action.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw NarrationChapterError.emptyOnScreenAction(scene.sceneNumber)
+            }
+            guard !scene.onScreen.result.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw NarrationChapterError.emptyOnScreenResult(scene.sceneNumber)
             }
         }
     }
@@ -107,7 +117,9 @@ enum NarrationChapterError: LocalizedError, Equatable {
     case missingSceneID(Int)
     case duplicateSceneID(String)
     case emptyNarration(Int)
-    case invalidEstimatedSeconds(Int)
+    case missingDisplayTitle(Int)
+    case emptyOnScreenAction(Int)
+    case emptyOnScreenResult(Int)
 
     var errorDescription: String? {
         switch self {
@@ -131,8 +143,12 @@ enum NarrationChapterError: LocalizedError, Equatable {
             "The scene id \(id) is used more than once."
         case .emptyNarration(let sceneNumber):
             "Scene \(sceneNumber) has empty narration."
-        case .invalidEstimatedSeconds(let sceneNumber):
-            "Scene \(sceneNumber) has an invalid estimatedSeconds value."
+        case .missingDisplayTitle(let sceneNumber):
+            "Scene \(sceneNumber) is missing displayTitle."
+        case .emptyOnScreenAction(let sceneNumber):
+            "Scene \(sceneNumber) has an empty onScreen action."
+        case .emptyOnScreenResult(let sceneNumber):
+            "Scene \(sceneNumber) has an empty onScreen result."
         }
     }
 }

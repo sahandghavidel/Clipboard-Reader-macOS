@@ -117,7 +117,7 @@ final class NarrationPilotTests: XCTestCase {
     func testNarrationChapterLoaderPreservesExplicitScenes() throws {
         let data = Data(#"""
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "projectSlug": "test-project",
           "chapterNumber": 1,
           "chapterTitle": "Test Chapter",
@@ -127,21 +127,19 @@ final class NarrationPilotTests: XCTestCase {
               "id": "scene-01",
               "sceneNumber": 1,
               "title": "First scene",
-              "onScreen": ["Show the page"],
+              "displayTitle": "First Scene",
+              "onScreen": {"action":"Show the page","result":"The page is visible."},
               "narration": "First sentence. Second sentence stays in this scene.",
-              "code": null,
-              "expectedResult": "The page is visible.",
-              "estimatedSeconds": 8
+              "code": null
             },
             {
               "id": "scene-02",
               "sceneNumber": 2,
               "title": "Second scene",
-              "onScreen": [],
+              "displayTitle": "Second Scene",
+              "onScreen": {"action":"Show the next view","result":"The next view is visible."},
               "narration": "Another scene.",
-              "code": null,
-              "expectedResult": null,
-              "estimatedSeconds": null
+              "code": null
             }
           ]
         }
@@ -156,7 +154,7 @@ final class NarrationPilotTests: XCTestCase {
     func testNarrationChapterLoaderRejectsUnsupportedSchema() {
         let data = Data(#"""
         {
-          "schemaVersion": 2,
+          "schemaVersion": 3,
           "projectSlug": "test-project",
           "chapterNumber": 1,
           "chapterTitle": "Test Chapter",
@@ -165,31 +163,30 @@ final class NarrationPilotTests: XCTestCase {
             "id": "scene-01",
             "sceneNumber": 1,
             "title": "Scene",
-            "onScreen": [],
+            "displayTitle": "Scene",
+            "onScreen": {"action":"Show it","result":"It is visible."},
             "narration": "Narration.",
-            "code": null,
-            "expectedResult": null,
-            "estimatedSeconds": null
+            "code": null
           }]
         }
         """#.utf8)
 
         XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
-            XCTAssertEqual(error as? NarrationChapterError, .unsupportedSchemaVersion(2))
+            XCTAssertEqual(error as? NarrationChapterError, .unsupportedSchemaVersion(3))
         }
     }
 
     func testNarrationChapterLoaderRejectsDuplicateSceneIDs() {
         let data = Data(#"""
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "projectSlug": "test-project",
           "chapterNumber": 1,
           "chapterTitle": "Test Chapter",
           "status": "approved",
           "scenes": [
-            {"id":"same","sceneNumber":1,"title":"One","onScreen":[],"narration":"One.","code":null,"expectedResult":null,"estimatedSeconds":null},
-            {"id":"same","sceneNumber":2,"title":"Two","onScreen":[],"narration":"Two.","code":null,"expectedResult":null,"estimatedSeconds":null}
+            {"id":"same","sceneNumber":1,"title":"One","displayTitle":"One","onScreen":{"action":"Show one","result":"One is visible."},"narration":"One.","code":null},
+            {"id":"same","sceneNumber":2,"title":"Two","displayTitle":"Two","onScreen":{"action":"Show two","result":"Two is visible."},"narration":"Two.","code":null}
           ]
         }
         """#.utf8)
@@ -202,7 +199,7 @@ final class NarrationPilotTests: XCTestCase {
     func testNarrationChapterLoaderRejectsEmptyNarration() {
         let data = Data(#"""
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "projectSlug": "test-project",
           "chapterNumber": 1,
           "chapterTitle": "Test Chapter",
@@ -211,11 +208,10 @@ final class NarrationPilotTests: XCTestCase {
             "id": "scene-01",
             "sceneNumber": 1,
             "title": "Scene",
-            "onScreen": [],
+            "displayTitle": "Scene",
+            "onScreen": {"action":"Show it","result":"It is visible."},
             "narration": "   ",
-            "code": null,
-            "expectedResult": null,
-            "estimatedSeconds": null
+            "code": null
           }]
         }
         """#.utf8)

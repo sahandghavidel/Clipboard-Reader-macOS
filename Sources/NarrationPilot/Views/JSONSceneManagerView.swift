@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct JSONSceneManagerView: View {
@@ -113,16 +114,11 @@ struct JSONSceneManagerView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    detailSection("On Screen", text: scene.onScreen.joined(separator: "\n"))
+                    detailSection("Display Title", text: scene.displayTitle)
+                    onScreenSection(scene.onScreen)
                     detailSection("Narration", text: scene.narration)
                     if let code = scene.code, !code.isEmpty {
-                        detailSection("Code", text: code, monospaced: true)
-                    }
-                    if let expectedResult = scene.expectedResult, !expectedResult.isEmpty {
-                        detailSection("Expected Result", text: expectedResult)
-                    }
-                    if let estimatedSeconds = scene.estimatedSeconds {
-                        detailSection("Estimated Time", text: "\(estimatedSeconds.formatted()) seconds")
+                        codeSection(code)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -150,7 +146,78 @@ struct JSONSceneManagerView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(10)
                 .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+
+            ForEach(detectedURLs(in: text), id: \.absoluteString) { url in
+                Link(destination: url) {
+                    Label(url.absoluteString, systemImage: "arrow.up.right.square")
+                        .font(.caption)
+                }
+            }
         }
+    }
+
+    private func onScreenSection(_ onScreen: NarrationOnScreen) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("ON SCREEN")
+                .font(.caption.bold())
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 10) {
+                labeledValue("Action", text: onScreen.action)
+                Divider()
+                labeledValue("Result", text: onScreen.result)
+            }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+        }
+    }
+
+    private func labeledValue(_ label: String, text: String) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(label)
+                .font(.caption.bold())
+                .foregroundStyle(.secondary)
+            Text(text)
+                .textSelection(.enabled)
+            ForEach(detectedURLs(in: text), id: \.absoluteString) { url in
+                Link(destination: url) {
+                    Label(url.absoluteString, systemImage: "arrow.up.right.square")
+                        .font(.caption)
+                }
+            }
+        }
+    }
+
+    private func codeSection(_ code: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("CODE")
+                    .font(.caption.bold())
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(code, forType: .string)
+                } label: {
+                    Label("Copy Code", systemImage: "doc.on.doc")
+                }
+            }
+
+            Text(code)
+                .font(.system(.body, design: .monospaced))
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+        }
+    }
+
+    private func detectedURLs(in text: String) -> [URL] {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return []
+        }
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        return detector.matches(in: text, range: range).compactMap(\.url)
     }
 
     private func select(_ index: Int) {
