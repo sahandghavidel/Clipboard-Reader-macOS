@@ -18,6 +18,7 @@ struct JSONSceneManagerView: View {
     @State private var activeField: EditableField?
     @FocusState private var focusedField: EditableField?
     @State private var previewFontSize = UserDefaults.standard.object(forKey: "NarrationPilot.jsonPreviewFontSize") as? Double ?? 14
+    @AppStorage("NarrationPilot.jsonShowDisplayTitle") private var showDisplayTitle = false
 
     private enum EditableField: Hashable { case title, displayTitle, action, result, narration }
 
@@ -124,7 +125,9 @@ struct JSONSceneManagerView: View {
                     editableField("Narration", field: .narration, text: $narration)
                     editableField("Action", field: .action, text: $action)
                     editableField("Result", field: .result, text: $result)
-                    editableField("Display Title", field: .displayTitle, text: $displayTitle)
+                    if showDisplayTitle {
+                        editableField("Display Title", field: .displayTitle, text: $displayTitle)
+                    }
                     if let code = scene.code {
                         codeSection(code)
                     }
@@ -146,6 +149,8 @@ struct JSONSceneManagerView: View {
                 Button("Save Changes") { _ = saveChanges() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(!hasUnsavedChanges)
+                Toggle("Display Title", isOn: $showDisplayTitle)
+                    .toggleStyle(.checkbox)
                 Spacer()
                 Button("Previous") { select(max(selectedIndex - 1, 0)) }
                     .disabled(selectedIndex == 0)
