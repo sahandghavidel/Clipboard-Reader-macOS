@@ -59,7 +59,7 @@ final class NotionSceneService {
             "Code": richText(code?.text ?? ""),
             "Language": richText(code?.language ?? ""),
             "Target File": richText(code?.targetFile ?? ""),
-            "Code Action": select(code?.action.rawValue)
+            "Code Instruction": richText(code?.instruction ?? "")
         ]
         _ = try await request(
             path: "/v1/pages/\(cleanID(pageID))",
@@ -86,11 +86,18 @@ final class NotionSceneService {
         } else {
             let language = text(properties["Language"])
             let targetFile = text(properties["Target File"])
-            let action = NarrationCodeAction(rawValue: selectValue(properties["Code Action"])) ?? .insert
+            let instruction = text(properties["Code Instruction"])
+            let action = inferredAction(from: instruction)
             guard !language.isEmpty, !targetFile.isEmpty else {
                 throw NotionSceneError.invalidScenes("Scene \(sceneNumber) code needs Language and Target File values.")
             }
-            code = NarrationCode(text: codeText, language: language, targetFile: targetFile, action: action)
+            code = NarrationCode(
+                text: codeText,
+                language: language,
+                targetFile: targetFile,
+                action: action,
+                instruction: instruction.isEmpty ? nil : instruction
+            )
         }
         guard !narration.isEmpty, !onScreen.isEmpty else {
             throw NotionSceneError.invalidScenes("Scene \(sceneNumber) needs Narration and On Screen values.")
@@ -137,11 +144,6 @@ final class NotionSceneService {
         ["title": [["type": "text", "text": ["content": value]]]]
     }
 
-    private func select(_ value: String?) -> [String: Any] {
-        if let value { return ["select": ["name": value]] }
-        return ["select": NSNull()]
-    }
-
     private func text(_ property: Any?) -> String {
         guard let property = property as? [String: Any] else { return "" }
         let values = (property["title"] as? [[String: Any]]) ?? (property["rich_text"] as? [[String: Any]]) ?? []
@@ -152,10 +154,12 @@ final class NotionSceneService {
         (property as? [String: Any])?["last_edited_time"] as? String
     }
 
-    private func selectValue(_ property: Any?) -> String {
-        guard let property = property as? [String: Any],
-              let selected = property["select"] as? [String: Any] else { return "" }
-        return selected["name"] as? String ?? ""
+    private func inferredAction(from instruction: String) -> NarrationCodeAction {
+        let value = instruction.lowercased()
+        if value.hasPrefix("replace") { return .replace }
+        if value.hasPrefix("append") { return .append }
+        if value.hasPrefix("create") { return .create }
+        return .insert
     }
 
     private func nilIfEmpty(_ value: String) -> String? { value.isEmpty ? nil : value }

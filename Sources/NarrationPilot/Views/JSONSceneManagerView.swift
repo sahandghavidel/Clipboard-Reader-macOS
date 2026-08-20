@@ -14,6 +14,7 @@ struct JSONSceneManagerView: View {
     @State private var postProduction = ""
     @State private var annotation = ""
     @State private var codeText = ""
+    @State private var codeInstruction = ""
     @State private var activeField: EditableField?
     @FocusState private var focusedField: EditableField?
     @State private var previewFontSize = UserDefaults.standard.object(forKey: "NarrationPilot.jsonPreviewFontSize") as? Double ?? 14
@@ -275,13 +276,20 @@ struct JSONSceneManagerView: View {
         postProduction = scene.postProduction ?? ""
         annotation = scene.annotation ?? ""
         codeText = scene.code?.text ?? ""
+        codeInstruction = scene.code?.instruction ?? scene.code.map { "\($0.action.rawValue.capitalized) this code in \($0.targetFile)." } ?? ""
     }
 
     @discardableResult
     private func saveChanges() -> Bool {
         let old = workingChapter.scenes[selectedIndex]
         let updatedCode = old.code.map {
-            NarrationCode(text: codeText, language: $0.language, targetFile: $0.targetFile, action: $0.action)
+            NarrationCode(
+                text: codeText,
+                language: $0.language,
+                targetFile: $0.targetFile,
+                action: $0.action,
+                instruction: codeInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
         }
         let updated = NarrationScene(
             id: old.id, sceneNumber: old.sceneNumber, narration: narration,
@@ -324,7 +332,8 @@ struct JSONSceneManagerView: View {
             onScreen != scene.onScreen ||
             postProduction != (scene.postProduction ?? "") ||
             annotation != (scene.annotation ?? "") ||
-            codeText != (scene.code?.text ?? "")
+            codeText != (scene.code?.text ?? "") ||
+            codeInstruction != (scene.code?.instruction ?? scene.code.map { "\($0.action.rawValue.capitalized) this code in \($0.targetFile)." } ?? "")
     }
 
     private func codeSection(_ code: NarrationCode) -> some View {
@@ -336,9 +345,6 @@ struct JSONSceneManagerView: View {
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)
                     .background(Capsule().fill(languageColor(code.language).opacity(0.16)))
-                Text(code.action.rawValue.uppercased())
-                    .font(.caption.bold())
-                    .foregroundStyle(.secondary)
                 Text("→ \(code.targetFile)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -357,6 +363,17 @@ struct JSONSceneManagerView: View {
                 } label: {
                     Label("Copy Code", systemImage: "doc.on.doc")
                 }
+            }
+
+            if activeField == .code {
+                TextField("Specific code instruction", text: $codeInstruction)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: previewFontSize + 1, weight: .medium))
+            } else {
+                Text(codeInstruction)
+                    .font(.system(size: previewFontSize + 1, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             SyntaxHighlightedCodeEditor(

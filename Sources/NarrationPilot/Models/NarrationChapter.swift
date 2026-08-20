@@ -28,6 +28,7 @@ struct NarrationCode: Codable, Equatable {
     let language: String
     let targetFile: String
     let action: NarrationCodeAction
+    var instruction: String? = nil
 }
 
 enum NarrationCodeAction: String, Codable, CaseIterable { case create, replace, append, insert }
