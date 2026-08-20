@@ -5,7 +5,11 @@ import Foundation
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        AppModel.shared.restoreLastChapterJSONIfAvailable()
+        if AppModel.shared.hasNotionConfiguration {
+            AppModel.shared.restoreNotionIfAvailable()
+        } else {
+            AppModel.shared.restoreLastChapterJSONIfAvailable()
+        }
         AppModel.shared.checkAccessibilityPermissionAtLaunch()
     }
 

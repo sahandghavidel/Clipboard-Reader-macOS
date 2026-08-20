@@ -48,28 +48,29 @@ struct MenuBarView: View {
 
                     if appModel.scriptModeEnabled, appModel.scriptInputFormat == .json {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(appModel.loadedChapterDescription ?? "No chapter JSON loaded")
+                            Text(appModel.loadedChapterDescription ?? "Connect your Notion scenes")
                                 .font(.subheadline.bold())
-                            if let url = appModel.loadedChapterURL {
-                                Text(url.lastPathComponent)
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                            }
+                            SecureField("Notion integration token", text: $appModel.notionToken)
+                                .textFieldStyle(.roundedBorder)
+                            TextField("Notion data source ID", text: $appModel.notionDataSourceID)
+                                .textFieldStyle(.roundedBorder)
 
                             HStack(spacing: 8) {
-                                Button("Import Chapter JSON") {
-                                    appModel.chooseChapterJSON()
+                                Button(appModel.isNotionConnected ? "Reconnect" : "Connect Notion") {
+                                    appModel.connectNotion()
                                 }
-                                Button("Reload") {
-                                    appModel.reloadChapterJSON()
+                                Button("Sync Now") {
+                                    appModel.syncNotionNow()
                                 }
-                                .disabled(appModel.loadedChapterURL == nil)
-                                Button("Clear Chapter") {
-                                    appModel.clearChapterJSON()
+                                .disabled(!appModel.hasNotionConfiguration || appModel.isNotionSyncing)
+                                Button("Disconnect") {
+                                    appModel.disconnectNotion()
                                 }
-                                .disabled(appModel.loadedChapter == nil)
+                                .disabled(!appModel.isNotionConnected && appModel.notionToken.isEmpty)
                             }
+                            Text(appModel.isNotionConnected ? "Syncs before the Scene Manager opens" : "Share the database with your Notion integration first")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
                         }
                         .padding(10)
                         .frame(maxWidth: .infinity, alignment: .leading)

@@ -30,6 +30,10 @@ final class AppModel: ObservableObject {
     }
     @Published private(set) var loadedChapter: NarrationChapter?
     @Published private(set) var loadedChapterURL: URL?
+    @Published var notionToken: String
+    @Published var notionDataSourceID: String
+    @Published private(set) var isNotionConnected = false
+    @Published private(set) var isNotionSyncing = false
 
     @Published var recordingCueSoundsEnabled: Bool {
         didSet { defaults.set(recordingCueSoundsEnabled, forKey: Self.recordingCueSoundsEnabledKey) }
@@ -602,6 +606,10 @@ final class AppModel: ObservableObject {
         return "Chapter \(loadedChapter.chapterNumber): \(loadedChapter.chapterTitle)"
     }
 
+    var hasNotionConfiguration: Bool {
+        !notionToken.isEmpty && !notionDataSourceID.isEmpty
+    }
+
     var scriptSceneProgress: String {
         guard !scriptScenes.isEmpty else {
             return "No scenes yet"
@@ -634,6 +642,7 @@ final class AppModel: ObservableObject {
     private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
     private static let scriptInputFormatKey = "clipboardReader.scriptInputFormat"
     private static let lastChapterJSONPathKey = "clipboardReader.lastChapterJSONPath"
+    private static let notionDataSourceIDKey = "clipboardReader.notion.dataSourceID"
     private static let legacyRecordingShortcutTriggerKey = "clipboardReader.recordingShortcutTrigger.enabled"
     private static let recordingShortcutValueKey = "clipboardReader.recordingShortcutTrigger.shortcut"
     private static let accessibilityLaunchPromptAttemptedKey = "clipboardReader.accessibility.launchPromptAttempted"
@@ -744,6 +753,7 @@ final class AppModel: ObservableObject {
     private let neonSpotlightStatusService = NeonSpotlightStatusService()
     private let userActivityIdleService = UserActivityIdleService()
     private let chapterFileWatcher = ChapterFileWatcher()
+    private let notionSceneService = NotionSceneService()
     private let ttsManager = TTSManager()
     private var cancellables = Set<AnyCancellable>()
     private var presenterOverlayController: PresenterOverlayController?
@@ -760,6 +770,8 @@ final class AppModel: ObservableObject {
     private var activeReadSequenceID: UUID?
     private var pendingReadTask: Task<Void, Never>?
     private var pendingChapterReloadURL: URL?
+    private var notionPageIDsBySceneID: [String: String] = [:]
+    private var notionRevision = ""
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -776,6 +788,8 @@ final class AppModel: ObservableObject {
         ) ?? .text
         self.loadedChapter = nil
         self.loadedChapterURL = nil
+        self.notionToken = NotionTokenStore.load()
+        self.notionDataSourceID = defaults.string(forKey: Self.notionDataSourceIDKey) ?? "81db58ed-5ad8-45b5-bac5-893d68d697eb"
         self.recordingCueSoundsEnabled = defaults.bool(forKey: Self.recordingCueSoundsEnabledKey)
         self.recordingStartCueSound = RecordingCueSound(
             rawValue: defaults.string(forKey: Self.recordingStartCueSoundKey) ?? RecordingCueSound.pop.rawValue
@@ -1044,6 +1058,100 @@ final class AppModel: ObservableObject {
         refreshScriptScenes()
     }
 
+    func restoreNotionIfAvailable() {
+        guard !notionToken.isEmpty, !notionDataSourceID.isEmpty else {
+            restoreNotionCache()
+            return
+        }
+        connectNotion()
+    }
+
+    func connectNotion() {
+        let token = notionToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        let dataSourceID = notionDataSourceID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !token.isEmpty, !dataSourceID.isEmpty else {
+            statusMessage = "Enter a Notion token and data source ID."
+            return
+        }
+        notionToken = token
+        notionDataSourceID = dataSourceID
+        NotionTokenStore.save(token)
+        defaults.set(dataSourceID, forKey: Self.notionDataSourceIDKey)
+        Task { await syncNotionScenes(force: true) }
+    }
+
+    func syncNotionNow() {
+        Task { await syncNotionScenes(force: true) }
+    }
+
+    func disconnectNotion() {
+        isNotionConnected = false
+        notionPageIDsBySceneID = [:]
+        notionRevision = ""
+        NotionTokenStore.save("")
+        notionToken = ""
+        statusMessage = "Notion disconnected."
+    }
+
+    private func syncNotionScenes(force: Bool) async {
+        guard !notionToken.isEmpty, !notionDataSourceID.isEmpty, !isNotionSyncing else { return }
+        isNotionSyncing = true
+        defer { isNotionSyncing = false }
+        do {
+            let records = try await notionSceneService.fetchScenes(token: notionToken, dataSourceID: notionDataSourceID)
+            guard !records.isEmpty else { throw NotionSceneError.invalidScenes("The Notion scene database is empty.") }
+            let revision = records.map { "\($0.pageID):\($0.lastEditedTime)" }.joined(separator: "|")
+            if !force, revision == notionRevision { return }
+            let chapter = NarrationChapter(
+                schemaVersion: NarrationChapterLoader.supportedSchemaVersion,
+                chapterNumber: 1,
+                chapterTitle: "Notion Scenes",
+                scenes: records.map(\.scene)
+            )
+            try NarrationChapterLoader.validate(chapter)
+            let previousSceneID = currentNarrationScene?.id
+            loadedChapter = chapter
+            loadedChapterURL = nil
+            notionPageIDsBySceneID = Dictionary(uniqueKeysWithValues: records.map { ($0.scene.id, $0.pageID) })
+            notionRevision = revision
+            isNotionConnected = true
+            scriptInputFormat = .json
+            scriptModeEnabled = true
+            readsTypedTextInsteadOfClipboard = true
+            refreshScriptScenes()
+            if let previousSceneID, let index = chapter.scenes.firstIndex(where: { $0.id == previousSceneID }) {
+                currentSceneIndex = index
+            }
+            saveNotionCache(chapter)
+            statusMessage = "Notion synced. \(scriptSceneProgress)"
+            presenterOverlayController?.updateLayout()
+        } catch {
+            if !isNotionConnected { restoreNotionCache() }
+            statusMessage = "Notion sync failed: \((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)"
+        }
+    }
+
+    private func saveNotionCache(_ chapter: NarrationChapter) {
+        guard let data = try? JSONEncoder.narrationPilot.encode(chapter) else { return }
+        try? FileManager.default.createDirectory(at: notionCacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: notionCacheURL, options: .atomic)
+    }
+
+    private func restoreNotionCache() {
+        guard let chapter = try? NarrationChapterLoader.load(from: notionCacheURL) else { return }
+        loadedChapter = chapter
+        loadedChapterURL = nil
+        scriptInputFormat = .json
+        scriptModeEnabled = true
+        refreshScriptScenes()
+        statusMessage = "Using cached Notion scenes offline."
+    }
+
+    private var notionCacheURL: URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return base.appendingPathComponent("Narration Pilot", isDirectory: true).appendingPathComponent("notion-scenes-cache.json")
+    }
+
     func chooseChapterJSON() {
         let panel = NSOpenPanel()
         panel.title = "Import Chapter JSON"
@@ -1176,6 +1284,10 @@ final class AppModel: ObservableObject {
     }
 
     func saveEditedChapterJSON(_ text: String) {
+        if isNotionConnected {
+            saveEditedNotionChapter(text)
+            return
+        }
         guard let url = loadedChapterURL else {
             statusMessage = "No chapter JSON is loaded."
             return
@@ -1201,6 +1313,36 @@ final class AppModel: ObservableObject {
         }
     }
 
+    private func saveEditedNotionChapter(_ text: String) {
+        do {
+            let chapter = try NarrationChapterLoader.decode(Data(text.utf8))
+            guard let oldChapter = loadedChapter,
+                  let changed = chapter.scenes.first(where: { scene in
+                      oldChapter.scenes.first(where: { $0.id == scene.id }) != scene
+                  }),
+                  let pageID = notionPageIDsBySceneID[changed.id] else {
+                statusMessage = "No Notion scene change found."
+                return
+            }
+            loadedChapter = chapter
+            refreshScriptScenes()
+            saveNotionCache(chapter)
+            statusMessage = "Saving Scene \(changed.sceneNumber) to Notion…"
+            Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await self.notionSceneService.updateScene(changed, pageID: pageID, token: self.notionToken)
+                    self.notionRevision = ""
+                    self.statusMessage = "Scene \(changed.sceneNumber) saved to Notion."
+                } catch {
+                    self.statusMessage = "Notion save failed: \((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)"
+                }
+            }
+        } catch {
+            statusMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+    }
+
     private func applyPendingChapterReloadIfNeeded() {
         guard let url = pendingChapterReloadURL else { return }
         pendingChapterReloadURL = nil
@@ -1212,8 +1354,17 @@ final class AppModel: ObservableObject {
             scriptModeEnabled = true
         }
 
-        refreshScriptScenes()
-        sceneEditorController?.show()
+        if hasNotionConfiguration {
+            Task { [weak self] in
+                guard let self else { return }
+                await self.syncNotionScenes(force: true)
+                self.refreshScriptScenes()
+                self.sceneEditorController?.show()
+            }
+        } else {
+            refreshScriptScenes()
+            sceneEditorController?.show()
+        }
     }
 
     func toggleCurrentSceneEditor() {
@@ -1221,8 +1372,19 @@ final class AppModel: ObservableObject {
             scriptModeEnabled = true
         }
 
-        refreshScriptScenes()
-        sceneEditorController?.toggle()
+        if sceneEditorController?.isVisible == true {
+            sceneEditorController?.toggle()
+        } else if hasNotionConfiguration {
+            Task { [weak self] in
+                guard let self else { return }
+                await self.syncNotionScenes(force: true)
+                self.refreshScriptScenes()
+                self.sceneEditorController?.show()
+            }
+        } else {
+            refreshScriptScenes()
+            sceneEditorController?.toggle()
+        }
     }
 
     func saveCurrentSceneEdit(_ editedText: String) {

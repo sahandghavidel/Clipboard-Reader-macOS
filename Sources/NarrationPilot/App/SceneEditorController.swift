@@ -17,6 +17,8 @@ final class SceneEditorController: NSObject, NSWindowDelegate {
         super.init()
     }
 
+    var isVisible: Bool { panel?.isVisible == true }
+
     func show() {
         guard let appModel else {
             return

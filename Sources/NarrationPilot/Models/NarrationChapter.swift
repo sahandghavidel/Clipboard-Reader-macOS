@@ -3,7 +3,7 @@ import Foundation
 enum ScriptInputFormat: String, CaseIterable, Identifiable {
     case text, json
     var id: String { rawValue }
-    var label: String { self == .text ? "Text Script" : "Chapter JSON" }
+    var label: String { self == .text ? "Text Script" : "Notion Scenes" }
 }
 
 struct NarrationChapter: Codable, Equatable {

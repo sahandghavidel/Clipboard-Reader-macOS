@@ -13,12 +13,13 @@ struct JSONSceneManagerView: View {
     @State private var onScreen = ""
     @State private var postProduction = ""
     @State private var annotation = ""
+    @State private var codeText = ""
     @State private var activeField: EditableField?
     @FocusState private var focusedField: EditableField?
     @State private var previewFontSize = UserDefaults.standard.object(forKey: "NarrationPilot.jsonPreviewFontSize") as? Double ?? 14
     @AppStorage("NarrationPilot.jsonShowPostProduction") private var showPostProduction = false
 
-    private enum EditableField: Hashable { case narration, onScreen, postProduction }
+    private enum EditableField: Hashable { case narration, onScreen, postProduction, code }
 
     init(chapter: NarrationChapter, selectedIndex: Int, close: @escaping () -> Void) {
         self.chapter = chapter
@@ -229,6 +230,7 @@ struct JSONSceneManagerView: View {
         case .narration: "text.bubble"
         case .onScreen: "rectangle.on.rectangle"
         case .postProduction: "film.stack"
+        case .code: "chevron.left.forwardslash.chevron.right"
         }
     }
 
@@ -237,6 +239,7 @@ struct JSONSceneManagerView: View {
         case .narration: .secondary
         case .onScreen: .blue
         case .postProduction: .gray
+        case .code: .purple
         }
     }
 
@@ -245,6 +248,7 @@ struct JSONSceneManagerView: View {
         case .narration: .system(size: previewFontSize + 4, weight: .semibold)
         case .onScreen: .system(size: previewFontSize + 2)
         case .postProduction: .system(size: max(9, previewFontSize - 4))
+        case .code: .system(size: previewFontSize, design: .monospaced)
         }
     }
 
@@ -270,14 +274,18 @@ struct JSONSceneManagerView: View {
         onScreen = scene.onScreen
         postProduction = scene.postProduction ?? ""
         annotation = scene.annotation ?? ""
+        codeText = scene.code?.text ?? ""
     }
 
     @discardableResult
     private func saveChanges() -> Bool {
         let old = workingChapter.scenes[selectedIndex]
+        let updatedCode = old.code.map {
+            NarrationCode(text: codeText, language: $0.language, targetFile: $0.targetFile, action: $0.action)
+        }
         let updated = NarrationScene(
             id: old.id, sceneNumber: old.sceneNumber, narration: narration,
-            onScreen: onScreen, code: old.code,
+            onScreen: onScreen, code: updatedCode,
             postProduction: postProduction.isEmpty ? nil : postProduction,
             annotation: annotation.isEmpty ? nil : annotation
         )
@@ -315,31 +323,62 @@ struct JSONSceneManagerView: View {
         return narration != scene.narration ||
             onScreen != scene.onScreen ||
             postProduction != (scene.postProduction ?? "") ||
-            annotation != (scene.annotation ?? "")
+            annotation != (scene.annotation ?? "") ||
+            codeText != (scene.code?.text ?? "")
     }
 
     private func codeSection(_ code: NarrationCode) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("CODE → \(code.targetFile) · \(code.language.uppercased()) · \(code.action.rawValue.capitalized)")
+                Text(code.language.uppercased())
+                    .font(.caption.bold())
+                    .foregroundStyle(languageColor(code.language))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(languageColor(code.language).opacity(0.16)))
+                Text(code.action.rawValue.uppercased())
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)
+                Text("→ \(code.targetFile)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Spacer()
+                Button(activeField == .code ? "Done Editing" : "Edit Code") {
+                    if activeField == .code {
+                        _ = commitEdits()
+                    } else {
+                        guard commitEdits() else { return }
+                        activeField = .code
+                    }
+                }
                 Button {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(code.text, forType: .string)
+                    NSPasteboard.general.setString(codeText, forType: .string)
                 } label: {
                     Label("Copy Code", systemImage: "doc.on.doc")
                 }
             }
 
-            Text(code.text)
-                .font(.system(.body, design: .monospaced))
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(10)
-                .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+            SyntaxHighlightedCodeEditor(
+                text: $codeText,
+                language: code.language,
+                isEditable: activeField == .code
+            )
+            .frame(minHeight: activeField == .code ? 190 : 110, maxHeight: activeField == .code ? 300 : 180)
+            .clipShape(RoundedRectangle(cornerRadius: 7))
+            .overlay(
+                RoundedRectangle(cornerRadius: 7)
+                    .stroke(activeField == .code ? languageColor(code.language) : Color.secondary.opacity(0.25), lineWidth: activeField == .code ? 1.5 : 1)
+            )
         }
+    }
+
+    private func languageColor(_ language: String) -> Color {
+        let value = language.lowercased()
+        if value.contains("html") { return .blue }
+        if value.contains("css") { return .orange }
+        if value.contains("javascript") || value == "js" { return .yellow }
+        return .purple
     }
 
     private func select(_ index: Int) {
