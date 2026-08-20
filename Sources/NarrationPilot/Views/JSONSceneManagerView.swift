@@ -16,9 +16,10 @@ struct JSONSceneManagerView: View {
     @State private var narration = ""
     @State private var annotation = ""
     @State private var activeField: EditableField?
+    @FocusState private var focusedField: EditableField?
     @State private var previewFontSize = UserDefaults.standard.object(forKey: "NarrationPilot.jsonPreviewFontSize") as? Double ?? 14
 
-    private enum EditableField { case title, displayTitle, action, result, narration }
+    private enum EditableField: Hashable { case title, displayTitle, action, result, narration }
 
     init(chapter: NarrationChapter, selectedIndex: Int, close: @escaping () -> Void) {
         self.chapter = chapter
@@ -54,7 +55,7 @@ struct JSONSceneManagerView: View {
             loadDraft()
         }
         .onReceive(NotificationCenter.default.publisher(for: .sceneEditorShouldClose)) { _ in
-            close()
+            if commitEdits() { close() }
         }
     }
 
@@ -73,6 +74,7 @@ struct JSONSceneManagerView: View {
                         ForEach(workingChapter.scenes.indices, id: \.self) { index in
                             let scene = workingChapter.scenes[index]
                             Button {
+                                guard commitEdits() else { return }
                                 selectedIndex = index
                                 loadDraft()
                                 activeField = nil
@@ -117,28 +119,6 @@ struct JSONSceneManagerView: View {
         let scene = workingChapter.scenes[selectedIndex]
 
         return VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Scene \(scene.sceneNumber)")
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
-                    Text(scene.title)
-                        .font(.title2.bold())
-                }
-
-                Spacer()
-
-                Button("Previous") {
-                    select(max(selectedIndex - 1, 0))
-                }
-                .disabled(selectedIndex == 0)
-
-                Button("Next") {
-                    select(min(selectedIndex + 1, workingChapter.scenes.count - 1))
-                }
-                .disabled(selectedIndex >= workingChapter.scenes.count - 1)
-            }
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     editableField("Title", field: .title, text: $title)
@@ -158,18 +138,29 @@ struct JSONSceneManagerView: View {
             }
 
             HStack {
-                Button("Cancel") { loadDraft(); activeField = nil }
+                Button("Cancel") { loadDraft(); activeField = nil; focusedField = nil }
                     .disabled(activeField == nil)
-                Button("Save Changes") { saveChanges() }
+                Button("Save Changes") { _ = saveChanges() }
                     .keyboardShortcut(.defaultAction)
                 Text("Annotations are saved with the chapter and are never spoken.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("Done", action: close)
+                Button("Previous") { select(max(selectedIndex - 1, 0)) }
+                    .disabled(selectedIndex == 0)
+                Button("Next") { select(min(selectedIndex + 1, workingChapter.scenes.count - 1)) }
+                    .disabled(selectedIndex >= workingChapter.scenes.count - 1)
+                Button("Done") { if commitEdits() { close() } }
                     .keyboardShortcut(.cancelAction)
             }
         }
+        .background(
+            WindowOutsideEditorClickMonitor {
+                if activeField != nil || hasUnsavedChanges {
+                    _ = commitEdits()
+                }
+            }
+        )
     }
 
     private func editableField(_ label: String, field: EditableField, text: Binding<String>) -> some View {
@@ -178,18 +169,25 @@ struct JSONSceneManagerView: View {
             if activeField == field {
                 TextEditor(text: text)
                     .font(.system(size: previewFontSize))
+                    .focused($focusedField, equals: field)
                     .frame(height: max(34, min(110, CGFloat(text.wrappedValue.count / 65 + 1) * 22)))
                     .padding(5)
                     .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
                     .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.accentColor.opacity(0.7)))
             } else {
-                Text(text.wrappedValue.isEmpty ? "None" : text.wrappedValue)
-                    .font(.system(size: previewFontSize))
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
-                    .onTapGesture { activeField = field }
+                Button {
+                    guard commitEdits() else { return }
+                    activeField = field
+                    focusedField = field
+                } label: {
+                    Text(text.wrappedValue.isEmpty ? "None" : text.wrappedValue)
+                        .font(.system(size: previewFontSize))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(8)
+                        .contentShape(Rectangle())
+                        .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -221,7 +219,8 @@ struct JSONSceneManagerView: View {
         annotation = scene.annotation ?? ""
     }
 
-    private func saveChanges() {
+    @discardableResult
+    private func saveChanges() -> Bool {
         let old = workingChapter.scenes[selectedIndex]
         let updated = NarrationScene(
             id: old.id, sceneNumber: old.sceneNumber, sceneType: old.sceneType,
@@ -243,9 +242,31 @@ struct JSONSceneManagerView: View {
             appModel.saveEditedChapterJSON(String(data: data, encoding: .utf8) ?? "")
             workingChapter = updatedChapter
             activeField = nil
+            focusedField = nil
+            return true
         } catch {
             appModel.statusMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            return false
         }
+    }
+
+    private func commitEdits() -> Bool {
+        guard hasUnsavedChanges else {
+            activeField = nil
+            focusedField = nil
+            return true
+        }
+        return saveChanges()
+    }
+
+    private var hasUnsavedChanges: Bool {
+        let scene = workingChapter.scenes[selectedIndex]
+        return title != scene.title ||
+            displayTitle != scene.displayTitle ||
+            action != (scene.onScreen.action ?? "") ||
+            result != scene.onScreen.result ||
+            narration != scene.narration ||
+            annotation != (scene.annotation ?? "")
     }
 
     private func detailSection(_ title: String, text: String, monospaced: Bool = false) -> some View {
@@ -388,9 +409,65 @@ struct JSONSceneManagerView: View {
     }
 
     private func select(_ index: Int) {
+        guard commitEdits() else { return }
         selectedIndex = index
         loadDraft()
         activeField = nil
         appModel.selectSceneForEditing(index)
+    }
+}
+
+private struct WindowOutsideEditorClickMonitor: NSViewRepresentable {
+    let onOutsideClick: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onOutsideClick: onOutsideClick)
+    }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: .zero)
+        DispatchQueue.main.async {
+            context.coordinator.window = view.window
+            context.coordinator.start()
+        }
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        context.coordinator.onOutsideClick = onOutsideClick
+        context.coordinator.window = view.window
+        context.coordinator.start()
+    }
+
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        coordinator.stop()
+    }
+
+    final class Coordinator {
+        weak var window: NSWindow?
+        var onOutsideClick: () -> Void
+        private var monitor: Any?
+
+        init(onOutsideClick: @escaping () -> Void) {
+            self.onOutsideClick = onOutsideClick
+        }
+
+        func start() {
+            guard monitor == nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+                guard let self, event.window === self.window else { return event }
+                let hitView = self.window?.contentView?.hitTest(event.locationInWindow)
+                if hitView is NSTextView { return event }
+                self.onOutsideClick()
+                return event
+            }
+        }
+
+        func stop() {
+            if let monitor { NSEvent.removeMonitor(monitor) }
+            monitor = nil
+        }
+
+        deinit { stop() }
     }
 }
