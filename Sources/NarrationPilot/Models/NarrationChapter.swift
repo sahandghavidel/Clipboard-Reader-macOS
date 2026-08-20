@@ -21,22 +21,59 @@ struct NarrationChapter: Codable, Equatable {
     let chapterTitle: String
     let status: String
     let scenes: [NarrationScene]
+
+    func visualURL(for scene: NarrationScene) -> URL? {
+        guard let visualID = scene.visualId?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !visualID.isEmpty else {
+            return nil
+        }
+
+        let linkedLearningPage = scene.links
+            .compactMap { URL(string: $0.url) }
+            .first { $0.path.contains("/learn/") }
+        let baseURL = linkedLearningPage ?? URL(
+            string: "https://www.100jsprojects.com/learn/\(projectSlug)"
+        )
+        guard let baseURL,
+              var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+
+        components.fragment = visualID
+        return components.url
+    }
 }
 
 struct NarrationScene: Codable, Equatable, Identifiable {
     let id: String
     let sceneNumber: Int
+    let sceneType: NarrationSceneType
     let title: String
     let displayTitle: String
     let onScreen: NarrationOnScreen
     let narration: String
     let code: NarrationCode?
     let links: [NarrationLink]
+    let visualId: String?
 }
 
 struct NarrationOnScreen: Codable, Equatable {
-    let action: String
+    let action: String?
     let result: String
+}
+
+enum NarrationSceneType: String, Codable, CaseIterable {
+    case action
+    case result
+    case explanation
+
+    var label: String {
+        switch self {
+        case .action: "Action"
+        case .result: "Result Only"
+        case .explanation: "Explanation"
+        }
+    }
 }
 
 struct NarrationCode: Codable, Equatable {
@@ -61,8 +98,8 @@ struct NarrationLink: Codable, Equatable, Identifiable {
 }
 
 enum NarrationChapterLoader {
-    static let supportedSchemaVersion = 3
-    static let readableSchemaVersions = [2, 3]
+    static let supportedSchemaVersion = 4
+    static let readableSchemaVersions = [2, 3, 4]
 
     static func load(from url: URL) throws -> NarrationChapter {
         try decode(Data(contentsOf: url))
@@ -74,8 +111,10 @@ enum NarrationChapterLoader {
 
         do {
             switch version {
-            case 3:
+            case 4:
                 chapter = try JSONDecoder().decode(NarrationChapter.self, from: data)
+            case 3:
+                chapter = migrate(try JSONDecoder().decode(LegacyNarrationChapterV3.self, from: data))
             case 2:
                 chapter = migrate(try JSONDecoder().decode(LegacyNarrationChapterV2.self, from: data))
             default:
@@ -130,11 +169,43 @@ enum NarrationChapterLoader {
             guard !scene.displayTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw NarrationChapterError.missingDisplayTitle(scene.sceneNumber)
             }
-            guard !scene.onScreen.action.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw NarrationChapterError.emptyOnScreenAction(scene.sceneNumber)
-            }
             guard !scene.onScreen.result.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw NarrationChapterError.emptyOnScreenResult(scene.sceneNumber)
+            }
+            let narration = scene.narration.trimmingCharacters(in: .whitespacesAndNewlines)
+            let containsResultTransition = narration.localizedCaseInsensitiveContains("as you can see")
+            switch scene.sceneType {
+            case .action:
+                guard let action = scene.onScreen.action,
+                      !action.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw NarrationChapterError.missingActionForActionScene(scene.sceneNumber)
+                }
+                guard !containsResultTransition else {
+                    throw NarrationChapterError.resultTransitionOutsideResultScene(scene.sceneNumber)
+                }
+            case .result:
+                guard scene.onScreen.action == nil else {
+                    throw NarrationChapterError.unexpectedAction(scene.sceneNumber, scene.sceneType)
+                }
+                guard narration.hasPrefix("As you can see") else {
+                    throw NarrationChapterError.invalidResultNarration(scene.sceneNumber)
+                }
+                guard index > 0, chapter.scenes[index - 1].sceneType == .action else {
+                    throw NarrationChapterError.resultMustFollowAction(scene.sceneNumber)
+                }
+                guard scene.code == nil else {
+                    throw NarrationChapterError.codeOutsideActionScene(scene.sceneNumber)
+                }
+            case .explanation:
+                guard scene.onScreen.action == nil else {
+                    throw NarrationChapterError.unexpectedAction(scene.sceneNumber, scene.sceneType)
+                }
+                guard !containsResultTransition else {
+                    throw NarrationChapterError.resultTransitionOutsideResultScene(scene.sceneNumber)
+                }
+                guard scene.code == nil else {
+                    throw NarrationChapterError.codeOutsideActionScene(scene.sceneNumber)
+                }
             }
             if let code = scene.code {
                 guard !code.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -148,6 +219,16 @@ enum NarrationChapterLoader {
                       let url = URL(string: link.url),
                       ["http", "https"].contains(url.scheme?.lowercased() ?? "") else {
                     throw NarrationChapterError.invalidLink(scene.sceneNumber)
+                }
+            }
+            if let visualID = scene.visualId {
+                let trimmedVisualID = visualID.trimmingCharacters(in: .whitespacesAndNewlines)
+                let validVisualID = trimmedVisualID.range(
+                    of: #"^[a-z0-9]+(?:-[a-z0-9]+)*$"#,
+                    options: .regularExpression
+                ) != nil
+                guard validVisualID else {
+                    throw NarrationChapterError.invalidVisualID(scene.sceneNumber)
                 }
             }
         }
@@ -176,21 +257,84 @@ enum NarrationChapterLoader {
             chapterTitle: legacy.chapterTitle,
             status: legacy.status,
             scenes: legacy.scenes.map { scene in
-                NarrationScene(
+                let sceneType = inferredSceneType(narration: scene.narration)
+                return NarrationScene(
                     id: scene.id,
                     sceneNumber: scene.sceneNumber,
+                    sceneType: sceneType,
                     title: scene.title,
                     displayTitle: scene.displayTitle,
-                    onScreen: scene.onScreen,
+                    onScreen: NarrationOnScreen(
+                        action: sceneType == .action ? scene.onScreen.action : nil,
+                        result: scene.onScreen.result
+                    ),
                     narration: scene.narration,
                     code: scene.code.map {
                         NarrationCode(text: $0, language: "text", targetFile: "Unspecified", action: .insert)
                     },
-                    links: []
+                    links: [],
+                    visualId: nil
                 )
             }
         )
     }
+
+    private static func migrate(_ legacy: LegacyNarrationChapterV3) -> NarrationChapter {
+        NarrationChapter(
+            schemaVersion: supportedSchemaVersion,
+            projectSlug: legacy.projectSlug,
+            chapterNumber: legacy.chapterNumber,
+            chapterTitle: legacy.chapterTitle,
+            status: legacy.status,
+            scenes: legacy.scenes.map { scene in
+                let sceneType = inferredSceneType(narration: scene.narration)
+                return NarrationScene(
+                    id: scene.id,
+                    sceneNumber: scene.sceneNumber,
+                    sceneType: sceneType,
+                    title: scene.title,
+                    displayTitle: scene.displayTitle,
+                    onScreen: NarrationOnScreen(
+                        action: sceneType == .action ? scene.onScreen.action : nil,
+                        result: scene.onScreen.result
+                    ),
+                    narration: scene.narration,
+                    code: scene.code,
+                    links: scene.links,
+                    visualId: nil
+                )
+            }
+        )
+    }
+
+    private static func inferredSceneType(narration: String) -> NarrationSceneType {
+        narration.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("As you can see") ? .result : .action
+    }
+}
+
+private struct LegacyNarrationChapterV3: Codable {
+    let schemaVersion: Int
+    let projectSlug: String
+    let chapterNumber: Int
+    let chapterTitle: String
+    let status: String
+    let scenes: [LegacyNarrationSceneV3]
+}
+
+private struct LegacyNarrationSceneV3: Codable {
+    let id: String
+    let sceneNumber: Int
+    let title: String
+    let displayTitle: String
+    let onScreen: LegacyNarrationOnScreen
+    let narration: String
+    let code: NarrationCode?
+    let links: [NarrationLink]
+}
+
+private struct LegacyNarrationOnScreen: Codable {
+    let action: String
+    let result: String
 }
 
 private struct LegacyNarrationChapterV2: Codable {
@@ -225,10 +369,16 @@ enum NarrationChapterError: LocalizedError, Equatable {
     case duplicateSceneID(String)
     case emptyNarration(Int)
     case missingDisplayTitle(Int)
-    case emptyOnScreenAction(Int)
     case emptyOnScreenResult(Int)
+    case missingActionForActionScene(Int)
+    case unexpectedAction(Int, NarrationSceneType)
+    case invalidResultNarration(Int)
+    case resultMustFollowAction(Int)
+    case resultTransitionOutsideResultScene(Int)
+    case codeOutsideActionScene(Int)
     case invalidCode(Int)
     case invalidLink(Int)
+    case invalidVisualID(Int)
 
     var errorDescription: String? {
         switch self {
@@ -246,10 +396,16 @@ enum NarrationChapterError: LocalizedError, Equatable {
         case .duplicateSceneID(let id): "The scene id \(id) is used more than once."
         case .emptyNarration(let sceneNumber): "Scene \(sceneNumber) has empty narration."
         case .missingDisplayTitle(let sceneNumber): "Scene \(sceneNumber) is missing displayTitle."
-        case .emptyOnScreenAction(let sceneNumber): "Scene \(sceneNumber) has an empty onScreen action."
         case .emptyOnScreenResult(let sceneNumber): "Scene \(sceneNumber) has an empty onScreen result."
+        case .missingActionForActionScene(let sceneNumber): "Action scene \(sceneNumber) must include one onScreen action."
+        case .unexpectedAction(let sceneNumber, let sceneType): "\(sceneType.label) scene \(sceneNumber) cannot include an onScreen action."
+        case .invalidResultNarration(let sceneNumber): "Result scene \(sceneNumber) narration must begin with As you can see."
+        case .resultMustFollowAction(let sceneNumber): "Result scene \(sceneNumber) must immediately follow an action scene."
+        case .resultTransitionOutsideResultScene(let sceneNumber): "Scene \(sceneNumber) uses As you can see outside a result scene."
+        case .codeOutsideActionScene(let sceneNumber): "Scene \(sceneNumber) contains code but is not an action scene."
         case .invalidCode(let sceneNumber): "Scene \(sceneNumber) has incomplete structured code."
         case .invalidLink(let sceneNumber): "Scene \(sceneNumber) has an invalid link."
+        case .invalidVisualID(let sceneNumber): "Scene \(sceneNumber) has an invalid visualId. Use lowercase words separated by hyphens."
         }
     }
 }

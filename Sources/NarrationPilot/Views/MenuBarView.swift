@@ -127,6 +127,13 @@ struct MenuBarView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     HStack(spacing: 8) {
+                        if let visualURL = appModel.currentSceneVisualURL {
+                            Link(destination: visualURL) {
+                                Label("Open Visual", systemImage: "rectangle.on.rectangle.angled")
+                            }
+                            .help(visualURL.absoluteString)
+                        }
+
                         Button("Previous") {
                             appModel.goToPreviousScene()
                         }

@@ -33,6 +33,9 @@ struct JSONSceneManagerView: View {
         .onAppear {
             appModel.selectSceneForEditing(selectedIndex)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .sceneEditorShouldClose)) { _ in
+            close()
+        }
     }
 
     private var sceneList: some View {
@@ -54,8 +57,10 @@ struct JSONSceneManagerView: View {
                                 appModel.selectSceneForEditing(index)
                             } label: {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Scene \(scene.sceneNumber)")
-                                        .font(.caption.bold())
+                                    HStack(spacing: 5) {
+                                        Text("Scene \(scene.sceneNumber)")
+                                            .font(.caption.bold())
+                                    }
                                     Text(scene.title)
                                         .font(.caption2)
                                         .lineLimit(2)
@@ -114,14 +119,14 @@ struct JSONSceneManagerView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    detailSection("Display Title", text: scene.displayTitle)
-                    onScreenSection(scene.onScreen)
+                    onScreenSection(scene)
                     detailSection("Narration", text: scene.narration)
+                    detailSection("Display Title", text: scene.displayTitle)
                     if let code = scene.code {
                         codeSection(code)
                     }
-                    if !scene.links.isEmpty {
-                        linksSection(scene.links)
+                    if !scene.links.isEmpty || chapter.visualURL(for: scene) != nil {
+                        linksSection(scene)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -159,16 +164,26 @@ struct JSONSceneManagerView: View {
         }
     }
 
-    private func onScreenSection(_ onScreen: NarrationOnScreen) -> some View {
+    private func onScreenSection(_ scene: NarrationScene) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("ON SCREEN")
                 .font(.caption.bold())
                 .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 10) {
-                labeledValue("Action", text: onScreen.action)
-                Divider()
-                labeledValue("Result", text: onScreen.result)
+                if scene.sceneType == .action, let action = scene.onScreen.action {
+                    labeledValue("Action", text: action)
+                    Divider()
+                } else if scene.sceneType == .result {
+                    Text("RESULT ONLY — DO NOT PERFORM A NEW ACTION")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("EXPLANATION — KEEP THE CURRENT SCREEN VISIBLE")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                }
+                labeledValue("Result", text: scene.onScreen.result)
             }
             .padding(10)
             .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
@@ -215,20 +230,48 @@ struct JSONSceneManagerView: View {
         }
     }
 
-    private func linksSection(_ links: [NarrationLink]) -> some View {
+    private func linksSection(_ scene: NarrationScene) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("LINKS")
                 .font(.caption.bold())
                 .foregroundStyle(.secondary)
 
-            ForEach(links) { link in
+            ForEach(scene.links) { link in
                 if let url = URL(string: link.url) {
                     Link(destination: url) {
                         Label(link.label, systemImage: "arrow.up.right.square")
                     }
                 }
             }
+
+            if let visualURL = chapter.visualURL(for: scene) {
+                Button {
+                    openVisual(visualURL)
+                } label: {
+                    Label("Open Visual", systemImage: "rectangle.on.rectangle.angled")
+                }
+                .buttonStyle(.link)
+                .help(visualURL.absoluteString)
+            }
         }
+    }
+
+    private func openVisual(_ url: URL) {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            NSWorkspace.shared.open(url)
+            return
+        }
+
+        var queryItems = components.queryItems ?? []
+        queryItems.removeAll { $0.name == "visualOpen" }
+        queryItems.append(
+            URLQueryItem(
+                name: "visualOpen",
+                value: String(Int(Date().timeIntervalSince1970 * 1_000))
+            )
+        )
+        components.queryItems = queryItems
+        NSWorkspace.shared.open(components.url ?? url)
     }
 
     private func detectedURLs(in text: String) -> [URL] {

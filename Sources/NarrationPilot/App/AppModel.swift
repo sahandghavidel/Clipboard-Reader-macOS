@@ -549,9 +549,21 @@ final class AppModel: ObservableObject {
         currentNarrationScene?.displayTitle
     }
 
+    var currentSceneVisualURL: URL? {
+        guard let loadedChapter, let currentNarrationScene else { return nil }
+        return loadedChapter.visualURL(for: currentNarrationScene)
+    }
+
     var currentSceneOnScreenSummary: String? {
-        guard let onScreen = currentNarrationScene?.onScreen else { return nil }
-        return "\(onScreen.action) Result: \(onScreen.result)"
+        guard let scene = currentNarrationScene else { return nil }
+        switch scene.sceneType {
+        case .action:
+            return "\(scene.onScreen.action ?? "") Result: \(scene.onScreen.result)"
+        case .result:
+            return "Result only: \(scene.onScreen.result)"
+        case .explanation:
+            return "Explain what is visible: \(scene.onScreen.result)"
+        }
     }
 
     var allSceneTexts: [String] {
@@ -630,6 +642,7 @@ final class AppModel: ObservableObject {
     private static let inputModeKey = "clipboardReader.readsTypedTextInsteadOfClipboard"
     private static let scriptModeKey = "clipboardReader.scriptModeEnabled"
     private static let scriptInputFormatKey = "clipboardReader.scriptInputFormat"
+    private static let lastChapterJSONPathKey = "clipboardReader.lastChapterJSONPath"
     private static let legacyRecordingShortcutTriggerKey = "clipboardReader.recordingShortcutTrigger.enabled"
     private static let recordingShortcutValueKey = "clipboardReader.recordingShortcutTrigger.shortcut"
     private static let recordingCueSoundsEnabledKey = "clipboardReader.recordingCueSounds.enabled"
@@ -1048,8 +1061,15 @@ final class AppModel: ObservableObject {
         panel.allowsMultipleSelection = false
         panel.allowedContentTypes = [.json]
 
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        importChapterJSON(from: url, confirmsReplacement: true)
+        NSApp.activate(ignoringOtherApps: true)
+        DispatchQueue.main.async { [weak self] in
+            panel.begin { response in
+                guard response == .OK, let url = panel.url else { return }
+                Task { @MainActor in
+                    self?.importChapterJSON(from: url, confirmsReplacement: true)
+                }
+            }
+        }
     }
 
     func reloadChapterJSON() {
@@ -1060,12 +1080,23 @@ final class AppModel: ObservableObject {
         importChapterJSON(from: loadedChapterURL, confirmsReplacement: false)
     }
 
+    func restoreLastChapterJSONIfAvailable() {
+        guard let path = defaults.string(forKey: Self.lastChapterJSONPathKey),
+              !path.isEmpty,
+              FileManager.default.fileExists(atPath: path) else {
+            return
+        }
+
+        importChapterJSON(from: URL(fileURLWithPath: path), confirmsReplacement: false)
+    }
+
     func clearChapterJSON() {
         stopSpeechForSceneNavigation()
         chapterFileWatcher.stop()
         pendingChapterReloadURL = nil
         loadedChapter = nil
         loadedChapterURL = nil
+        defaults.removeObject(forKey: Self.lastChapterJSONPathKey)
         currentSceneIndex = 0
         refreshScriptScenes()
         statusMessage = "Chapter JSON cleared."
@@ -1091,6 +1122,7 @@ final class AppModel: ObservableObject {
             pendingChapterReloadURL = nil
             loadedChapter = chapter
             loadedChapterURL = url.standardizedFileURL
+            defaults.set(url.standardizedFileURL.path, forKey: Self.lastChapterJSONPathKey)
             scriptInputFormat = .json
             scriptModeEnabled = true
             readsTypedTextInsteadOfClipboard = true
@@ -1164,6 +1196,15 @@ final class AppModel: ObservableObject {
 
         refreshScriptScenes()
         sceneEditorController?.show()
+    }
+
+    func toggleCurrentSceneEditor() {
+        if !scriptModeEnabled {
+            scriptModeEnabled = true
+        }
+
+        refreshScriptScenes()
+        sceneEditorController?.toggle()
     }
 
     func saveCurrentSceneEdit(_ editedText: String) {
@@ -1516,6 +1557,13 @@ final class AppModel: ObservableObject {
             return
         }
 
+        let spokenScene: String
+        if !advancesAfterSpeech, let narrationScene = currentNarrationScene {
+            spokenScene = JSONSceneReplayFormatter.spokenText(for: narrationScene)
+        } else {
+            spokenScene = scene
+        }
+
         shouldAdvanceScriptSceneAfterSpeech = advancesAfterSpeech
         let readingStatus = advancesAfterSpeech ? "Reading \(scriptSceneProgress)…" : "Replaying \(scriptSceneProgress)…"
         let resolvedSpeedMultiplier = speedMultiplier ?? self.speedMultiplier
@@ -1530,7 +1578,7 @@ final class AppModel: ObservableObject {
         ) { [weak self] in
             guard let self else { return }
             self.ttsManager.speak(
-                text: scene,
+                text: spokenScene,
                 speedMultiplier: resolvedSpeedMultiplier,
                 voiceIdentifier: self.selectedVoiceIdentifier,
                 includesBracketedDirections: includesBracketedDirections
@@ -2069,7 +2117,7 @@ final class AppModel: ObservableObject {
 
         KeyboardShortcuts.onKeyUp(for: .editCurrentScene) { [weak self] in
             Task { @MainActor in
-                self?.openCurrentSceneEditor()
+                self?.toggleCurrentSceneEditor()
             }
         }
 

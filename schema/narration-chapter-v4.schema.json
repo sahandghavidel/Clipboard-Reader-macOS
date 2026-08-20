@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://narrationpilot.local/schema/narration-chapter-v4.schema.json",
+  "title": "Narration Pilot Chapter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "projectSlug",
+    "chapterNumber",
+    "chapterTitle",
+    "status",
+    "scenes"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 4 },
+    "projectSlug": { "type": "string", "minLength": 1 },
+    "chapterNumber": { "type": "integer", "minimum": 1 },
+    "chapterTitle": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["draft", "approved"] },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/scene" }
+    }
+  },
+  "$defs": {
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sceneNumber",
+        "sceneType",
+        "title",
+        "displayTitle",
+        "onScreen",
+        "narration",
+        "code",
+        "links"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sceneNumber": { "type": "integer", "minimum": 1 },
+        "sceneType": { "enum": ["action", "result", "explanation"] },
+        "title": { "type": "string", "minLength": 1 },
+        "displayTitle": { "type": "string", "minLength": 1 },
+        "onScreen": { "$ref": "#/$defs/onScreen" },
+        "narration": { "type": "string", "minLength": 1 },
+        "code": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/code" }
+          ]
+        },
+        "visualId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "links": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/link" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "sceneType": { "const": "action" } } },
+          "then": {
+            "properties": {
+              "onScreen": {
+                "properties": { "action": { "type": "string", "minLength": 1 } }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "sceneType": { "enum": ["result", "explanation"] } } },
+          "then": {
+            "properties": {
+              "onScreen": { "properties": { "action": { "type": "null" } } },
+              "code": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "sceneType": { "const": "result" } } },
+          "then": {
+            "properties": {
+              "narration": { "type": "string", "pattern": "^As you can see" }
+            }
+          }
+        }
+      ]
+    },
+    "onScreen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "result"],
+      "properties": {
+        "action": { "type": ["string", "null"] },
+        "result": { "type": "string", "minLength": 1 }
+      }
+    },
+    "code": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "language", "targetFile", "action"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "language": { "type": "string", "minLength": 1 },
+        "targetFile": { "type": "string", "minLength": 1 },
+        "action": { "enum": ["create", "replace", "append", "insert"] }
+      }
+    },
+    "link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "url"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "format": "uri", "pattern": "^https?://" }
+      }
+    }
+  }
+}

@@ -37,6 +37,9 @@ struct CurrentSceneEditorView: View {
                 appModel.selectSceneForEditing(selectedIndex)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .sceneEditorShouldClose)) { _ in
+            saveAndClose()
+        }
     }
 
     private var sceneList: some View {

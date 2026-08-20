@@ -1,17 +1,29 @@
 import AppKit
 import SwiftUI
 
+extension Notification.Name {
+    static let sceneEditorShouldClose = Notification.Name("NarrationPilot.sceneEditorShouldClose")
+}
+
 @MainActor
-final class SceneEditorController {
+final class SceneEditorController: NSObject, NSWindowDelegate {
     private weak var appModel: AppModel?
     private var panel: NSPanel?
+    private var isFinishingClose = false
 
     init(appModel: AppModel) {
         self.appModel = appModel
+        super.init()
     }
 
     func show() {
         guard let appModel else {
+            return
+        }
+
+        if let panel, panel.isVisible {
+            NSApp.activate(ignoringOtherApps: true)
+            panel.makeKeyAndOrderFront(nil)
             return
         }
 
@@ -30,6 +42,38 @@ final class SceneEditorController {
         panel.makeKeyAndOrderFront(nil)
     }
 
+    func toggle() {
+        if let panel, panel.isVisible {
+            requestSaveAndClose()
+        } else {
+            show()
+        }
+    }
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard !isFinishingClose else {
+            return true
+        }
+
+        requestSaveAndClose()
+        return false
+    }
+
+    private func requestSaveAndClose() {
+        NotificationCenter.default.post(name: .sceneEditorShouldClose, object: nil)
+    }
+
+    private func finishClose() {
+        guard let panel else {
+            return
+        }
+
+        isFinishingClose = true
+        panel.close()
+        isFinishingClose = false
+        self.panel = nil
+    }
+
     private func makeTextPanel(appModel: AppModel, scenes: [String], selectedIndex: Int) -> NSPanel {
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 900, height: 520),
@@ -40,12 +84,12 @@ final class SceneEditorController {
 
         panel.contentView = NSHostingView(
             rootView: CurrentSceneEditorView(scenes: scenes, selectedIndex: selectedIndex) { [weak self] in
-                self?.panel?.close()
-                self?.panel = nil
+                self?.finishClose()
             }
             .environmentObject(appModel)
         )
         panel.hidesOnDeactivate = false
+        panel.delegate = self
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.minSize = NSSize(width: 720, height: 420)
@@ -68,12 +112,12 @@ final class SceneEditorController {
                 chapter: chapter,
                 selectedIndex: selectedIndex
             ) { [weak self] in
-                self?.panel?.close()
-                self?.panel = nil
+                self?.finishClose()
             }
             .environmentObject(appModel)
         )
         panel.hidesOnDeactivate = false
+        panel.delegate = self
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.minSize = NSSize(width: 780, height: 500)

@@ -5,6 +5,7 @@ import Foundation
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        AppModel.shared.restoreLastChapterJSONIfAvailable()
     }
 
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
