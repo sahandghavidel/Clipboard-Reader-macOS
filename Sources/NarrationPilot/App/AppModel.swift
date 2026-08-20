@@ -1183,6 +1183,32 @@ final class AppModel: ObservableObject {
         }
     }
 
+    func saveEditedChapterJSON(_ text: String) {
+        guard let url = loadedChapterURL else {
+            statusMessage = "No chapter JSON is loaded."
+            return
+        }
+
+        do {
+            let data = Data(text.utf8)
+            let chapter = try NarrationChapterLoader.decode(data)
+            let backupURL = url.deletingPathExtension().appendingPathExtension("json.backup")
+            if FileManager.default.fileExists(atPath: url.path) {
+                try? FileManager.default.copyItem(at: url, to: backupURL)
+                if FileManager.default.fileExists(atPath: backupURL.path) {
+                    try? FileManager.default.removeItem(at: backupURL)
+                    try FileManager.default.copyItem(at: url, to: backupURL)
+                }
+            }
+            try data.write(to: url, options: .atomic)
+            loadedChapter = chapter
+            refreshScriptScenes()
+            statusMessage = "Chapter JSON saved."
+        } catch {
+            statusMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+    }
+
     private func applyPendingChapterReloadIfNeeded() {
         guard let url = pendingChapterReloadURL else { return }
         pendingChapterReloadURL = nil

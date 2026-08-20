@@ -8,12 +8,23 @@ struct JSONSceneManagerView: View {
     let close: () -> Void
 
     @State private var selectedIndex: Int
+    @State private var workingChapter: NarrationChapter
+    @State private var title = ""
+    @State private var displayTitle = ""
+    @State private var action = ""
+    @State private var result = ""
+    @State private var narration = ""
+    @State private var annotation = ""
+    @State private var activeField: EditableField?
+
+    private enum EditableField { case title, displayTitle, action, result, narration }
 
     init(chapter: NarrationChapter, selectedIndex: Int, close: @escaping () -> Void) {
         self.chapter = chapter
         self.initialIndex = min(max(selectedIndex, 0), max(chapter.scenes.count - 1, 0))
         self.close = close
         self._selectedIndex = State(initialValue: self.initialIndex)
+        self._workingChapter = State(initialValue: chapter)
     }
 
     var body: some View {
@@ -32,6 +43,7 @@ struct JSONSceneManagerView: View {
         .frame(minWidth: 780, minHeight: 500)
         .onAppear {
             appModel.selectSceneForEditing(selectedIndex)
+            loadDraft()
         }
         .onReceive(NotificationCenter.default.publisher(for: .sceneEditorShouldClose)) { _ in
             close()
@@ -40,20 +52,22 @@ struct JSONSceneManagerView: View {
 
     private var sceneList: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Chapter \(chapter.chapterNumber)")
+            Text("Chapter \(workingChapter.chapterNumber)")
                 .font(.headline)
 
-            Text(chapter.chapterTitle)
+            Text(workingChapter.chapterTitle)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
-                        ForEach(chapter.scenes.indices, id: \.self) { index in
-                            let scene = chapter.scenes[index]
+                        ForEach(workingChapter.scenes.indices, id: \.self) { index in
+                            let scene = workingChapter.scenes[index]
                             Button {
                                 selectedIndex = index
+                                loadDraft()
+                                activeField = nil
                                 appModel.selectSceneForEditing(index)
                             } label: {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -85,14 +99,14 @@ struct JSONSceneManagerView: View {
                 }
             }
 
-            Text("Scene \(selectedIndex + 1) of \(chapter.scenes.count)")
+            Text("Scene \(selectedIndex + 1) of \(workingChapter.scenes.count)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
     }
 
     private var sceneDetails: some View {
-        let scene = chapter.scenes[selectedIndex]
+        let scene = workingChapter.scenes[selectedIndex]
 
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -112,20 +126,23 @@ struct JSONSceneManagerView: View {
                 .disabled(selectedIndex == 0)
 
                 Button("Next") {
-                    select(min(selectedIndex + 1, chapter.scenes.count - 1))
+                    select(min(selectedIndex + 1, workingChapter.scenes.count - 1))
                 }
-                .disabled(selectedIndex >= chapter.scenes.count - 1)
+                .disabled(selectedIndex >= workingChapter.scenes.count - 1)
             }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    onScreenSection(scene)
-                    detailSection("Narration", text: scene.narration)
-                    detailSection("Display Title", text: scene.displayTitle)
+                    editableField("Title", field: .title, text: $title)
+                    editableField("Display Title", field: .displayTitle, text: $displayTitle)
+                    editableField("Action", field: .action, text: $action)
+                    editableField("Result", field: .result, text: $result)
+                    editableField("Narration", field: .narration, text: $narration)
+                    annotationField
                     if let code = scene.code {
                         codeSection(code)
                     }
-                    if !scene.links.isEmpty || chapter.visualURL(for: scene) != nil {
+                    if !scene.links.isEmpty || workingChapter.visualURL(for: scene) != nil {
                         linksSection(scene)
                     }
                 }
@@ -133,13 +150,87 @@ struct JSONSceneManagerView: View {
             }
 
             HStack {
-                Text("JSON scenes are read-only. Saved source-file changes reload automatically.")
+                Button("Cancel") { loadDraft(); activeField = nil }
+                    .disabled(activeField == nil)
+                Button("Save Changes") { saveChanges() }
+                    .keyboardShortcut(.defaultAction)
+                Text("Annotations are saved with the chapter and are never spoken.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button("Done", action: close)
                     .keyboardShortcut(.cancelAction)
             }
+        }
+    }
+
+    private func editableField(_ label: String, field: EditableField, text: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label.uppercased()).font(.caption.bold()).foregroundStyle(.secondary)
+            if activeField == field {
+                TextEditor(text: text)
+                    .font(.body)
+                    .frame(height: max(34, min(110, CGFloat(text.wrappedValue.count / 65 + 1) * 22)))
+                    .padding(5)
+                    .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.accentColor.opacity(0.7)))
+            } else {
+                Text(text.wrappedValue.isEmpty ? "None" : text.wrappedValue)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(8)
+                    .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+                    .onTapGesture { activeField = field }
+            }
+        }
+    }
+
+    private var annotationField: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("ANNOTATION").font(.caption.bold()).foregroundStyle(.secondary)
+            TextEditor(text: $annotation)
+                .font(.body)
+                .frame(height: max(34, min(90, CGFloat(annotation.count / 65 + 1) * 22)))
+                .padding(5)
+                .background(RoundedRectangle(cornerRadius: 7).fill(Color.yellow.opacity(0.12)))
+                .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.yellow.opacity(0.5)))
+        }
+    }
+
+    private func loadDraft() {
+        let scene = workingChapter.scenes[selectedIndex]
+        title = scene.title
+        displayTitle = scene.displayTitle
+        action = scene.onScreen.action ?? ""
+        result = scene.onScreen.result
+        narration = scene.narration
+        annotation = scene.annotation ?? ""
+    }
+
+    private func saveChanges() {
+        let old = workingChapter.scenes[selectedIndex]
+        let updated = NarrationScene(
+            id: old.id, sceneNumber: old.sceneNumber, sceneType: old.sceneType,
+            title: title, annotation: annotation.isEmpty ? nil : annotation,
+            displayTitle: displayTitle,
+            onScreen: NarrationOnScreen(action: old.sceneType == .action ? action : nil, result: result),
+            narration: narration, code: old.code, links: old.links, visualId: old.visualId
+        )
+        var scenes = workingChapter.scenes
+        scenes[selectedIndex] = updated
+        let updatedChapter = NarrationChapter(
+            schemaVersion: workingChapter.schemaVersion, projectSlug: workingChapter.projectSlug,
+            chapterNumber: workingChapter.chapterNumber, chapterTitle: workingChapter.chapterTitle,
+            status: workingChapter.status, annotation: workingChapter.annotation, scenes: scenes
+        )
+        do {
+            try NarrationChapterLoader.validate(updatedChapter)
+            let data = try JSONEncoder.narrationPilot.encode(updatedChapter)
+            appModel.saveEditedChapterJSON(String(data: data, encoding: .utf8) ?? "")
+            workingChapter = updatedChapter
+            activeField = nil
+        } catch {
+            appModel.statusMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
     }
 
@@ -244,7 +335,7 @@ struct JSONSceneManagerView: View {
                 }
             }
 
-            if let visualURL = chapter.visualURL(for: scene) {
+            if let visualURL = workingChapter.visualURL(for: scene) {
                 Button {
                     openVisual(visualURL)
                 } label: {
@@ -284,6 +375,8 @@ struct JSONSceneManagerView: View {
 
     private func select(_ index: Int) {
         selectedIndex = index
+        loadDraft()
+        activeField = nil
         appModel.selectSceneForEditing(index)
     }
 }

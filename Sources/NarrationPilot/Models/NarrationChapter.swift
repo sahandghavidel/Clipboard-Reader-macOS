@@ -20,6 +20,7 @@ struct NarrationChapter: Codable, Equatable {
     let chapterNumber: Int
     let chapterTitle: String
     let status: String
+    var annotation: String? = nil
     let scenes: [NarrationScene]
 
     func visualURL(for scene: NarrationScene) -> URL? {
@@ -49,6 +50,7 @@ struct NarrationScene: Codable, Equatable, Identifiable {
     let sceneNumber: Int
     let sceneType: NarrationSceneType
     let title: String
+    var annotation: String? = nil
     let displayTitle: String
     let onScreen: NarrationOnScreen
     let narration: String
@@ -309,6 +311,14 @@ enum NarrationChapterLoader {
 
     private static func inferredSceneType(narration: String) -> NarrationSceneType {
         narration.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("As you can see") ? .result : .action
+    }
+}
+
+extension JSONEncoder {
+    static var narrationPilot: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return encoder
     }
 }
 
