@@ -16,6 +16,7 @@ struct JSONSceneManagerView: View {
     @State private var narration = ""
     @State private var annotation = ""
     @State private var activeField: EditableField?
+    @State private var previewFontSize = UserDefaults.standard.object(forKey: "NarrationPilot.jsonPreviewFontSize") as? Double ?? 14
 
     private enum EditableField { case title, displayTitle, action, result, narration }
 
@@ -39,6 +40,13 @@ struct JSONSceneManagerView: View {
 
             sceneDetails
                 .padding(18)
+        }
+        .toolbar {
+            ToolbarItemGroup {
+                Button { changeFontSize(-1) } label: { Image(systemName: "minus") }
+                Text("\(Int(previewFontSize)) pt").font(.caption)
+                Button { changeFontSize(1) } label: { Image(systemName: "plus") }
+            }
         }
         .frame(minWidth: 780, minHeight: 500)
         .onAppear {
@@ -169,13 +177,14 @@ struct JSONSceneManagerView: View {
             Text(label.uppercased()).font(.caption.bold()).foregroundStyle(.secondary)
             if activeField == field {
                 TextEditor(text: text)
-                    .font(.body)
+                    .font(.system(size: previewFontSize))
                     .frame(height: max(34, min(110, CGFloat(text.wrappedValue.count / 65 + 1) * 22)))
                     .padding(5)
                     .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
                     .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.accentColor.opacity(0.7)))
             } else {
                 Text(text.wrappedValue.isEmpty ? "None" : text.wrappedValue)
+                    .font(.system(size: previewFontSize))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(8)
@@ -189,12 +198,17 @@ struct JSONSceneManagerView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("ANNOTATION").font(.caption.bold()).foregroundStyle(.secondary)
             TextEditor(text: $annotation)
-                .font(.body)
+                .font(.system(size: previewFontSize))
                 .frame(height: max(34, min(90, CGFloat(annotation.count / 65 + 1) * 22)))
                 .padding(5)
                 .background(RoundedRectangle(cornerRadius: 7).fill(Color.yellow.opacity(0.12)))
                 .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.yellow.opacity(0.5)))
         }
+    }
+
+    private func changeFontSize(_ amount: Double) {
+        previewFontSize = min(max(previewFontSize + amount, 10), 28)
+        UserDefaults.standard.set(previewFontSize, forKey: "NarrationPilot.jsonPreviewFontSize")
     }
 
     private func loadDraft() {

@@ -10,6 +10,7 @@ final class SceneEditorController: NSObject, NSWindowDelegate {
     private weak var appModel: AppModel?
     private var panel: NSPanel?
     private var isFinishingClose = false
+    private let jsonWindowSizeKey = "NarrationPilot.jsonManagerWindowSize"
 
     init(appModel: AppModel) {
         self.appModel = appModel
@@ -69,6 +70,9 @@ final class SceneEditorController: NSObject, NSWindowDelegate {
         }
 
         isFinishingClose = true
+        if panel.title == "JSON Scene Manager" {
+            UserDefaults.standard.set(NSStringFromSize(panel.frame.size), forKey: jsonWindowSizeKey)
+        }
         panel.close()
         isFinishingClose = false
         self.panel = nil
@@ -100,8 +104,9 @@ final class SceneEditorController: NSObject, NSWindowDelegate {
     }
 
     private func makeJSONPanel(appModel: AppModel, chapter: NarrationChapter, selectedIndex: Int) -> NSPanel {
+        let savedSize = UserDefaults.standard.string(forKey: jsonWindowSizeKey).map(NSSizeFromString)
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 960, height: 600),
+            contentRect: NSRect(x: 0, y: 0, width: savedSize?.width ?? 960, height: savedSize?.height ?? 600),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
