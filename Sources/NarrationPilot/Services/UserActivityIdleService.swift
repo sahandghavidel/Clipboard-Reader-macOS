@@ -11,6 +11,7 @@ enum UserActivityIdleResult: Equatable {
 
 struct UserActivityIdlePolicy {
     static let defaultIdlePeriod = 1.0
+    static let keyboardIdlePeriod = 2.5
     static let defaultMaximumWait = 10.0
     static let minimumIdlePeriod = 0.5
     static let maximumIdlePeriod = 3.0
@@ -39,9 +40,12 @@ final class UserActivityIdleService {
         .otherMouseDown,
         .scrollWheel,
         .keyDown,
+        .keyUp,
+        .flagsChanged,
     ]
 
     private var lastActivityTime: TimeInterval = 0
+    private var lastKeyboardActivityTime: TimeInterval?
     private var lastMeaningfulPointerLocation: CGPoint = .zero
 
     func waitUntilIdle(
@@ -55,12 +59,9 @@ final class UserActivityIdleService {
         let resolvedIdlePeriod = UserActivityIdlePolicy.clampedIdlePeriod(
             idlePeriod
         )
-        let resolvedMaximumWait = max(
-            resolvedIdlePeriod,
-            UserActivityIdlePolicy.clampedMaximumWait(maximumWait)
-        )
         let startedAt = ProcessInfo.processInfo.systemUptime
         lastActivityTime = startedAt
+        lastKeyboardActivityTime = nil
         lastMeaningfulPointerLocation = NSEvent.mouseLocation
 
         guard let monitor = NSEvent.addGlobalMonitorForEvents(
@@ -77,10 +78,18 @@ final class UserActivityIdleService {
                 let pointerLocation = isPointerMotion
                     ? event.locationInWindow
                     : .zero
+                let isKeyboardActivity: Bool
+                switch event.type {
+                case .keyDown, .keyUp, .flagsChanged:
+                    isKeyboardActivity = true
+                default:
+                    isKeyboardActivity = false
+                }
                 Task { @MainActor [weak self] in
                     self?.recordActivity(
                         isPointerMotion: isPointerMotion,
-                        pointerLocation: pointerLocation
+                        pointerLocation: pointerLocation,
+                        isKeyboardActivity: isKeyboardActivity
                     )
                 }
             }
@@ -97,11 +106,12 @@ final class UserActivityIdleService {
             }
 
             let now = ProcessInfo.processInfo.systemUptime
-            if now - lastActivityTime >= resolvedIdlePeriod {
+            let pointerAndGeneralActivityIsIdle = now - lastActivityTime >= resolvedIdlePeriod
+            let keyboardIsIdle = lastKeyboardActivityTime.map {
+                now - $0 >= UserActivityIdlePolicy.keyboardIdlePeriod
+            } ?? true
+            if pointerAndGeneralActivityIsIdle, keyboardIsIdle {
                 return .idle
-            }
-            if now - startedAt >= resolvedMaximumWait {
-                return .timedOut
             }
 
             try? await Task.sleep(for: .milliseconds(50))
@@ -110,7 +120,8 @@ final class UserActivityIdleService {
 
     private func recordActivity(
         isPointerMotion: Bool,
-        pointerLocation: CGPoint
+        pointerLocation: CGPoint,
+        isKeyboardActivity: Bool
     ) {
         if isPointerMotion {
             let xDistance = pointerLocation.x - lastMeaningfulPointerLocation.x
@@ -123,6 +134,10 @@ final class UserActivityIdleService {
             lastMeaningfulPointerLocation = pointerLocation
         }
 
-        lastActivityTime = ProcessInfo.processInfo.systemUptime
+        let now = ProcessInfo.processInfo.systemUptime
+        lastActivityTime = now
+        if isKeyboardActivity {
+            lastKeyboardActivityTime = now
+        }
     }
 }

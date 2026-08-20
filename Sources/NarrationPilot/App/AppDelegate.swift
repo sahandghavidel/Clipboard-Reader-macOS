@@ -6,6 +6,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         AppModel.shared.restoreLastChapterJSONIfAvailable()
+        AppModel.shared.checkAccessibilityPermissionAtLaunch()
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        AppModel.shared.recheckAccessibilityPermission()
     }
 
     func application(_ sender: NSApplication, openFiles filenames: [String]) {

@@ -636,6 +636,7 @@ final class AppModel: ObservableObject {
     private static let lastChapterJSONPathKey = "clipboardReader.lastChapterJSONPath"
     private static let legacyRecordingShortcutTriggerKey = "clipboardReader.recordingShortcutTrigger.enabled"
     private static let recordingShortcutValueKey = "clipboardReader.recordingShortcutTrigger.shortcut"
+    private static let accessibilityLaunchPromptAttemptedKey = "clipboardReader.accessibility.launchPromptAttempted"
     private static let recordingCueSoundsEnabledKey = "clipboardReader.recordingCueSounds.enabled"
     private static let recordingStartCueSoundKey = "clipboardReader.recordingCueSounds.startSound"
     private static let recordingStopCueSoundKey = "clipboardReader.recordingCueSounds.stopSound"
@@ -1355,8 +1356,32 @@ final class AppModel: ObservableObject {
     }
 
     func requestShortcutTriggerAccessibilityPermission() {
+        defaults.set(true, forKey: Self.accessibilityLaunchPromptAttemptedKey)
         ShortcutTriggerService.requestAccessibilityTrustPrompt()
         refreshShortcutTriggerAccessibilityStatus()
+    }
+
+    func checkAccessibilityPermissionAtLaunch() {
+        refreshShortcutTriggerAccessibilityStatus()
+        guard !isShortcutTriggerAccessibilityTrusted,
+              !defaults.bool(forKey: Self.accessibilityLaunchPromptAttemptedKey) else {
+            return
+        }
+
+        defaults.set(true, forKey: Self.accessibilityLaunchPromptAttemptedKey)
+        statusMessage = "Accessibility permission is needed for external shortcuts and activity detection."
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            ShortcutTriggerService.requestAccessibilityTrustPrompt()
+            self?.refreshShortcutTriggerAccessibilityStatus()
+        }
+    }
+
+    func recheckAccessibilityPermission() {
+        let wasTrusted = isShortcutTriggerAccessibilityTrusted
+        refreshShortcutTriggerAccessibilityStatus()
+        if !wasTrusted, isShortcutTriggerAccessibilityTrusted {
+            statusMessage = "Accessibility permission granted."
+        }
     }
 
     func updateRecordingTriggerShortcut(_ shortcut: TriggerShortcut) {
