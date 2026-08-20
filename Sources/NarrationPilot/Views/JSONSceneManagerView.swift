@@ -120,13 +120,11 @@ struct JSONSceneManagerView: View {
 
         return VStack(alignment: .leading, spacing: 12) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    editableField("Title", field: .title, text: $title)
-                    editableField("Display Title", field: .displayTitle, text: $displayTitle)
+                VStack(alignment: .leading, spacing: 22) {
+                    editableField("Narration", field: .narration, text: $narration)
                     editableField("Action", field: .action, text: $action)
                     editableField("Result", field: .result, text: $result)
-                    editableField("Narration", field: .narration, text: $narration)
-                    annotationField
+                    editableField("Display Title", field: .displayTitle, text: $displayTitle)
                     if let code = scene.code {
                         codeSection(code)
                     }
@@ -137,14 +135,17 @@ struct JSONSceneManagerView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            annotationField
+
+            Text(appModel.statusMessage)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+
             HStack {
-                Button("Cancel") { loadDraft(); activeField = nil; focusedField = nil }
-                    .disabled(activeField == nil)
                 Button("Save Changes") { _ = saveChanges() }
                     .keyboardShortcut(.defaultAction)
-                Text("Annotations are saved with the chapter and are never spoken.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .disabled(!hasUnsavedChanges)
                 Spacer()
                 Button("Previous") { select(max(selectedIndex - 1, 0)) }
                     .disabled(selectedIndex == 0)
@@ -165,15 +166,27 @@ struct JSONSceneManagerView: View {
 
     private func editableField(_ label: String, field: EditableField, text: Binding<String>) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(label.uppercased()).font(.caption.bold()).foregroundStyle(.secondary)
+            HStack(spacing: 5) {
+                Image(systemName: fieldIcon(field))
+                    .foregroundStyle(fieldColor(field))
+                Text(label.uppercased()).font(.caption.bold()).foregroundStyle(.secondary)
+                if activeField == field {
+                    Image(systemName: "pencil")
+                        .font(.caption)
+                        .foregroundStyle(Color.accentColor)
+                }
+            }
             if activeField == field {
                 TextEditor(text: text)
-                    .font(.system(size: previewFontSize))
+                    .font(fieldFont(field))
+                    .foregroundStyle(Color.primary.opacity(0.88))
+                    .lineSpacing(field == .narration ? 5 : 2)
                     .focused($focusedField, equals: field)
                     .frame(height: max(34, min(110, CGFloat(text.wrappedValue.count / 65 + 1) * 22)))
+                    .frame(maxWidth: 720, alignment: .leading)
                     .padding(5)
-                    .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
-                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.accentColor.opacity(0.7)))
+                    .background(RoundedRectangle(cornerRadius: 7).fill(fieldBackground(field)))
+                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(fieldColor(field).opacity(0.8)))
             } else {
                 Button {
                     guard commitEdits() else { return }
@@ -181,11 +194,16 @@ struct JSONSceneManagerView: View {
                     focusedField = field
                 } label: {
                     Text(text.wrappedValue.isEmpty ? "None" : text.wrappedValue)
-                        .font(.system(size: previewFontSize))
+                        .font(fieldFont(field))
+                        .foregroundStyle(Color.primary.opacity(0.88))
+                        .lineSpacing(field == .narration ? 5 : 2)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(8)
                         .contentShape(Rectangle())
-                        .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+                        .background(
+                            RoundedRectangle(cornerRadius: 7)
+                                .fill(fieldBackground(field))
+                        )
                 }
                 .buttonStyle(.plain)
             }
@@ -194,13 +212,53 @@ struct JSONSceneManagerView: View {
 
     private var annotationField: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("ANNOTATION").font(.caption.bold()).foregroundStyle(.secondary)
+            HStack(spacing: 5) {
+                Image(systemName: "note.text").foregroundStyle(.orange)
+                Text("ANNOTATION").font(.caption.bold()).foregroundStyle(.secondary)
+            }
             TextEditor(text: $annotation)
                 .font(.system(size: previewFontSize))
                 .frame(height: max(34, min(90, CGFloat(annotation.count / 65 + 1) * 22)))
                 .padding(5)
                 .background(RoundedRectangle(cornerRadius: 7).fill(Color.yellow.opacity(0.12)))
                 .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.yellow.opacity(0.5)))
+        }
+    }
+
+    private func fieldIcon(_ field: EditableField) -> String {
+        switch field {
+        case .title: "textformat.size.larger"
+        case .displayTitle: "rectangle.on.rectangle"
+        case .action: "cursorarrow.click"
+        case .result: "checkmark.circle"
+        case .narration: "text.bubble"
+        }
+    }
+
+    private func fieldColor(_ field: EditableField) -> Color {
+        switch field {
+        case .title: .primary
+        case .displayTitle: .gray
+        case .action: .blue
+        case .result: .green
+        case .narration: .secondary
+        }
+    }
+
+    private func fieldFont(_ field: EditableField) -> Font {
+        switch field {
+        case .title: .system(size: previewFontSize + 4, weight: .bold)
+        case .displayTitle: .system(size: max(10, previewFontSize - 2))
+        case .action, .result: .system(size: previewFontSize + 2, weight: .regular)
+        case .narration: .system(size: previewFontSize + 4, weight: .semibold)
+        }
+    }
+
+    private func fieldBackground(_ field: EditableField) -> Color {
+        switch field {
+        case .title: .clear
+        case .narration: Color.orange.opacity(0.07)
+        default: fieldColor(field).opacity(0.09)
         }
     }
 
