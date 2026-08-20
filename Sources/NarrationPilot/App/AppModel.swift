@@ -542,28 +542,19 @@ final class AppModel: ObservableObject {
     }
 
     var currentSceneTitle: String? {
-        currentNarrationScene?.title
+        currentNarrationScene.map { "Scene \($0.sceneNumber)" }
     }
 
     var currentSceneDisplayTitle: String? {
-        currentNarrationScene?.displayTitle
+        currentSceneTitle
     }
 
     var currentSceneVisualURL: URL? {
-        guard let loadedChapter, let currentNarrationScene else { return nil }
-        return loadedChapter.visualURL(for: currentNarrationScene)
+        nil
     }
 
     var currentSceneOnScreenSummary: String? {
-        guard let scene = currentNarrationScene else { return nil }
-        switch scene.sceneType {
-        case .action:
-            return "\(scene.onScreen.action ?? "") Result: \(scene.onScreen.result)"
-        case .result:
-            return "Result only: \(scene.onScreen.result)"
-        case .explanation:
-            return "Explain what is visible: \(scene.onScreen.result)"
-        }
+        currentNarrationScene?.onScreen
     }
 
     var allSceneTexts: [String] {
@@ -587,7 +578,7 @@ final class AppModel: ObservableObject {
         guard scriptInputFormat == .json else { return previousSceneText }
         let previousIndex = currentSceneIndex - 1
         guard let loadedChapter, loadedChapter.scenes.indices.contains(previousIndex) else { return nil }
-        return loadedChapter.scenes[previousIndex].title
+        return "Scene \(loadedChapter.scenes[previousIndex].sceneNumber)"
     }
 
     var nextSceneText: String? {
@@ -603,7 +594,7 @@ final class AppModel: ObservableObject {
         guard scriptInputFormat == .json else { return nextSceneText }
         let nextIndex = currentSceneIndex + 1
         guard let loadedChapter, loadedChapter.scenes.indices.contains(nextIndex) else { return nil }
-        return loadedChapter.scenes[nextIndex].title
+        return "Scene \(loadedChapter.scenes[nextIndex].sceneNumber)"
     }
 
     var loadedChapterDescription: String? {
@@ -1466,6 +1457,32 @@ final class AppModel: ObservableObject {
         )
     }
 
+    func replayCurrentOnScreenOnly() {
+        guard scriptModeEnabled, scriptInputFormat == .json,
+              let scene = currentNarrationScene else {
+            statusMessage = "Load a Chapter JSON scene first."
+            return
+        }
+
+        shouldAdvanceScriptSceneAfterSpeech = false
+        beginReadSequence(
+            actionBefore: .none,
+            actionAfter: .none,
+            delayBefore: 0,
+            delayAfter: 0,
+            waitsForNeonSpotlight: false,
+            waitsForUserInactivity: false,
+            readingStatus: "Reading on-screen direction for \(scriptSceneProgress)…"
+        ) { [weak self] in
+            guard let self else { return }
+            self.ttsManager.speak(
+                text: scene.onScreen,
+                speedMultiplier: self.speedMultiplier,
+                voiceIdentifier: self.selectedVoiceIdentifier
+            )
+        }
+    }
+
     private func readClipboardNow(
         actionBefore: ExternalTriggerAction,
         actionAfter: ExternalTriggerAction,
@@ -1603,6 +1620,15 @@ final class AppModel: ObservableObject {
             readingStatus: readingStatus
         ) { [weak self] in
             guard let self else { return }
+            if !advancesAfterSpeech, let narrationScene = self.currentNarrationScene {
+                self.ttsManager.speakSequence(
+                    texts: JSONSceneReplayFormatter.spokenParts(for: narrationScene),
+                    pauseBetween: 1,
+                    speedMultiplier: resolvedSpeedMultiplier,
+                    voiceIdentifier: self.selectedVoiceIdentifier
+                )
+                return
+            }
             self.ttsManager.speak(
                 text: spokenScene,
                 speedMultiplier: resolvedSpeedMultiplier,
@@ -2114,6 +2140,12 @@ final class AppModel: ObservableObject {
         KeyboardShortcuts.onKeyUp(for: .replayScriptScene) { [weak self] in
             Task { @MainActor in
                 self?.replayCurrentScriptScene()
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .replayOnScreenOnly) { [weak self] in
+            Task { @MainActor in
+                self?.replayCurrentOnScreenOnly()
             }
         }
 

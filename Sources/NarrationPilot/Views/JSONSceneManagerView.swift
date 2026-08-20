@@ -9,18 +9,16 @@ struct JSONSceneManagerView: View {
 
     @State private var selectedIndex: Int
     @State private var workingChapter: NarrationChapter
-    @State private var title = ""
-    @State private var displayTitle = ""
-    @State private var action = ""
-    @State private var result = ""
     @State private var narration = ""
+    @State private var onScreen = ""
+    @State private var postProduction = ""
     @State private var annotation = ""
     @State private var activeField: EditableField?
     @FocusState private var focusedField: EditableField?
     @State private var previewFontSize = UserDefaults.standard.object(forKey: "NarrationPilot.jsonPreviewFontSize") as? Double ?? 14
-    @AppStorage("NarrationPilot.jsonShowDisplayTitle") private var showDisplayTitle = false
+    @AppStorage("NarrationPilot.jsonShowPostProduction") private var showPostProduction = false
 
-    private enum EditableField: Hashable { case title, displayTitle, action, result, narration }
+    private enum EditableField: Hashable { case narration, onScreen, postProduction }
 
     init(chapter: NarrationChapter, selectedIndex: Int, close: @escaping () -> Void) {
         self.chapter = chapter
@@ -86,7 +84,7 @@ struct JSONSceneManagerView: View {
                                         Text("Scene \(scene.sceneNumber)")
                                             .font(.caption.bold())
                                     }
-                                    Text(scene.title)
+                                    Text(scene.narration)
                                         .font(.caption2)
                                         .lineLimit(2)
                                         .foregroundStyle(.secondary)
@@ -123,16 +121,12 @@ struct JSONSceneManagerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     editableField("Narration", field: .narration, text: $narration)
-                    editableField("Action", field: .action, text: $action)
-                    editableField("Result", field: .result, text: $result)
-                    if showDisplayTitle {
-                        editableField("Display Title", field: .displayTitle, text: $displayTitle)
-                    }
+                    editableField("On Screen", field: .onScreen, text: $onScreen)
                     if let code = scene.code {
                         codeSection(code)
                     }
-                    if !scene.links.isEmpty || workingChapter.visualURL(for: scene) != nil {
-                        linksSection(scene)
+                    if showPostProduction {
+                        editableField("Post Production", field: .postProduction, text: $postProduction)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -149,7 +143,7 @@ struct JSONSceneManagerView: View {
                 Button("Save Changes") { _ = saveChanges() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(!hasUnsavedChanges)
-                Toggle("Display Title", isOn: $showDisplayTitle)
+                Toggle("Post Production", isOn: $showPostProduction)
                     .toggleStyle(.checkbox)
                 Spacer()
                 Button("Previous") { select(max(selectedIndex - 1, 0)) }
@@ -184,11 +178,11 @@ struct JSONSceneManagerView: View {
             if activeField == field {
                 TextEditor(text: text)
                     .font(fieldFont(field))
-                    .foregroundStyle(Color.primary.opacity(0.88))
+                    .foregroundStyle(fieldTextColor(field))
                     .lineSpacing(field == .narration ? 5 : 2)
                     .focused($focusedField, equals: field)
-                    .frame(height: max(34, min(110, CGFloat(text.wrappedValue.count / 65 + 1) * 22)))
-                    .frame(maxWidth: 720, alignment: .leading)
+                    .frame(height: max(64, min(180, CGFloat(text.wrappedValue.count / 65 + 1) * 30)))
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(5)
                     .background(RoundedRectangle(cornerRadius: 7).fill(fieldBackground(field)))
                     .overlay(RoundedRectangle(cornerRadius: 7).stroke(fieldColor(field).opacity(0.8)))
@@ -200,7 +194,7 @@ struct JSONSceneManagerView: View {
                 } label: {
                     Text(text.wrappedValue.isEmpty ? "None" : text.wrappedValue)
                         .font(fieldFont(field))
-                        .foregroundStyle(Color.primary.opacity(0.88))
+                        .foregroundStyle(fieldTextColor(field))
                         .lineSpacing(field == .narration ? 5 : 2)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(8)
@@ -223,7 +217,7 @@ struct JSONSceneManagerView: View {
             }
             TextEditor(text: $annotation)
                 .font(.system(size: previewFontSize))
-                .frame(height: max(34, min(90, CGFloat(annotation.count / 65 + 1) * 22)))
+                .frame(height: max(120, min(240, CGFloat(annotation.count / 65 + 1) * 34)))
                 .padding(5)
                 .background(RoundedRectangle(cornerRadius: 7).fill(Color.yellow.opacity(0.12)))
                 .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.yellow.opacity(0.5)))
@@ -232,36 +226,34 @@ struct JSONSceneManagerView: View {
 
     private func fieldIcon(_ field: EditableField) -> String {
         switch field {
-        case .title: "textformat.size.larger"
-        case .displayTitle: "rectangle.on.rectangle"
-        case .action: "cursorarrow.click"
-        case .result: "checkmark.circle"
         case .narration: "text.bubble"
+        case .onScreen: "rectangle.on.rectangle"
+        case .postProduction: "film.stack"
         }
     }
 
     private func fieldColor(_ field: EditableField) -> Color {
         switch field {
-        case .title: .primary
-        case .displayTitle: .gray
-        case .action: .blue
-        case .result: .green
         case .narration: .secondary
+        case .onScreen: .blue
+        case .postProduction: .gray
         }
     }
 
     private func fieldFont(_ field: EditableField) -> Font {
         switch field {
-        case .title: .system(size: previewFontSize + 4, weight: .bold)
-        case .displayTitle: .system(size: max(10, previewFontSize - 2))
-        case .action, .result: .system(size: previewFontSize + 2, weight: .regular)
         case .narration: .system(size: previewFontSize + 4, weight: .semibold)
+        case .onScreen: .system(size: previewFontSize + 2)
+        case .postProduction: .system(size: max(9, previewFontSize - 4))
         }
+    }
+
+    private func fieldTextColor(_ field: EditableField) -> Color {
+        field == .postProduction ? Color.secondary.opacity(0.72) : Color.primary.opacity(0.88)
     }
 
     private func fieldBackground(_ field: EditableField) -> Color {
         switch field {
-        case .title: .clear
         case .narration: Color.orange.opacity(0.07)
         default: fieldColor(field).opacity(0.09)
         }
@@ -274,11 +266,9 @@ struct JSONSceneManagerView: View {
 
     private func loadDraft() {
         let scene = workingChapter.scenes[selectedIndex]
-        title = scene.title
-        displayTitle = scene.displayTitle
-        action = scene.onScreen.action ?? ""
-        result = scene.onScreen.result
         narration = scene.narration
+        onScreen = scene.onScreen
+        postProduction = scene.postProduction ?? ""
         annotation = scene.annotation ?? ""
     }
 
@@ -286,18 +276,16 @@ struct JSONSceneManagerView: View {
     private func saveChanges() -> Bool {
         let old = workingChapter.scenes[selectedIndex]
         let updated = NarrationScene(
-            id: old.id, sceneNumber: old.sceneNumber, sceneType: old.sceneType,
-            title: title, annotation: annotation.isEmpty ? nil : annotation,
-            displayTitle: displayTitle,
-            onScreen: NarrationOnScreen(action: old.sceneType == .action ? action : nil, result: result),
-            narration: narration, code: old.code, links: old.links, visualId: old.visualId
+            id: old.id, sceneNumber: old.sceneNumber, narration: narration,
+            onScreen: onScreen, code: old.code,
+            postProduction: postProduction.isEmpty ? nil : postProduction,
+            annotation: annotation.isEmpty ? nil : annotation
         )
         var scenes = workingChapter.scenes
         scenes[selectedIndex] = updated
         let updatedChapter = NarrationChapter(
-            schemaVersion: workingChapter.schemaVersion, projectSlug: workingChapter.projectSlug,
-            chapterNumber: workingChapter.chapterNumber, chapterTitle: workingChapter.chapterTitle,
-            status: workingChapter.status, annotation: workingChapter.annotation, scenes: scenes
+            schemaVersion: workingChapter.schemaVersion, chapterNumber: workingChapter.chapterNumber,
+            chapterTitle: workingChapter.chapterTitle, scenes: scenes
         )
         do {
             try NarrationChapterLoader.validate(updatedChapter)
@@ -324,75 +312,10 @@ struct JSONSceneManagerView: View {
 
     private var hasUnsavedChanges: Bool {
         let scene = workingChapter.scenes[selectedIndex]
-        return title != scene.title ||
-            displayTitle != scene.displayTitle ||
-            action != (scene.onScreen.action ?? "") ||
-            result != scene.onScreen.result ||
-            narration != scene.narration ||
+        return narration != scene.narration ||
+            onScreen != scene.onScreen ||
+            postProduction != (scene.postProduction ?? "") ||
             annotation != (scene.annotation ?? "")
-    }
-
-    private func detailSection(_ title: String, text: String, monospaced: Bool = false) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title.uppercased())
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
-            Text(text.isEmpty ? "None" : text)
-                .font(monospaced ? .system(.body, design: .monospaced) : .body)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(10)
-                .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
-
-            ForEach(detectedURLs(in: text), id: \.absoluteString) { url in
-                Link(destination: url) {
-                    Label(url.absoluteString, systemImage: "arrow.up.right.square")
-                        .font(.caption)
-                }
-            }
-        }
-    }
-
-    private func onScreenSection(_ scene: NarrationScene) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("ON SCREEN")
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
-
-            VStack(alignment: .leading, spacing: 10) {
-                if scene.sceneType == .action, let action = scene.onScreen.action {
-                    labeledValue("Action", text: action)
-                    Divider()
-                } else if scene.sceneType == .result {
-                    Text("RESULT ONLY — DO NOT PERFORM A NEW ACTION")
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("EXPLANATION — KEEP THE CURRENT SCREEN VISIBLE")
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
-                }
-                labeledValue("Result", text: scene.onScreen.result)
-            }
-            .padding(10)
-            .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
-        }
-    }
-
-    private func labeledValue(_ label: String, text: String) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(label)
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
-            Text(text)
-                .textSelection(.enabled)
-            ForEach(detectedURLs(in: text), id: \.absoluteString) { url in
-                Link(destination: url) {
-                    Label(url.absoluteString, systemImage: "arrow.up.right.square")
-                        .font(.caption)
-                }
-            }
-        }
     }
 
     private func codeSection(_ code: NarrationCode) -> some View {
@@ -417,58 +340,6 @@ struct JSONSceneManagerView: View {
                 .padding(10)
                 .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
         }
-    }
-
-    private func linksSection(_ scene: NarrationScene) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("LINKS")
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
-
-            ForEach(scene.links) { link in
-                if let url = URL(string: link.url) {
-                    Link(destination: url) {
-                        Label(link.label, systemImage: "arrow.up.right.square")
-                    }
-                }
-            }
-
-            if let visualURL = workingChapter.visualURL(for: scene) {
-                Button {
-                    openVisual(visualURL)
-                } label: {
-                    Label("Open Visual", systemImage: "rectangle.on.rectangle.angled")
-                }
-                .buttonStyle(.link)
-                .help(visualURL.absoluteString)
-            }
-        }
-    }
-
-    private func openVisual(_ url: URL) {
-        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            NSWorkspace.shared.open(url)
-            return
-        }
-
-        var queryItems = components.queryItems ?? []
-        queryItems.removeAll { $0.name == "visualOpen" }
-        queryItems.append(
-            URLQueryItem(
-                name: "visualOpen",
-                value: String(Int(Date().timeIntervalSince1970 * 1_000))
-            )
-        )
-        components.queryItems = queryItems
-        NSWorkspace.shared.open(components.url ?? url)
-    }
-
-    private func detectedURLs(in text: String) -> [URL] {
-        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
-            return []
-        }
-        let range = NSRange(text.startIndex..<text.endIndex, in: text)
-        return detector.matches(in: text, range: range).compactMap(\.url)
     }
 
     private func select(_ index: Int) {

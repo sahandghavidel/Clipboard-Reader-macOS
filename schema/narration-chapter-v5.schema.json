@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://narrationpilot.local/schema/narration-chapter-v5.schema.json",
+  "title": "Narration Pilot Chapter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "chapterNumber", "chapterTitle", "scenes"],
+  "properties": {
+    "schemaVersion": { "const": 5 },
+    "chapterNumber": { "type": "integer", "minimum": 1 },
+    "chapterTitle": { "type": "string", "minLength": 1 },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/scene" }
+    }
+  },
+  "$defs": {
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sceneNumber", "narration", "onScreen"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sceneNumber": { "type": "integer", "minimum": 1 },
+        "narration": { "type": "string", "minLength": 1 },
+        "onScreen": { "type": "string", "minLength": 1 },
+        "postProduction": { "type": "string" },
+        "annotation": { "type": "string" },
+        "code": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/code" }
+          ]
+        }
+      }
+    },
+    "code": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "language", "targetFile", "action"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "language": { "type": "string", "minLength": 1 },
+        "targetFile": { "type": "string", "minLength": 1 },
+        "action": { "enum": ["create", "replace", "append", "insert"] }
+      }
+    }
+  }
+}

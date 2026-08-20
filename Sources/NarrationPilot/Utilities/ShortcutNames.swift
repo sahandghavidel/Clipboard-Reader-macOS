@@ -41,6 +41,11 @@ extension KeyboardShortcuts.Name {
         default: KeyboardShortcuts.Shortcut(.upArrow, modifiers: [.command, .option])
     )
 
+    static let replayOnScreenOnly = Self(
+        "replayOnScreenOnly",
+        default: KeyboardShortcuts.Shortcut(.upArrow, modifiers: [.command, .option, .shift])
+    )
+
     static let previousScriptScene = Self(
         "previousScriptScene",
         default: KeyboardShortcuts.Shortcut(.leftArrow, modifiers: [.command, .option])

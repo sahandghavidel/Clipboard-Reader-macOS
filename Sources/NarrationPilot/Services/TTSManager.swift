@@ -20,6 +20,11 @@ final class TTSManager: NSObject, ObservableObject {
     }
 
     private var activeEngine: ActiveEngine = .none
+    private var queuedSegments: [String] = []
+    private var queuedSegmentTask: DispatchWorkItem?
+    private var queuedPause: Double = 0
+    private var queuedSpeedMultiplier: Double = 1
+    private var queuedVoiceIdentifier: String?
 
     override init() {
         super.init()
@@ -43,12 +48,34 @@ final class TTSManager: NSObject, ObservableObject {
 
         stopActiveSpeechBeforeStarting()
 
+        startSpeech(text: spokenText, speedMultiplier: speedMultiplier, voiceIdentifier: voiceIdentifier)
+    }
+
+    func speakSequence(
+        texts: [String],
+        pauseBetween: Double,
+        speedMultiplier: Double,
+        voiceIdentifier: String?
+    ) {
+        let segments = texts.map {
+            SpokenTextSanitizer.preparingForSpeech($0, includesBracketedDirections: false)
+        }.filter { !$0.isEmpty }
+        guard let first = segments.first else { return }
+
+        stopActiveSpeechBeforeStarting()
+        queuedSegments = Array(segments.dropFirst())
+        queuedPause = max(0, pauseBetween)
+        queuedSpeedMultiplier = speedMultiplier
+        queuedVoiceIdentifier = voiceIdentifier
+        startSpeech(text: first, speedMultiplier: speedMultiplier, voiceIdentifier: voiceIdentifier)
+    }
+
+    private func startSpeech(text: String, speedMultiplier: Double, voiceIdentifier: String?) {
         if shouldUseSystemDefaultSpeechRoute(for: voiceIdentifier) {
-            speakWithSystemDefaultSynthesizer(text: spokenText, speedMultiplier: speedMultiplier)
+            speakWithSystemDefaultSynthesizer(text: text, speedMultiplier: speedMultiplier)
             return
         }
-
-        speakWithAVSpeech(text: spokenText, speedMultiplier: speedMultiplier, voiceIdentifier: voiceIdentifier)
+        speakWithAVSpeech(text: text, speedMultiplier: speedMultiplier, voiceIdentifier: voiceIdentifier)
     }
 
     private func shouldUseSystemDefaultSpeechRoute(for voiceIdentifier: String?) -> Bool {
@@ -107,6 +134,9 @@ final class TTSManager: NSObject, ObservableObject {
     }
 
     private func stopActiveSpeechBeforeStarting() {
+        queuedSegmentTask?.cancel()
+        queuedSegmentTask = nil
+        queuedSegments = []
         if activeEngine == .systemSpeech || systemSynthesizer.isSpeaking {
             systemSynthesizer.stopSpeaking(at: .immediateBoundary)
         }
@@ -193,6 +223,9 @@ final class TTSManager: NSObject, ObservableObject {
     }
 
     func stop() {
+        queuedSegmentTask?.cancel()
+        queuedSegmentTask = nil
+        queuedSegments = []
         let avActive = synthesizer.isSpeaking || synthesizer.isPaused
         let systemActive = activeEngine == .systemSpeech || systemSynthesizer.isSpeaking
 
@@ -213,6 +246,30 @@ final class TTSManager: NSObject, ObservableObject {
 
         activeEngine = .none
         state = .idle
+    }
+
+    private func finishSegment(finished: Bool) {
+        activeEngine = .none
+        guard finished, !queuedSegments.isEmpty else {
+            queuedSegments = []
+            state = .idle
+            if finished { completedUtteranceCount += 1 }
+            return
+        }
+
+        let next = queuedSegments.removeFirst()
+        state = .speaking
+        let task = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.queuedSegmentTask = nil
+            self.startSpeech(
+                text: next,
+                speedMultiplier: self.queuedSpeedMultiplier,
+                voiceIdentifier: self.queuedVoiceIdentifier
+            )
+        }
+        queuedSegmentTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + queuedPause, execute: task)
     }
 
     func togglePauseResume() {
@@ -248,16 +305,13 @@ final class TTSManager: NSObject, ObservableObject {
 extension TTSManager: AVSpeechSynthesizerDelegate {
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         DispatchQueue.main.async {
-            self.activeEngine = .none
-            self.state = .idle
-            self.completedUtteranceCount += 1
+            self.finishSegment(finished: true)
         }
     }
 
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         DispatchQueue.main.async {
-            self.activeEngine = .none
-            self.state = .idle
+            self.finishSegment(finished: false)
         }
     }
 
@@ -281,11 +335,7 @@ extension TTSManager: NSSpeechSynthesizerDelegate {
                 return
             }
 
-            self.activeEngine = .none
-            self.state = .idle
-            if finishedSpeaking {
-                self.completedUtteranceCount += 1
-            }
+            self.finishSegment(finished: finishedSpeaking)
         }
     }
 }

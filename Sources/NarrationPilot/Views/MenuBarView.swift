@@ -127,12 +127,6 @@ struct MenuBarView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     HStack(spacing: 8) {
-                        if let visualURL = appModel.currentSceneVisualURL {
-                            Link(destination: visualURL) {
-                                Label("Open Visual", systemImage: "rectangle.on.rectangle.angled")
-                            }
-                            .help(visualURL.absoluteString)
-                        }
 
                         Button("Previous") {
                             appModel.goToPreviousScene()
@@ -502,6 +496,7 @@ struct MenuBarView: View {
                         KeyboardShortcuts.Recorder("Stop Reading", name: .stopReading)
                         KeyboardShortcuts.Recorder("Pause / Resume", name: .pauseResumeReading)
                         KeyboardShortcuts.Recorder("Replay Scene", name: .replayScriptScene)
+                        KeyboardShortcuts.Recorder("Replay On Screen Only", name: .replayOnScreenOnly)
                         KeyboardShortcuts.Recorder("Previous Scene", name: .previousScriptScene)
                         KeyboardShortcuts.Recorder("Next Scene", name: .nextScriptScene)
                         KeyboardShortcuts.Recorder("Restart Script", name: .restartScript)

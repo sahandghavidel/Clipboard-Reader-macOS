@@ -114,211 +114,24 @@ final class NarrationPilotTests: XCTestCase {
         XCTAssertEqual(ScriptSceneSplitter.scenes(from: "\n\n  "), [])
     }
 
-    func testNarrationChapterLoaderPreservesExplicitScenes() throws {
-        let data = Data(#"""
-        {
-          "schemaVersion": 4,
-          "projectSlug": "test-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Test Chapter",
-          "status": "approved",
-          "scenes": [
-            {
-              "id": "scene-01",
-              "sceneNumber": 1,
-              "sceneType": "action",
-              "title": "First scene",
-              "displayTitle": "First Scene",
-              "onScreen": {"action":"Show the page","result":"The page is visible."},
-              "narration": "First sentence. Second sentence stays in this scene.",
-              "code": null,
-              "links": []
-            },
-            {
-              "id": "scene-02",
-              "sceneNumber": 2,
-              "sceneType": "action",
-              "title": "Second scene",
-              "displayTitle": "Second Scene",
-              "onScreen": {"action":"Show the next view","result":"The next view is visible."},
-              "narration": "Another scene.",
-              "code": null,
-              "links": []
-            }
-          ]
-        }
-        """#.utf8)
-
+    func testNarrationChapterLoaderReadsVersionFive() throws {
+        let data = Data(#"{"schemaVersion":5,"chapterNumber":1,"chapterTitle":"Test","scenes":[{"id":"scene-01","sceneNumber":1,"narration":"Hello.","onScreen":"Show the editor.","code":null,"postProduction":"Animate the concept.","annotation":"Make this clearer."}]}"#.utf8)
         let chapter = try NarrationChapterLoader.decode(data)
-
-        XCTAssertEqual(chapter.scenes.count, 2)
-        XCTAssertEqual(chapter.scenes[0].narration, "First sentence. Second sentence stays in this scene.")
+        XCTAssertEqual(chapter.schemaVersion, 5)
+        XCTAssertEqual(chapter.scenes[0].onScreen, "Show the editor.")
+        XCTAssertEqual(chapter.scenes[0].postProduction, "Animate the concept.")
     }
 
-    func testNarrationChapterLoaderMigratesVersionTwoInMemory() throws {
-        let data = Data(#"""
-        {
-          "schemaVersion": 2,
-          "projectSlug": "legacy-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Legacy Chapter",
-          "status": "draft",
-          "scenes": [{
-            "id": "scene-01",
-            "sceneNumber": 1,
-            "title": "Legacy scene",
-            "displayTitle": "Legacy Scene",
-            "onScreen": {"action":"Add the code","result":"The code is visible."},
-            "narration": "I am going to add this code.",
-            "code": "const legacy = true;"
-          }]
-        }
-        """#.utf8)
-
+    func testNarrationChapterLoaderMigratesVersionFour() throws {
+        let data = Data(#"{"schemaVersion":4,"projectSlug":"test","chapterNumber":1,"chapterTitle":"Test","status":"draft","scenes":[{"id":"scene-01","sceneNumber":1,"sceneType":"action","title":"Run","displayTitle":"Run","onScreen":{"action":"Run the page.","result":"The page appears."},"narration":"Run it.","code":null,"links":[]}]}"#.utf8)
         let chapter = try NarrationChapterLoader.decode(data)
-
-        XCTAssertEqual(chapter.schemaVersion, 4)
-        XCTAssertEqual(chapter.scenes[0].sceneType, .action)
-        XCTAssertEqual(chapter.scenes[0].code?.text, "const legacy = true;")
-        XCTAssertEqual(chapter.scenes[0].code?.targetFile, "Unspecified")
-        XCTAssertEqual(chapter.scenes[0].links, [])
+        XCTAssertEqual(chapter.schemaVersion, 5)
+        XCTAssertEqual(chapter.scenes[0].onScreen, "Run the page.\nThe page appears.")
     }
 
-    func testNarrationChapterLoaderMigratesVersionThreeResultScene() throws {
-        let data = Data(#"""
-        {
-          "schemaVersion": 3,
-          "projectSlug": "legacy-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Legacy Chapter",
-          "status": "draft",
-          "scenes": [
-            {"id":"scene-01","sceneNumber":1,"title":"Run","displayTitle":"Run","onScreen":{"action":"Run the page","result":"The page is visible."},"narration":"Now I would run the page.","code":null,"links":[]},
-            {"id":"scene-02","sceneNumber":2,"title":"Show","displayTitle":"Page Works","onScreen":{"action":"Keep the page visible","result":"The page remains visible."},"narration":"As you can see, the page is working.","code":null,"links":[]}
-          ]
-        }
-        """#.utf8)
-
-        let chapter = try NarrationChapterLoader.decode(data)
-
-        XCTAssertEqual(chapter.schemaVersion, 4)
-        XCTAssertEqual(chapter.scenes[1].sceneType, .result)
-        XCTAssertNil(chapter.scenes[1].onScreen.action)
-    }
-
-    func testNarrationChapterLoaderRejectsUnsupportedSchema() {
-        let data = Data(#"""
-        {
-          "schemaVersion": 5,
-          "projectSlug": "test-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Test Chapter",
-          "status": "approved",
-          "scenes": [{
-            "id": "scene-01",
-            "sceneNumber": 1,
-            "title": "Scene",
-            "displayTitle": "Scene",
-            "onScreen": {"action":"Show it","result":"It is visible."},
-            "narration": "Narration.",
-            "code": null,
-            "links": []
-          }]
-        }
-        """#.utf8)
-
-        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
-            XCTAssertEqual(error as? NarrationChapterError, .unsupportedSchemaVersion(5))
-        }
-    }
-
-    func testNarrationChapterLoaderRejectsDuplicateSceneIDs() {
-        let data = Data(#"""
-        {
-          "schemaVersion": 4,
-          "projectSlug": "test-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Test Chapter",
-          "status": "approved",
-          "scenes": [
-            {"id":"same","sceneNumber":1,"sceneType":"action","title":"One","displayTitle":"One","onScreen":{"action":"Show one","result":"One is visible."},"narration":"One.","code":null,"links":[]},
-            {"id":"same","sceneNumber":2,"sceneType":"action","title":"Two","displayTitle":"Two","onScreen":{"action":"Show two","result":"Two is visible."},"narration":"Two.","code":null,"links":[]}
-          ]
-        }
-        """#.utf8)
-
-        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
-            XCTAssertEqual(error as? NarrationChapterError, .duplicateSceneID("same"))
-        }
-    }
-
-    func testNarrationChapterLoaderRejectsEmptyNarration() {
-        let data = Data(#"""
-        {
-          "schemaVersion": 4,
-          "projectSlug": "test-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Test Chapter",
-          "status": "approved",
-          "scenes": [{
-            "id": "scene-01",
-            "sceneNumber": 1,
-            "sceneType": "action",
-            "title": "Scene",
-            "displayTitle": "Scene",
-            "onScreen": {"action":"Show it","result":"It is visible."},
-            "narration": "   ",
-            "code": null,
-            "links": []
-          }]
-        }
-        """#.utf8)
-
-        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
-            XCTAssertEqual(error as? NarrationChapterError, .emptyNarration(1))
-        }
-    }
-
-    func testNarrationChapterLoaderAcceptsResultSceneAfterAction() throws {
-        let data = Data(#"""
-        {
-          "schemaVersion": 4,
-          "projectSlug": "test-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Test Chapter",
-          "status": "draft",
-          "scenes": [
-            {"id":"scene-01","sceneNumber":1,"sceneType":"action","title":"Run","displayTitle":"Run","onScreen":{"action":"Run the page","result":"The page is visible."},"narration":"Now I would run the page.","code":null,"links":[]},
-            {"id":"scene-02","sceneNumber":2,"sceneType":"result","title":"Show","displayTitle":"Page Works","onScreen":{"action":null,"result":"The page remains visible."},"narration":"As you can see, the page is working.","code":null,"links":[]}
-          ]
-        }
-        """#.utf8)
-
-        let chapter = try NarrationChapterLoader.decode(data)
-
-        XCTAssertEqual(chapter.scenes[1].sceneType, .result)
-        XCTAssertNil(chapter.scenes[1].onScreen.action)
-    }
-
-    func testNarrationChapterLoaderRejectsResultTransitionInActionScene() {
-        let data = Data(#"""
-        {
-          "schemaVersion": 4,
-          "projectSlug": "test-project",
-          "chapterNumber": 1,
-          "chapterTitle": "Test Chapter",
-          "status": "draft",
-          "scenes": [{
-            "id":"scene-01","sceneNumber":1,"sceneType":"action","title":"Run","displayTitle":"Run",
-            "onScreen":{"action":"Run the page","result":"The page is visible."},
-            "narration":"Now I would run the page. As you can see, it works.","code":null,"links":[]
-          }]
-        }
-        """#.utf8)
-
-        XCTAssertThrowsError(try NarrationChapterLoader.decode(data)) { error in
-            XCTAssertEqual(error as? NarrationChapterError, .resultTransitionOutsideResultScene(1))
-        }
+    func testNarrationChapterLoaderRejectsDuplicateIDs() {
+        let data = Data(#"{"schemaVersion":5,"chapterNumber":1,"chapterTitle":"Test","scenes":[{"id":"same","sceneNumber":1,"narration":"One.","onScreen":"One.","code":null},{"id":"same","sceneNumber":2,"narration":"Two.","onScreen":"Two.","code":null}]}"#.utf8)
+        XCTAssertThrowsError(try NarrationChapterLoader.decode(data))
     }
 
     func testSpokenTextSanitizerRemovesBracketedDirections() {
@@ -382,113 +195,9 @@ final class NarrationPilotTests: XCTestCase {
         )
     }
 
-    func testJSONActionSceneReplayIntroducesActionResultAndNarration() {
-        let scene = NarrationScene(
-            id: "scene-01",
-            sceneNumber: 1,
-            sceneType: .action,
-            title: "Open the browser",
-            displayTitle: "Open Browser",
-            onScreen: NarrationOnScreen(
-                action: "Open the browser.",
-                result: "The homepage is visible."
-            ),
-            narration: "Now we can begin building the project.",
-            code: nil,
-            links: [],
-            visualId: nil
-        )
-
-        XCTAssertEqual(
-            JSONSceneReplayFormatter.spokenText(for: scene),
-            """
-            On screen, the action you need to do is: Open the browser.
-            As a result, you should see: The homepage is visible.
-            And the narration is: Now we can begin building the project.
-            """
-        )
-    }
-
-    func testJSONSceneReplayWithoutActionIntroducesResultAndNarration() {
-        let scene = NarrationScene(
-            id: "scene-02",
-            sceneNumber: 2,
-            sceneType: .result,
-            title: "Show the homepage",
-            displayTitle: "Homepage",
-            onScreen: NarrationOnScreen(
-                action: nil,
-                result: "The homepage remains visible."
-            ),
-            narration: "As you can see, the homepage is ready.",
-            code: nil,
-            links: [],
-            visualId: nil
-        )
-
-        XCTAssertEqual(
-            JSONSceneReplayFormatter.spokenText(for: scene),
-            """
-            On screen, you should see: The homepage remains visible.
-            And the narration is: As you can see, the homepage is ready.
-            """
-        )
-    }
-
-    func testChapterBuildsVisualURLFromSceneLink() throws {
-        let scene = NarrationScene(
-            id: "scene-01",
-            sceneNumber: 1,
-            sceneType: .action,
-            title: "Show the loop",
-            displayTitle: "Learning Loop",
-            onScreen: NarrationOnScreen(action: "Open the visual.", result: "The loop is visible."),
-            narration: "Now I would show the learning loop.",
-            code: nil,
-            links: [NarrationLink(label: "Learning page", url: "http://localhost:3010/learn/test-project")],
-            visualId: "learning-loop"
-        )
-        let chapter = NarrationChapter(
-            schemaVersion: 4,
-            projectSlug: "test-project",
-            chapterNumber: 1,
-            chapterTitle: "Test",
-            status: "draft",
-            scenes: [scene]
-        )
-
-        XCTAssertEqual(
-            chapter.visualURL(for: scene)?.absoluteString,
-            "http://localhost:3010/learn/test-project#learning-loop"
-        )
-    }
-
-    func testChapterBuildsProductionVisualURLWithoutSceneLink() {
-        let scene = NarrationScene(
-            id: "scene-01",
-            sceneNumber: 1,
-            sceneType: .explanation,
-            title: "Show the loop",
-            displayTitle: "Learning Loop",
-            onScreen: NarrationOnScreen(action: nil, result: "The loop is visible."),
-            narration: "This loop keeps the learning process focused.",
-            code: nil,
-            links: [],
-            visualId: "learning-loop"
-        )
-        let chapter = NarrationChapter(
-            schemaVersion: 4,
-            projectSlug: "test-project",
-            chapterNumber: 1,
-            chapterTitle: "Test",
-            status: "draft",
-            scenes: [scene]
-        )
-
-        XCTAssertEqual(
-            chapter.visualURL(for: scene)?.absoluteString,
-            "https://www.100jsprojects.com/learn/test-project#learning-loop"
-        )
+    func testJSONSceneReplayReadsNarrationThenOnScreen() {
+        let scene = NarrationScene(id: "scene-01", sceneNumber: 1, narration: "Explain it.", onScreen: "Show it.", code: nil)
+        XCTAssertEqual(JSONSceneReplayFormatter.spokenText(for: scene), "Explain it.\nOn screen: Show it.")
     }
 
     func testPauseResumeLabel() {
