@@ -60,6 +60,16 @@ final class SceneEditorController: NSObject, NSWindowDelegate {
         return false
     }
 
+    func windowDidResignKey(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow,
+              window === panel,
+              window.title == "JSON Scene Manager",
+              !isFinishingClose else {
+            return
+        }
+        requestSaveAndClose()
+    }
+
     private func requestSaveAndClose() {
         NotificationCenter.default.post(name: .sceneEditorShouldClose, object: nil)
     }
