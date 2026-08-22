@@ -19,7 +19,6 @@ struct NarrationScene: Codable, Equatable, Identifiable {
     let narration: String
     let onScreen: String
     let code: NarrationCode?
-    var postProduction: String? = nil
     var annotation: String? = nil
 }
 
@@ -96,7 +95,7 @@ enum NarrationChapterLoader {
         NarrationChapter(schemaVersion: 5, chapterNumber: legacy.chapterNumber, chapterTitle: legacy.chapterTitle, scenes: legacy.scenes.map { scene in
             NarrationScene(id: scene.id, sceneNumber: scene.sceneNumber, narration: scene.narration,
                            onScreen: combinedOnScreen(action: scene.onScreen.action, result: scene.onScreen.result), code: scene.code,
-                           postProduction: scene.visualId.map { "Create the post-production visual for \($0)." }, annotation: scene.annotation)
+                           annotation: scene.annotation)
         })
     }
 

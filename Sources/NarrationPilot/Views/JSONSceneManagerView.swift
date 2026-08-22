@@ -1,4 +1,5 @@
 import AppKit
+import AppKit
 import SwiftUI
 
 struct JSONSceneManagerView: View {
@@ -11,16 +12,14 @@ struct JSONSceneManagerView: View {
     @State private var workingChapter: NarrationChapter
     @State private var narration = ""
     @State private var onScreen = ""
-    @State private var postProduction = ""
     @State private var annotation = ""
     @State private var codeText = ""
     @State private var codeInstruction = ""
     @State private var activeField: EditableField?
     @FocusState private var focusedField: EditableField?
     @State private var previewFontSize = UserDefaults.standard.object(forKey: "NarrationPilot.jsonPreviewFontSize") as? Double ?? 14
-    @AppStorage("NarrationPilot.jsonShowPostProduction") private var showPostProduction = false
 
-    private enum EditableField: Hashable { case narration, onScreen, postProduction, code }
+    private enum EditableField: Hashable { case narration, onScreen, code }
 
     init(chapter: NarrationChapter, selectedIndex: Int, close: @escaping () -> Void) {
         self.chapter = chapter
@@ -124,11 +123,9 @@ struct JSONSceneManagerView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     editableField("Narration", field: .narration, text: $narration)
                     editableField("On Screen", field: .onScreen, text: $onScreen)
+                    onScreenLinks
                     if let code = scene.code {
                         codeSection(code)
-                    }
-                    if showPostProduction {
-                        editableField("Post Production", field: .postProduction, text: $postProduction)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -145,8 +142,6 @@ struct JSONSceneManagerView: View {
                 Button("Save Changes") { _ = saveChanges() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(!hasUnsavedChanges)
-                Toggle("Post Production", isOn: $showPostProduction)
-                    .toggleStyle(.checkbox)
                 Spacer()
                 Button("Previous") { select(max(selectedIndex - 1, 0)) }
                     .disabled(selectedIndex == 0)
@@ -163,6 +158,36 @@ struct JSONSceneManagerView: View {
                 }
             }
         )
+    }
+
+    @ViewBuilder
+    private var onScreenLinks: some View {
+        let urls = OnScreenLinkExtractor.urls(in: onScreen)
+
+        if !urls.isEmpty {
+            VStack(alignment: .leading, spacing: 7) {
+                Text(urls.count == 1 ? "LINK" : "LINKS")
+                    .font(.caption.bold())
+                    .foregroundStyle(.secondary)
+
+                ForEach(urls, id: \.absoluteString) { url in
+                    Button {
+                        NSWorkspace.shared.open(url)
+                    } label: {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Image(systemName: "arrow.up.right.square")
+                            Text(url.absoluteString)
+                                .multilineTextAlignment(.leading)
+                                .textSelection(.enabled)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.link)
+                    .help("Open in default browser")
+                }
+            }
+            .padding(.top, -12)
+        }
     }
 
     private func editableField(_ label: String, field: EditableField, text: Binding<String>) -> some View {
@@ -230,7 +255,6 @@ struct JSONSceneManagerView: View {
         switch field {
         case .narration: "text.bubble"
         case .onScreen: "rectangle.on.rectangle"
-        case .postProduction: "film.stack"
         case .code: "chevron.left.forwardslash.chevron.right"
         }
     }
@@ -239,7 +263,6 @@ struct JSONSceneManagerView: View {
         switch field {
         case .narration: .secondary
         case .onScreen: .blue
-        case .postProduction: .gray
         case .code: .purple
         }
     }
@@ -248,13 +271,12 @@ struct JSONSceneManagerView: View {
         switch field {
         case .narration: .system(size: previewFontSize + 4, weight: .semibold)
         case .onScreen: .system(size: previewFontSize + 2)
-        case .postProduction: .system(size: max(9, previewFontSize - 4))
         case .code: .system(size: previewFontSize, design: .monospaced)
         }
     }
 
     private func fieldTextColor(_ field: EditableField) -> Color {
-        field == .postProduction ? Color.secondary.opacity(0.72) : Color.primary.opacity(0.88)
+        Color.primary.opacity(0.88)
     }
 
     private func fieldBackground(_ field: EditableField) -> Color {
@@ -273,7 +295,6 @@ struct JSONSceneManagerView: View {
         let scene = workingChapter.scenes[selectedIndex]
         narration = scene.narration
         onScreen = scene.onScreen
-        postProduction = scene.postProduction ?? ""
         annotation = scene.annotation ?? ""
         codeText = scene.code?.text ?? ""
         codeInstruction = scene.code?.instruction ?? scene.code.map { "\($0.action.rawValue.capitalized) this code in \($0.targetFile)." } ?? ""
@@ -294,7 +315,6 @@ struct JSONSceneManagerView: View {
         let updated = NarrationScene(
             id: old.id, sceneNumber: old.sceneNumber, narration: narration,
             onScreen: onScreen, code: updatedCode,
-            postProduction: postProduction.isEmpty ? nil : postProduction,
             annotation: annotation.isEmpty ? nil : annotation
         )
         var scenes = workingChapter.scenes
@@ -330,7 +350,6 @@ struct JSONSceneManagerView: View {
         let scene = workingChapter.scenes[selectedIndex]
         return narration != scene.narration ||
             onScreen != scene.onScreen ||
-            postProduction != (scene.postProduction ?? "") ||
             annotation != (scene.annotation ?? "") ||
             codeText != (scene.code?.text ?? "") ||
             codeInstruction != (scene.code?.instruction ?? scene.code.map { "\($0.action.rawValue.capitalized) this code in \($0.targetFile)." } ?? "")

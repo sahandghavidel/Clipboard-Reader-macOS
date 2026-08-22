@@ -2,6 +2,43 @@ import XCTest
 @testable import NarrationPilot
 
 final class NarrationPilotTests: XCTestCase {
+    func testNotionSceneServiceTreatsEmptyNarrationAndOnScreenAsBlank() {
+        XCTAssertTrue(NotionSceneService.isBlankScene(narration: "", onScreen: ""))
+        XCTAssertTrue(NotionSceneService.isBlankScene(narration: "  \n", onScreen: "\t"))
+    }
+
+    func testNotionSceneServiceKeepsRowsWithEitherVisibleField() {
+        XCTAssertFalse(NotionSceneService.isBlankScene(narration: "Explain this.", onScreen: ""))
+        XCTAssertFalse(NotionSceneService.isBlankScene(narration: "", onScreen: "Show the editor."))
+    }
+
+    func testOnScreenLinkExtractorFindsHTTPAndHTTPSLinksInOrder() {
+        let urls = OnScreenLinkExtractor.urls(
+            in: "Open https://github.com/Leonxlnx/unlazy and http://example.com/docs."
+        )
+
+        XCTAssertEqual(urls.map(\.absoluteString), [
+            "https://github.com/Leonxlnx/unlazy",
+            "http://example.com/docs"
+        ])
+    }
+
+    func testOnScreenLinkExtractorRemovesDuplicateLinks() {
+        let urls = OnScreenLinkExtractor.urls(
+            in: "Use https://example.com twice: https://example.com"
+        )
+
+        XCTAssertEqual(urls.map(\.absoluteString), ["https://example.com"])
+    }
+
+    func testOnScreenLinkExtractorIgnoresUnsupportedSchemesAndPlainText() {
+        let urls = OnScreenLinkExtractor.urls(
+            in: "Email mailto:test@example.com or read example.com without a scheme."
+        )
+
+        XCTAssertTrue(urls.isEmpty)
+    }
+
     func testSpeedMultiplierClamps() {
         XCTAssertEqual(SpeechRateMapper.clampMultiplier(0.1), 0.5)
         XCTAssertEqual(SpeechRateMapper.clampMultiplier(1.0), 1.0)
@@ -115,11 +152,11 @@ final class NarrationPilotTests: XCTestCase {
     }
 
     func testNarrationChapterLoaderReadsVersionFive() throws {
-        let data = Data(#"{"schemaVersion":5,"chapterNumber":1,"chapterTitle":"Test","scenes":[{"id":"scene-01","sceneNumber":1,"narration":"Hello.","onScreen":"Show the editor.","code":null,"postProduction":"Animate the concept.","annotation":"Make this clearer."}]}"#.utf8)
+        let data = Data(#"{"schemaVersion":5,"chapterNumber":1,"chapterTitle":"Test","scenes":[{"id":"scene-01","sceneNumber":1,"narration":"Hello.","onScreen":"Show the editor.","code":null,"annotation":"Make this clearer."}]}"#.utf8)
         let chapter = try NarrationChapterLoader.decode(data)
         XCTAssertEqual(chapter.schemaVersion, 5)
         XCTAssertEqual(chapter.scenes[0].onScreen, "Show the editor.")
-        XCTAssertEqual(chapter.scenes[0].postProduction, "Animate the concept.")
+        XCTAssertEqual(chapter.scenes[0].annotation, "Make this clearer.")
     }
 
     func testNarrationChapterLoaderMigratesVersionFour() throws {

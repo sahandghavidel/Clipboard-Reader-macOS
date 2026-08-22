@@ -41,7 +41,7 @@ final class NotionSceneService {
             guard let pages = result["results"] as? [[String: Any]] else {
                 throw NotionSceneError.invalidResponse
             }
-            records.append(contentsOf: try pages.map(record(from:)))
+            records.append(contentsOf: try pages.compactMap(record(from:)))
             cursor = (result["has_more"] as? Bool) == true ? result["next_cursor"] as? String : nil
         } while cursor != nil
 
@@ -54,7 +54,6 @@ final class NotionSceneService {
             "Scene Number": titleText(String(scene.sceneNumber)),
             "Narration": richText(scene.narration),
             "On Screen": richText(scene.onScreen),
-            "Post Production": richText(scene.postProduction ?? ""),
             "Annotation": richText(scene.annotation ?? ""),
             "Code": richText(code?.text ?? ""),
             "Language": richText(code?.language ?? ""),
@@ -69,16 +68,29 @@ final class NotionSceneService {
         )
     }
 
-    private func record(from page: [String: Any]) throws -> NotionSceneRecord {
+    static func isBlankScene(narration: String, onScreen: String) -> Bool {
+        narration.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && onScreen.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func record(from page: [String: Any]) throws -> NotionSceneRecord? {
         guard let pageID = page["id"] as? String,
-              let properties = page["properties"] as? [String: Any],
+              let properties = page["properties"] as? [String: Any] else {
+            throw NotionSceneError.invalidResponse
+        }
+
+        let narration = text(properties["Narration"])
+        let onScreen = text(properties["On Screen"])
+        if Self.isBlankScene(narration: narration, onScreen: onScreen) {
+            return nil
+        }
+
+        guard
               let sceneNumber = Int(text(properties["Scene Number"]).trimmingCharacters(in: .whitespacesAndNewlines)),
               sceneNumber > 0 else {
             throw NotionSceneError.invalidScenes("A Notion row is missing a valid Scene Number.")
         }
 
-        let narration = text(properties["Narration"])
-        let onScreen = text(properties["On Screen"])
         let codeText = text(properties["Code"])
         let code: NarrationCode?
         if codeText.isEmpty {
@@ -112,7 +124,6 @@ final class NotionSceneService {
                 narration: narration,
                 onScreen: onScreen,
                 code: code,
-                postProduction: nilIfEmpty(text(properties["Post Production"])),
                 annotation: nilIfEmpty(text(properties["Annotation"]))
             )
         )
