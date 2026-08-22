@@ -18,6 +18,7 @@ struct JSONSceneManagerView: View {
     @State private var activeField: EditableField?
     @FocusState private var focusedField: EditableField?
     @State private var previewFontSize = UserDefaults.standard.object(forKey: "NarrationPilot.jsonPreviewFontSize") as? Double ?? 14
+    @State private var sortByNewestEdited = false
 
     private enum EditableField: Hashable { case narration, onScreen, code }
 
@@ -61,8 +62,22 @@ struct JSONSceneManagerView: View {
 
     private var sceneList: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Chapter \(workingChapter.chapterNumber)")
-                .font(.headline)
+            HStack {
+                Text("Chapter \(workingChapter.chapterNumber)")
+                    .font(.headline)
+                Spacer()
+                if appModel.hasNotionConfiguration {
+                    Button {
+                        sortByNewestEdited.toggle()
+                    } label: {
+                        Label(sortByNewestEdited ? "Newest" : "Order",
+                              systemImage: sortByNewestEdited ? "clock.arrow.circlepath" : "list.number")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderless)
+                    .help(sortByNewestEdited ? "Sorted by Notion last edited (newest first). Click to restore scene order." : "Sort by Notion last edited (newest first)")
+                }
+            }
 
             Text(workingChapter.chapterTitle)
                 .font(.caption)
@@ -71,7 +86,7 @@ struct JSONSceneManagerView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
-                        ForEach(workingChapter.scenes.indices, id: \.self) { index in
+                        ForEach(displayedSceneIndices, id: \.self) { index in
                             let scene = workingChapter.scenes[index]
                             Button {
                                 guard commitEdits() else { return }
@@ -84,6 +99,12 @@ struct JSONSceneManagerView: View {
                                     HStack(spacing: 5) {
                                         Text("Scene \(scene.sceneNumber)")
                                             .font(.caption.bold())
+                                        if sortByNewestEdited, let date = appModel.notionLastEdited(forSceneID: scene.id) {
+                                            Spacer()
+                                            Text(date.formatted(.relative(presentation: .named)))
+                                                .font(.caption2)
+                                                .foregroundStyle(.tertiary)
+                                        }
                                     }
                                     Text(scene.narration)
                                         .font(.caption2)
@@ -112,6 +133,20 @@ struct JSONSceneManagerView: View {
             Text("Scene \(selectedIndex + 1) of \(workingChapter.scenes.count)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Scene indices in sidebar display order: natural order, or newest-edited first when sorting is on.
+    private var displayedSceneIndices: [Int] {
+        let all = Array(workingChapter.scenes.indices)
+        guard sortByNewestEdited else { return all }
+        return all.sorted { lhs, rhs in
+            let lID = workingChapter.scenes[lhs].id
+            let rID = workingChapter.scenes[rhs].id
+            let lDate = appModel.notionLastEdited(forSceneID: lID) ?? .distantPast
+            let rDate = appModel.notionLastEdited(forSceneID: rID) ?? .distantPast
+            if lDate != rDate { return lDate > rDate }
+            return workingChapter.scenes[lhs].sceneNumber < workingChapter.scenes[rhs].sceneNumber
         }
     }
 

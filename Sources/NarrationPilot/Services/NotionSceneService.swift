@@ -165,6 +165,13 @@ final class NotionSceneService {
         (property as? [String: Any])?["last_edited_time"] as? String
     }
 
+    /// Parses Notion ISO-8601 timestamps like "2026-08-22T10:15:30.000Z".
+    static let dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
     private func inferredAction(from instruction: String) -> NarrationCodeAction {
         let value = instruction.lowercased()
         if value.hasPrefix("replace") { return .replace }

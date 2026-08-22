@@ -771,7 +771,13 @@ final class AppModel: ObservableObject {
     private var pendingReadTask: Task<Void, Never>?
     private var pendingChapterReloadURL: URL?
     private var notionPageIDsBySceneID: [String: String] = [:]
+    private var notionLastEditedBySceneID: [String: Date] = [:]
     private var notionRevision = ""
+
+    /// Notion "last edited" timestamp for a scene ID, when the chapter came from Notion.
+    func notionLastEdited(forSceneID sceneID: String) -> Date? {
+        notionLastEditedBySceneID[sceneID]
+    }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -1113,6 +1119,10 @@ final class AppModel: ObservableObject {
             loadedChapter = chapter
             loadedChapterURL = nil
             notionPageIDsBySceneID = Dictionary(uniqueKeysWithValues: records.map { ($0.scene.id, $0.pageID) })
+            notionLastEditedBySceneID = Dictionary(uniqueKeysWithValues: records.compactMap { record in
+                guard let date = NotionSceneService.dateFormatter.date(from: record.lastEditedTime) else { return nil }
+                return (record.scene.id, date)
+            })
             notionRevision = revision
             isNotionConnected = true
             scriptInputFormat = .json
